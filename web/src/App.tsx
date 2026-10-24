@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AudioEngine, type EngineState, type SourceKind } from './audio/AudioEngine';
 import { bandRange } from './audio/blocks/EqBlock';
 import { DEFAULT_SETTINGS, type ToneSettings } from './audio/settings';
+import { AmpPanel } from './components/AmpPanel';
 import { ClipPanel } from './components/ClipPanel';
 import { EqPanel } from './components/EqPanel';
 import { fmt, Knob } from './components/Knob';
@@ -218,6 +219,7 @@ export function App() {
 
           <EqPanel eq={settings.eq} onChange={(eq) => patch('eq', eq)} onActiveBand={setActiveBand} />
           <PedalPanel pedal={settings.pedal} onChange={(pedal) => patch('pedal', pedal)} />
+          <AmpPanel amp={settings.amp} onChange={(amp) => patch('amp', amp)} />
           <PresetPanel engine={getEngine()} settings={settings} onLoad={setSettings} />
         </div>
       </div>

@@ -10,6 +10,7 @@
 
 import { Chain } from './Chain';
 import type { ToneSettings } from './settings';
+import { setIrDecoder } from './ir';
 import { makeLogSweep, makePinkNoise } from './signals';
 import { dbToGain, gainToDb } from './util';
 
@@ -80,6 +81,7 @@ export class AudioEngine {
     this.sineLevel.connect(this.input);
     this.effectIn = c.createGain();
     this.effectOut = c.createGain();
+    setIrDecoder(c);
     this.chain = new Chain(c);
     this.levelMatch = c.createGain();
     this.dryGain = c.createGain();

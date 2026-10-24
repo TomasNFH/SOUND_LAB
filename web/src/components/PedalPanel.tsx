@@ -1,5 +1,5 @@
 import { humpFrequency, tsGain, tsHighCut } from '../audio/blocks/TubeScreamer';
-import type { PedalSettings, PedalType, TsSettings } from '../audio/settings';
+import type { BdSettings, Ds2Settings, KlonSettings, PedalSettings, PedalType, TsSettings } from '../audio/settings';
 import { fmt, Knob } from './Knob';
 
 type Props = {
@@ -14,11 +14,31 @@ const PEDALS: { id: PedalType; name: string; idea: string }[] = [
     name: 'Tube Screamer',
     idea: 'Mid hump, clean bass path, soft diode clipping. Only the highpassed branch is driven into the diodes.',
   },
+  {
+    id: 'bd',
+    name: 'Blues Driver',
+    idea: 'Gentle clipping in two stages, full range, flatter mids: closer to an amp breaking up.',
+  },
+  {
+    id: 'ds2',
+    name: 'DS-2 Turbo',
+    idea: 'Hard clipping and a scooped tone control. Turbo boosts the mids before the clipper.',
+  },
+  {
+    id: 'klon',
+    name: 'Klon Centaur',
+    idea: 'Clean signal blended with soft clipping, so the attack of each note survives.',
+  },
 ];
+
+const unit = { min: 0, max: 1, step: 0.01, format: fmt.pct };
 
 export function PedalPanel({ pedal, onChange }: Props) {
   const info = PEDALS.find((p) => p.id === pedal.type);
   const setTs = (patch: Partial<TsSettings>) => onChange({ ...pedal, ts: { ...pedal.ts, ...patch } });
+  const setBd = (patch: Partial<BdSettings>) => onChange({ ...pedal, bd: { ...pedal.bd, ...patch } });
+  const setDs2 = (patch: Partial<Ds2Settings>) => onChange({ ...pedal, ds2: { ...pedal.ds2, ...patch } });
+  const setKlon = (patch: Partial<KlonSettings>) => onChange({ ...pedal, klon: { ...pedal.klon, ...patch } });
 
   return (
     <section className="panel pedal-panel">
@@ -63,7 +83,7 @@ export function PedalPanel({ pedal, onChange }: Props) {
             <div className="knobs">
               <Knob label="Drive" value={pedal.ts.drive} min={0} max={1} step={0.01} defaultValue={0.3} format={fmt.pct} onChange={(drive) => setTs({ drive })} />
               <Knob label="Tone" value={pedal.ts.tone} min={0} max={1} step={0.01} defaultValue={0.5} format={fmt.pct} onChange={(tone) => setTs({ tone })} />
-              <Knob label="Level" value={pedal.ts.level} min={-30} max={6} step={0.5} defaultValue={-6} format={fmt.db} onChange={(level) => setTs({ level })} />
+              <Knob label="Level" value={pedal.ts.level} min={-30} max={6} step={0.5} defaultValue={-9} format={fmt.db} onChange={(level) => setTs({ level })} />
             </div>
             <div className="switches">
               <div className="switch-row">
@@ -102,6 +122,45 @@ export function PedalPanel({ pedal, onChange }: Props) {
               {pedal.ts.highCut && <>, high cut at {fmt.hz(tsHighCut(pedal.ts.drive))}</>}.
             </p>
           </>
+        )}
+
+        {pedal.type === 'bd' && (
+          <div className="knobs">
+            <Knob label="Gain" value={pedal.bd.gain} {...unit} defaultValue={0.5} onChange={(gain) => setBd({ gain })} />
+            <Knob label="Tone" value={pedal.bd.tone} {...unit} defaultValue={0.5} onChange={(tone) => setBd({ tone })} />
+            <Knob label="Level" value={pedal.bd.level} min={-30} max={6} step={0.5} defaultValue={-9} format={fmt.db} onChange={(level) => setBd({ level })} />
+          </div>
+        )}
+
+        {pedal.type === 'ds2' && (
+          <>
+            <div className="knobs">
+              <Knob label="Dist" value={pedal.ds2.dist} {...unit} defaultValue={0.5} onChange={(dist) => setDs2({ dist })} />
+              <Knob label="Tone" value={pedal.ds2.tone} {...unit} defaultValue={0.5} onChange={(tone) => setDs2({ tone })} />
+              <Knob label="Level" value={pedal.ds2.level} min={-30} max={6} step={0.5} defaultValue={-7} format={fmt.db} onChange={(level) => setDs2({ level })} />
+            </div>
+            <div className="switches">
+              <div className="switch-row">
+                <span className="switch-label">Mode</span>
+                <div className="seg">
+                  <button className={pedal.ds2.turbo ? '' : 'on'} onClick={() => setDs2({ turbo: false })}>
+                    I
+                  </button>
+                  <button className={pedal.ds2.turbo ? 'on' : ''} onClick={() => setDs2({ turbo: true })}>
+                    II · Turbo
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {pedal.type === 'klon' && (
+          <div className="knobs">
+            <Knob label="Gain" value={pedal.klon.gain} {...unit} defaultValue={0.35} onChange={(gain) => setKlon({ gain })} />
+            <Knob label="Treble" value={pedal.klon.treble} {...unit} defaultValue={0.5} onChange={(treble) => setKlon({ treble })} />
+            <Knob label="Output" value={pedal.klon.output} min={-30} max={6} step={0.5} defaultValue={3} format={fmt.db} onChange={(output) => setKlon({ output })} />
+          </div>
         )}
       </div>
     </section>

@@ -12,7 +12,7 @@ export function expectedResponseDb(
   freqs: Float32Array,
 ): Float32Array | null {
   const pedalLinear = !s.pedal.on || s.pedal.type === 'boost';
-  if (!pedalLinear) return null;
+  if (!pedalLinear || s.amp.on) return null;
 
   const out = s.eq.on ? eqResponseDb(ctx, s.eq, freqs) : new Float32Array(freqs.length);
   if (s.pedal.on && s.pedal.type === 'boost') {

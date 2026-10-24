@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { AudioEngine } from '../audio/AudioEngine';
 import { expectedResponseDb } from '../audio/response';
 import type { ToneSettings } from '../audio/settings';
-import { pedalTransfer } from '../audio/transfer';
+import { ampTransfer, pedalTransfer } from '../audio/transfer';
 import { HarmonicsView } from './HarmonicsView';
 import { ResponseView } from './ResponseView';
 import { TransferView } from './TransferView';
@@ -19,7 +19,7 @@ type Props = {
 const TABS = [
   { id: 'spectrum', label: 'Spectrum' },
   { id: 'waveform', label: 'Waveform' },
-  { id: 'response', label: 'EQ response' },
+  { id: 'response', label: 'Filters' },
   { id: 'harmonics', label: 'Harmonics' },
   { id: 'transfer', label: 'Transfer' },
 ] as const;
@@ -30,6 +30,7 @@ export function ViewsPanel({ engine, settings, highlight, activeBand }: Props) {
   const [matchLevels, setMatchLevels] = useState(false);
   const [showDiff, setShowDiff] = useState(true);
   const [windowMs, setWindowMs] = useState(20);
+  const [transferOf, setTransferOf] = useState<'pedal' | 'amp'>('pedal');
 
   return (
     <section className="panel views">
@@ -58,7 +59,22 @@ export function ViewsPanel({ engine, settings, highlight, activeBand }: Props) {
       )}
       {tab === 'response' && <ResponseView ctx={engine.ctx} settings={settings} activeBand={activeBand} />}
       {tab === 'harmonics' && <HarmonicsView engine={engine} />}
-      {tab === 'transfer' && <TransferView transfer={pedalTransfer(settings.pedal)} />}
+      {tab === 'transfer' && (
+        <>
+          <div className="seg view-switch">
+            <button className={transferOf === 'pedal' ? 'on' : ''} onClick={() => setTransferOf('pedal')}>
+              Pedal
+            </button>
+            <button className={transferOf === 'amp' ? 'on' : ''} onClick={() => setTransferOf('amp')}>
+              Amp preamp
+            </button>
+          </div>
+          <TransferView
+            transfer={transferOf === 'pedal' ? pedalTransfer(settings.pedal) : ampTransfer(settings.amp)}
+            inputRange={transferOf === 'pedal' ? 0.5 : 1}
+          />
+        </>
+      )}
       {tab === 'waveform' && <WaveformView engine={engine} windowMs={windowMs} matchLevels={matchLevels} />}
 
       {(tab === 'spectrum' || tab === 'waveform') && (

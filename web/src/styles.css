@@ -133,3 +133,4 @@ input.text {
   border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; flex: 1; min-width: 0;
 }
 optgroup { color: var(--muted); }
+.view-switch { margin-bottom: 8px; }

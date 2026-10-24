@@ -1,5 +1,9 @@
+import { ampPreampTransfer } from './blocks/Amp';
+import { bdTransfer } from './blocks/BluesDriver';
+import { ds2Transfer } from './blocks/Ds2';
+import { klonTransfer } from './blocks/Klon';
 import { tsTransfer } from './blocks/TubeScreamer';
-import type { PedalSettings } from './settings';
+import type { AmpSettings, PedalSettings } from './settings';
 import { dbToGain } from './util';
 
 export type Transfer = { fn: (x: number) => number; note: string };
@@ -17,5 +21,27 @@ export function pedalTransfer(p: PedalSettings): Transfer {
         fn: tsTransfer(p.ts),
         note: 'Clipping stage for mid frequencies (above the hump), before tone and level.',
       };
+    case 'bd':
+      return {
+        fn: bdTransfer(p.bd),
+        note: 'Two gentle stages in series: the bend builds up gradually as gain rises.',
+      };
+    case 'ds2':
+      return {
+        fn: ds2Transfer(p.ds2),
+        note: 'Hard clipping: straight, then flat. Close to a square wave at high distortion.',
+      };
+    case 'klon':
+      return {
+        fn: klonTransfer(p.klon),
+        note: 'Clipped signal plus clean signal: the clean part keeps the line rising, so dynamics survive.',
+      };
   }
+}
+
+export function ampTransfer(a: AmpSettings): Transfer {
+  return {
+    fn: ampPreampTransfer(a),
+    note: 'Amp preamp stage at this volume. Lopsided like a tube: low volume stays near the straight part.',
+  };
 }

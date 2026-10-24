@@ -1,6 +1,9 @@
 import type { PedalSettings, PedalType } from '../settings';
 import { setParam, type Block } from '../util';
+import { BluesDriver } from './BluesDriver';
 import { BoostPedal } from './BoostPedal';
+import { Ds2 } from './Ds2';
+import { Klon } from './Klon';
 import { TubeScreamer } from './TubeScreamer';
 
 type Model = Block & { apply(s: PedalSettings): void };
@@ -21,9 +24,15 @@ export class PedalBlock implements Block {
 
     const boost = new BoostPedal(ctx);
     const ts = new TubeScreamer(ctx);
+    const bd = new BluesDriver(ctx);
+    const ds2 = new Ds2(ctx);
+    const klon = new Klon(ctx);
     this.models = {
       boost: { input: boost.input, output: boost.output, apply: (s) => boost.apply(s.boost) },
       ts: { input: ts.input, output: ts.output, apply: (s) => ts.apply(s.ts) },
+      bd: { input: bd.input, output: bd.output, apply: (s) => bd.apply(s.bd) },
+      ds2: { input: ds2.input, output: ds2.output, apply: (s) => ds2.apply(s.ds2) },
+      klon: { input: klon.input, output: klon.output, apply: (s) => klon.apply(s.klon) },
     };
 
     for (const [type, model] of Object.entries(this.models) as [PedalType, Model][]) {

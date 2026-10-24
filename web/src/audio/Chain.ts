@@ -1,3 +1,4 @@
+import { Amp } from './blocks/Amp';
 import { EqBlock } from './blocks/EqBlock';
 import { PedalBlock } from './blocks/PedalBlock';
 import type { ToneSettings } from './settings';
@@ -7,14 +8,16 @@ import { Slot } from './util';
 // depends on a BaseAudioContext, so the same chain can be built in an
 // OfflineAudioContext to export a processed file.
 //
-//   input ─ [EQ pre] ─ pedal ─ [EQ post] ─ output
+//   input ─ [EQ pre] ─ pedal ─ [EQ post] ─ amp ─ output
 export class Chain {
   readonly input: GainNode;
   readonly output: GainNode;
   readonly eq: EqBlock;
   readonly pedal: PedalBlock;
+  readonly amp: Amp;
   private readonly eqSlot: Slot;
   private readonly pedalSlot: Slot;
+  private readonly ampSlot: Slot;
   private orderKey = '';
 
   constructor(private readonly ctx: BaseAudioContext) {
@@ -24,6 +27,8 @@ export class Chain {
     this.pedal = new PedalBlock(ctx);
     this.eqSlot = new Slot(ctx, this.eq);
     this.pedalSlot = new Slot(ctx, this.pedal);
+    this.amp = new Amp(ctx);
+    this.ampSlot = new Slot(ctx, this.amp);
   }
 
   // Seconds of sound after the input ends (delay repeats, reverb decay);
@@ -33,18 +38,23 @@ export class Chain {
   }
 
   // Resolves once anything the chain loads asynchronously is in place.
-  async ready() {}
+  async ready() {
+    await this.amp.ready();
+  }
 
   apply(s: ToneSettings) {
     this.eq.apply(s.eq);
     this.eqSlot.setEnabled(s.eq.on);
     this.pedal.apply(s.pedal);
     this.pedalSlot.setEnabled(s.pedal.on);
+    this.amp.apply(s.amp);
+    this.ampSlot.setEnabled(s.amp.on);
     this.connect(s);
   }
 
   private order(s: ToneSettings): Slot[] {
-    return s.eq.position === 'pre' ? [this.eqSlot, this.pedalSlot] : [this.pedalSlot, this.eqSlot];
+    const front = s.eq.position === 'pre' ? [this.eqSlot, this.pedalSlot] : [this.pedalSlot, this.eqSlot];
+    return [...front, this.ampSlot];
   }
 
   // Rewire only when the order actually changes. While playing, fade the
@@ -82,6 +92,6 @@ export class Chain {
   }
 
   private slotName(sl: Slot) {
-    return sl === this.eqSlot ? 'eq' : 'pedal';
+    return sl === this.eqSlot ? 'eq' : sl === this.pedalSlot ? 'pedal' : 'amp';
   }
 }

@@ -22,18 +22,35 @@ export type TsSettings = {
   highCut: boolean; // the 51 pF cap across the drive pot
 };
 
-export type PedalType = 'boost' | 'ts';
+export type BdSettings = { gain: number; tone: number; level: number };
+export type Ds2Settings = { dist: number; tone: number; level: number; turbo: boolean };
+export type KlonSettings = { gain: number; treble: number; output: number };
+
+export type PedalType = 'boost' | 'ts' | 'bd' | 'ds2' | 'klon';
 
 export type PedalSettings = {
   on: boolean;
   type: PedalType;
   boost: BoostSettings;
   ts: TsSettings;
+  bd: BdSettings;
+  ds2: Ds2Settings;
+  klon: KlonSettings;
+};
+
+export type AmpSettings = {
+  on: boolean;
+  volume: number; // 0..1: clean at the bottom, breaks up near the top
+  bass: number;
+  middle: number;
+  treble: number;
+  cab: string; // 'builtin', 'off', or a file name in irs/cabinets
 };
 
 export type ToneSettings = {
   eq: EqSettings;
   pedal: PedalSettings;
+  amp: AmpSettings;
 };
 
 export const DEFAULT_SETTINGS: ToneSettings = {
@@ -53,8 +70,12 @@ export const DEFAULT_SETTINGS: ToneSettings = {
     on: true,
     type: 'ts',
     boost: { gain: 0 },
-    ts: { drive: 0.3, tone: 0.5, level: -6, clip: 'sym', hump: 720, bassPath: true, highCut: true },
+    ts: { drive: 0.3, tone: 0.5, level: -9, clip: 'sym', hump: 720, bassPath: true, highCut: true },
+    bd: { gain: 0.5, tone: 0.5, level: -9 },
+    ds2: { dist: 0.5, tone: 0.5, level: -7, turbo: false },
+    klon: { gain: 0.35, treble: 0.5, output: 3 },
   },
+  amp: { on: true, volume: 0.3, bass: 0.5, middle: 0.5, treble: 0.6, cab: 'builtin' },
 };
 
 // Merge saved settings over the defaults, so presets saved by an older
