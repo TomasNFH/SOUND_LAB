@@ -1,0 +1,26 @@
+services:
+  web:
+    build: ./web
+    ports:
+      - "5173:5173"
+    environment:
+      API_URL: http://api:3001
+    volumes:
+      # Live-reload the source; keep the container's own node_modules.
+      - ./web:/app
+      - /app/node_modules
+    depends_on:
+      - api
+
+  api:
+    build: ./api
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./api/src:/app/src
+      - tone-data:/data
+    command: ["npm", "run", "dev"]
+
+volumes:
+  # Holds recordings/, irs/cabinets/, irs/reverbs/, presets/, exports/.
+  tone-data:
