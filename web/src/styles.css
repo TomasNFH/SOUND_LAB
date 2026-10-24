@@ -127,3 +127,9 @@ select.compact { min-width: 0; flex: 0 0 auto; padding: 4px 8px; }
 .switches { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
 .switch-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .switch-label { font-size: 0.8rem; color: var(--muted); min-width: 64px; }
+
+input.text {
+  font: inherit; color: var(--text); background: #15161a;
+  border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; flex: 1; min-width: 0;
+}
+optgroup { color: var(--muted); }

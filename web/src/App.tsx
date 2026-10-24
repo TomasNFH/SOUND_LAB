@@ -6,6 +6,7 @@ import { ClipPanel } from './components/ClipPanel';
 import { EqPanel } from './components/EqPanel';
 import { fmt, Knob } from './components/Knob';
 import { PedalPanel } from './components/PedalPanel';
+import { PresetPanel } from './components/PresetPanel';
 import { ViewsPanel } from './views/ViewsPanel';
 
 // One engine for the page's lifetime; created outside React so re-renders
@@ -217,6 +218,7 @@ export function App() {
 
           <EqPanel eq={settings.eq} onChange={(eq) => patch('eq', eq)} onActiveBand={setActiveBand} />
           <PedalPanel pedal={settings.pedal} onChange={(pedal) => patch('pedal', pedal)} />
+          <PresetPanel engine={getEngine()} settings={settings} onLoad={setSettings} />
         </div>
       </div>
     </main>

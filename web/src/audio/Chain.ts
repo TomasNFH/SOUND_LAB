@@ -26,6 +26,15 @@ export class Chain {
     this.pedalSlot = new Slot(ctx, this.pedal);
   }
 
+  // Seconds of sound after the input ends (delay repeats, reverb decay);
+  // an export renders this much extra.
+  static tailSeconds(_s: ToneSettings) {
+    return 0;
+  }
+
+  // Resolves once anything the chain loads asynchronously is in place.
+  async ready() {}
+
   apply(s: ToneSettings) {
     this.eq.apply(s.eq);
     this.eqSlot.setEnabled(s.eq.on);
