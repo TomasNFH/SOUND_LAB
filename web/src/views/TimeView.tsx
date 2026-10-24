@@ -36,7 +36,7 @@ export function TimeView({ engine, settings }: Props) {
 
     // Delay repeats.
     const d = settings.delay;
-    const top = 18;
+    const top = 34; // below the two caption lines
     const base = half - 10;
     g.fillStyle = COLORS.label;
     g.fillText(d.on ? `Delay · ${d.mode}` : 'Delay (off)', 4, 12);
@@ -63,7 +63,7 @@ export function TimeView({ engine, settings }: Props) {
       }
       if (tape) {
         g.fillStyle = COLORS.label;
-        g.fillText(`each pass through the loop: lowpass at ${(tapeLoopCutoff(d.tone) / 1000).toFixed(1)} kHz`, 120, 12);
+        g.fillText(`each pass: lowpass at ${(tapeLoopCutoff(d.tone) / 1000).toFixed(1)} kHz`, 4, 26);
       }
     }
 
