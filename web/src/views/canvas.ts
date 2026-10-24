@@ -101,6 +101,7 @@ export function drawFreqGrid(
 ) {
   g.font = '10px system-ui, sans-serif';
   g.lineWidth = 1;
+  let lastLabelEnd = -Infinity;
   for (const f of FREQ_TICKS) {
     const x = Math.round(freqToX(f, w)) + 0.5;
     g.strokeStyle = COLORS.grid;
@@ -108,8 +109,13 @@ export function drawFreqGrid(
     g.moveTo(x, 0);
     g.lineTo(x, h);
     g.stroke();
+    // On narrow screens, skip labels that would run into the previous one.
+    const label = fmtHz(f);
+    const lx = Math.min(x + 3, w - g.measureText(label).width - 2);
+    if (lx < lastLabelEnd + 4) continue;
     g.fillStyle = COLORS.label;
-    g.fillText(fmtHz(f), Math.min(x + 3, w - 22), h - 4);
+    g.fillText(label, lx, h - 4);
+    lastLabelEnd = lx + g.measureText(label).width;
   }
   for (let db = Math.ceil(dbMin / dbStep) * dbStep; db <= dbMax; db += dbStep) {
     const y = Math.round(dbToY(db, h, dbMin, dbMax)) + 0.5;
