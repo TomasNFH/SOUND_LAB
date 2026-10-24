@@ -94,3 +94,11 @@ export class ShaperStage implements Block {
     this.output.curve = makeCurve(f, this.range);
   }
 }
+
+// A clean path to sum with an oversampled clipper. Oversampling delays the
+// clipper's output by a few samples; summing that with an undelayed copy
+// comb-filters the low end. Passing the clean copy through an identical
+// shaper with a straight-line curve gives it exactly the same delay.
+export function latencyMatchedPath(ctx: BaseAudioContext): Block {
+  return new ShaperStage(ctx, (x) => x);
+}

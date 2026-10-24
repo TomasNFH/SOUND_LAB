@@ -146,6 +146,10 @@ export class AudioEngine {
     this.sineLevel.gain.setTargetAtTime(dbToGain(levelDb), this.ctx.currentTime, PARAM_TC);
   }
 
+  get sineFrequency() {
+    return this.sineFreq;
+  }
+
   get canPlay() {
     return this.kind !== 'clip' || this.clip !== null;
   }

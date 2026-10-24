@@ -1,6 +1,7 @@
 import type { PedalSettings, PedalType } from '../settings';
 import { setParam, type Block } from '../util';
 import { BoostPedal } from './BoostPedal';
+import { TubeScreamer } from './TubeScreamer';
 
 type Model = Block & { apply(s: PedalSettings): void };
 
@@ -19,8 +20,10 @@ export class PedalBlock implements Block {
     this.output = ctx.createGain();
 
     const boost = new BoostPedal(ctx);
+    const ts = new TubeScreamer(ctx);
     this.models = {
       boost: { input: boost.input, output: boost.output, apply: (s) => boost.apply(s.boost) },
+      ts: { input: ts.input, output: ts.output, apply: (s) => ts.apply(s.ts) },
     };
 
     for (const [type, model] of Object.entries(this.models) as [PedalType, Model][]) {

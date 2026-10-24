@@ -12,12 +12,23 @@ export type EqSettings = {
 
 export type BoostSettings = { gain: number }; // dB
 
-export type PedalType = 'boost';
+export type TsSettings = {
+  drive: number; // 0..1, pot rotation
+  tone: number; // 0..1
+  level: number; // dB
+  clip: 'sym' | 'asym';
+  hump: 340 | 720 | 1500; // Hz, from the cap in the 4.7 kΩ leg
+  bassPath: boolean; // the clean "+1" path that keeps the bass undistorted
+  highCut: boolean; // the 51 pF cap across the drive pot
+};
+
+export type PedalType = 'boost' | 'ts';
 
 export type PedalSettings = {
   on: boolean;
   type: PedalType;
   boost: BoostSettings;
+  ts: TsSettings;
 };
 
 export type ToneSettings = {
@@ -40,8 +51,9 @@ export const DEFAULT_SETTINGS: ToneSettings = {
   },
   pedal: {
     on: true,
-    type: 'boost',
+    type: 'ts',
     boost: { gain: 0 },
+    ts: { drive: 0.3, tone: 0.5, level: -6, clip: 'sym', hump: 720, bassPath: true, highCut: true },
   },
 };
 
