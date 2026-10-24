@@ -2,11 +2,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AudioEngine, type EngineState } from './audio/AudioEngine';
 import { Knob } from './components/Knob';
 import { fetchRecording, listRecordings, uploadRecording, type Recording } from './api';
+import { ViewsPanel } from './views/ViewsPanel';
 
 // One engine for the page's lifetime; created outside React so re-renders
 // (and StrictMode double effects) never rebuild the audio graph.
 let engine: AudioEngine | null = null;
-const getEngine = () => (engine ??= new AudioEngine());
+const getEngine = () => {
+  if (!engine) {
+    engine = new AudioEngine();
+    // Handy for poking at the graph from the browser console in dev.
+    if (import.meta.env.DEV) (window as unknown as { engine: AudioEngine }).engine = engine;
+  }
+  return engine;
+};
 
 const formatTime = (s: number) => {
   const tenths = Math.floor(s * 10);
@@ -116,8 +124,13 @@ export function App() {
     <main className="app">
       <header className="header">
         <h1>Tone Lab</h1>
-        <span className="phase">Phase 1 · Player and A/B</span>
       </header>
+
+      <div className="layout">
+        <div className="col-views">
+          <ViewsPanel engine={getEngine()} />
+        </div>
+        <div className="col-controls">
 
       <section className="panel">
         <h2>Clip</h2>
@@ -251,6 +264,8 @@ export function App() {
           />
         </div>
       </section>
+        </div>
+      </div>
     </main>
   );
 }

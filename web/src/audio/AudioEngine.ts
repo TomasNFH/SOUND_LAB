@@ -185,6 +185,12 @@ export class AudioEngine {
     this.master.gain.setTargetAtTime(dbToGain(db), this.ctx.currentTime, PARAM_TC);
   }
 
+  // Gain level matching currently applies to the processed path. Views
+  // use it to draw "matched" curves; the analysers tap before it.
+  getMatchGain() {
+    return this.levelMatchOn ? this.levelMatch.gain.value : 1;
+  }
+
   getState(): EngineState {
     return {
       playing: this.source !== null,
