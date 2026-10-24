@@ -4,10 +4,10 @@ import { fetchFile, type AudioFolder } from '../api';
 // from the api's IR folders. Loaded files are cached and shared between
 // the live context and offline export contexts (both run at 48 kHz).
 
-type BiquadSpec = { type: 'lowpass' | 'highpass' | 'peaking'; f: number; q: number; gain?: number };
+export type BiquadSpec = { type: 'lowpass' | 'highpass' | 'peaking'; f: number; q: number; gain?: number };
 
 // RBJ cookbook biquad run over a buffer in place (direct form I).
-function runBiquad(data: Float32Array, sr: number, s: BiquadSpec) {
+export function runBiquad(data: Float32Array, sr: number, s: BiquadSpec) {
   const w0 = (2 * Math.PI * s.f) / sr;
   const cos = Math.cos(w0);
   const alpha = Math.sin(w0) / (2 * s.q);

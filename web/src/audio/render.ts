@@ -1,4 +1,6 @@
+import { isBuiltInReverb } from './blocks/Reverb';
 import { Chain } from './Chain';
+import { loadIr } from './ir';
 import type { ToneSettings } from './settings';
 import { dbToGain } from './util';
 
@@ -19,7 +21,11 @@ export async function renderProcessed(
   opts: { matchLoudness: boolean },
 ): Promise<RenderResult> {
   const sr = input.sampleRate;
-  const tail = Chain.tailSeconds(settings);
+  let irSeconds: number | undefined;
+  if (settings.reverb.on && !isBuiltInReverb(settings.reverb.type)) {
+    irSeconds = (await loadIr('reverbs', settings.reverb.type)).duration;
+  }
+  const tail = Chain.tailSeconds(settings, irSeconds);
   const ctx = new OfflineAudioContext(input.numberOfChannels, input.length + Math.round(tail * sr), sr);
   const chain = new Chain(ctx);
   chain.apply(settings);

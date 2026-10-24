@@ -55,6 +55,23 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
     pedal: { on: true, type: 'ts', ts: { drive: 0.7, level: -10 } },
     amp: { volume: 0.5, cab: 'off' },
   }),
+  preset('Tape echo after the amp', 'Repeats get darker and wobble: tape in the effects loop.', {
+    pedal: { on: true, type: 'ts', ts: { drive: 0.4 } },
+    amp: { volume: 0.55 },
+    fxPosition: 'post',
+    delay: { on: true, mode: 'tape', time: 0.42, feedback: 0.55, mix: 0.4, tone: 0.3, wow: 0.5 },
+  }),
+  preset('Delay before a crunchy amp', 'The amp distorts the echoes too: muddier, but more "in" the sound.', {
+    pedal: { on: false },
+    amp: { volume: 0.75 },
+    fxPosition: 'pre',
+    delay: { on: true, mode: 'digital', time: 0.35, feedback: 0.45, mix: 0.45 },
+  }),
+  preset('Surf spring', 'Clean amp drenched in spring reverb.', {
+    pedal: { on: false },
+    amp: { volume: 0.25, treble: 0.75 },
+    reverb: { on: true, type: 'spring', mix: 0.6, tone: 0.7 },
+  }),
   preset('EQ before TS: scoop', 'An EQ cut before the pedal changes what distorts.', {
     pedal: { on: true, type: 'ts', ts: { drive: 0.6, level: -10 } },
     eq: { on: true, position: 'pre', bands: withBand(2, { freq: 800, gain: -9, q: 1 }) },

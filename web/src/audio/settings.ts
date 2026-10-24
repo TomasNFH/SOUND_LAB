@@ -47,10 +47,30 @@ export type AmpSettings = {
   cab: string; // 'builtin', 'off', or a file name in irs/cabinets
 };
 
+export type DelaySettings = {
+  on: boolean;
+  mode: 'digital' | 'tape';
+  time: number; // seconds
+  feedback: number; // 0..0.95, share of each repeat fed back
+  mix: number; // wet level
+  tone: number; // tape: how bright the repeats stay
+  wow: number; // tape: depth of the time wobble
+};
+
+export type ReverbSettings = {
+  on: boolean;
+  type: string; // 'spring' | 'room' | 'hall' or a file name in irs/reverbs
+  mix: number;
+  tone: number;
+};
+
 export type ToneSettings = {
   eq: EqSettings;
   pedal: PedalSettings;
   amp: AmpSettings;
+  fxPosition: 'pre' | 'post'; // delay and reverb before or after the amp
+  delay: DelaySettings;
+  reverb: ReverbSettings;
 };
 
 export const DEFAULT_SETTINGS: ToneSettings = {
@@ -76,6 +96,9 @@ export const DEFAULT_SETTINGS: ToneSettings = {
     klon: { gain: 0.35, treble: 0.5, output: 3 },
   },
   amp: { on: true, volume: 0.3, bass: 0.5, middle: 0.5, treble: 0.6, cab: 'builtin' },
+  fxPosition: 'post',
+  delay: { on: false, mode: 'tape', time: 0.38, feedback: 0.45, mix: 0.35, tone: 0.4, wow: 0.3 },
+  reverb: { on: false, type: 'spring', mix: 0.3, tone: 0.6 },
 };
 
 // Merge saved settings over the defaults, so presets saved by an older

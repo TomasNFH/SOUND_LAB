@@ -12,7 +12,9 @@ export function expectedResponseDb(
   freqs: Float32Array,
 ): Float32Array | null {
   const pedalLinear = !s.pedal.on || s.pedal.type === 'boost';
-  if (!pedalLinear || s.amp.on) return null;
+  // Delay and reverb are linear too, but their combs and tails don't
+  // compare cleanly with a smoothed spectrum.
+  if (!pedalLinear || s.amp.on || s.delay.on || s.reverb.on) return null;
 
   const out = s.eq.on ? eqResponseDb(ctx, s.eq, freqs) : new Float32Array(freqs.length);
   if (s.pedal.on && s.pedal.type === 'boost') {

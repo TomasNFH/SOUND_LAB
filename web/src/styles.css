@@ -134,3 +134,5 @@ input.text {
 }
 optgroup { color: var(--muted); }
 .view-switch { margin-bottom: 8px; }
+.fx-block { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 10px; }
+.sub-title { font-weight: 600; margin-right: auto; }

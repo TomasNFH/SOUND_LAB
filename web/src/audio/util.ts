@@ -81,11 +81,12 @@ export class ShaperStage implements Block {
     ctx: BaseAudioContext,
     f: (x: number) => number,
     readonly range = 32,
+    oversample: OverSampleType = '4x',
   ) {
     this.input = ctx.createGain();
     this.input.gain.value = 1 / range;
     this.output = ctx.createWaveShaper();
-    this.output.oversample = '4x';
+    this.output.oversample = oversample;
     this.output.curve = makeCurve(f, range);
     this.input.connect(this.output);
   }

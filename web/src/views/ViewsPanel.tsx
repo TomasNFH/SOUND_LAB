@@ -5,6 +5,7 @@ import type { ToneSettings } from '../audio/settings';
 import { ampTransfer, pedalTransfer } from '../audio/transfer';
 import { HarmonicsView } from './HarmonicsView';
 import { ResponseView } from './ResponseView';
+import { TimeView } from './TimeView';
 import { TransferView } from './TransferView';
 import { SpectrumView } from './SpectrumView';
 import { WaveformView } from './WaveformView';
@@ -22,6 +23,7 @@ const TABS = [
   { id: 'response', label: 'Filters' },
   { id: 'harmonics', label: 'Harmonics' },
   { id: 'transfer', label: 'Transfer' },
+  { id: 'time', label: 'Delay & reverb' },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
@@ -75,6 +77,7 @@ export function ViewsPanel({ engine, settings, highlight, activeBand }: Props) {
           />
         </>
       )}
+      {tab === 'time' && <TimeView engine={engine} settings={settings} />}
       {tab === 'waveform' && <WaveformView engine={engine} windowMs={windowMs} matchLevels={matchLevels} />}
 
       {(tab === 'spectrum' || tab === 'waveform') && (

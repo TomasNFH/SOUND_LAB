@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS, type ToneSettings } from './audio/settings';
 import { AmpPanel } from './components/AmpPanel';
 import { ClipPanel } from './components/ClipPanel';
 import { EqPanel } from './components/EqPanel';
+import { FxPanel } from './components/FxPanel';
 import { fmt, Knob } from './components/Knob';
 import { PedalPanel } from './components/PedalPanel';
 import { PresetPanel } from './components/PresetPanel';
@@ -220,6 +221,7 @@ export function App() {
           <EqPanel eq={settings.eq} onChange={(eq) => patch('eq', eq)} onActiveBand={setActiveBand} />
           <PedalPanel pedal={settings.pedal} onChange={(pedal) => patch('pedal', pedal)} />
           <AmpPanel amp={settings.amp} onChange={(amp) => patch('amp', amp)} />
+          <FxPanel settings={settings} onChange={(p) => setSettings((s) => ({ ...s, ...p }))} />
           <PresetPanel engine={getEngine()} settings={settings} onLoad={setSettings} />
         </div>
       </div>
