@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { AudioEngine, type EngineState } from './audio/AudioEngine';
-import { Knob } from './components/Knob';
-import { fetchRecording, listRecordings, uploadRecording, type Recording } from './api';
+import { useCallback, useEffect, useState } from 'react';
+import { AudioEngine, type EngineState, type SourceKind } from './audio/AudioEngine';
+import { bandRange } from './audio/blocks/EqBlock';
+import { DEFAULT_SETTINGS, type ToneSettings } from './audio/settings';
+import { ClipPanel } from './components/ClipPanel';
+import { EqPanel } from './components/EqPanel';
+import { fmt, Knob } from './components/Knob';
+import { PedalPanel } from './components/PedalPanel';
 import { ViewsPanel } from './views/ViewsPanel';
 
 // One engine for the page's lifetime; created outside React so re-renders
@@ -16,21 +20,25 @@ const getEngine = () => {
   return engine;
 };
 
+const SOURCES: { id: SourceKind; label: string }[] = [
+  { id: 'clip', label: 'Clip' },
+  { id: 'sine', label: 'Sine' },
+  { id: 'noise', label: 'Pink noise' },
+  { id: 'sweep', label: 'Sweep' },
+];
+
 const formatTime = (s: number) => {
   const tenths = Math.floor(s * 10);
   const sec = (tenths % 600) / 10;
   return `${Math.floor(tenths / 600)}:${sec.toFixed(1).padStart(4, '0')}`;
 };
-const formatDb = (db: number) => `${db > 0 ? '+' : ''}${db.toFixed(1)} dB`;
 
 export function App() {
-  const [clipName, setClipName] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const [library, setLibrary] = useState<Recording[] | null>(null);
-  const [apiOk, setApiOk] = useState(true);
-
+  const [settings, setSettings] = useState<ToneSettings>(() => structuredClone(DEFAULT_SETTINGS));
   const [engineState, setEngineState] = useState<EngineState>({
     playing: false,
+    canPlay: false,
+    source: 'clip',
     position: 0,
     duration: 0,
     levelMatchDb: 0,
@@ -38,16 +46,25 @@ export function App() {
   const [bypassed, setBypassed] = useState(false);
   const [loop, setLoop] = useState(true);
   const [levelMatch, setLevelMatch] = useState(true);
-  const [testGainDb, setTestGainDb] = useState(6);
   const [masterDb, setMasterDb] = useState(-6);
-  const fileInput = useRef<HTMLInputElement>(null);
+  const [activeBand, setActiveBand] = useState<number | null>(null);
+  const [source, setSource] = useState<SourceKind>('clip');
+  const [sineFreq, setSineFreq] = useState(220);
+  const [sineDb, setSineDb] = useState(-12);
 
   // Push UI values into the engine. Values only ever flow this way.
+  useEffect(() => getEngine().applySettings(settings), [settings]);
   useEffect(() => getEngine().setBypass(bypassed), [bypassed]);
   useEffect(() => getEngine().setLoop(loop), [loop]);
   useEffect(() => getEngine().setLevelMatch(levelMatch), [levelMatch]);
-  useEffect(() => getEngine().setTestGainDb(testGainDb), [testGainDb]);
   useEffect(() => getEngine().setMasterDb(masterDb), [masterDb]);
+  useEffect(() => getEngine().setSource(source), [source]);
+  useEffect(() => getEngine().setSine(sineFreq, sineDb), [sineFreq, sineDb]);
+
+  // Dev only: drive the UI state from the browser console or tests.
+  useEffect(() => {
+    if (import.meta.env.DEV) Object.assign(window, { ui: { setSettings, setSource, setSineFreq, setBypassed } });
+  }, []);
 
   // Poll the engine for transport position and the level-match readout.
   useEffect(() => {
@@ -55,50 +72,14 @@ export function App() {
     return () => window.clearInterval(id);
   }, []);
 
-  const refreshLibrary = useCallback(async () => {
-    try {
-      setLibrary(await listRecordings());
-      setApiOk(true);
-    } catch {
-      setApiOk(false);
-      setLibrary(null);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refreshLibrary();
-  }, [refreshLibrary]);
-
-  const load = async (name: string, getData: () => Promise<ArrayBuffer>) => {
-    setStatus(`Loading ${name}…`);
-    try {
-      const buffer = await getEngine().loadArrayBuffer(await getData());
-      setClipName(name);
-      setStatus(
-        `${buffer.numberOfChannels === 1 ? 'Mono' : `${buffer.numberOfChannels} ch`}, ` +
-          `${buffer.duration.toFixed(1)} s, playing at ${buffer.sampleRate / 1000} kHz`,
-      );
-    } catch (err) {
-      setStatus(`Could not load ${name}: ${(err as Error).message}`);
-    }
-  };
-
-  const onFilePicked = async (file: File) => {
-    // Save to the shared library when the api is up, so it's there next time.
-    if (apiOk) {
-      try {
-        await uploadRecording(file);
-        void refreshLibrary();
-      } catch (err) {
-        setStatus((err as Error).message);
-      }
-    }
-    await load(file.name, () => file.arrayBuffer());
-  };
+  const patch = useCallback(
+    <K extends keyof ToneSettings>(key: K, value: ToneSettings[K]) => setSettings((s) => ({ ...s, [key]: value })),
+    [],
+  );
 
   const togglePlay = useCallback(() => {
     const e = getEngine();
-    if (!e.hasBuffer) return;
+    if (!e.canPlay) return;
     if (e.getState().playing) e.pause();
     else void e.play();
   }, []);
@@ -106,7 +87,8 @@ export function App() {
   // Space = play/pause, B = A/B switch.
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
-      if (ev.target instanceof HTMLInputElement || ev.target instanceof HTMLSelectElement) return;
+      const t = ev.target;
+      if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return;
       if (ev.code === 'Space') {
         ev.preventDefault();
         togglePlay();
@@ -118,7 +100,11 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [togglePlay]);
 
-  const { playing, position, duration, levelMatchDb } = engineState;
+  const { playing, canPlay, position, duration, levelMatchDb } = engineState;
+  const highlight =
+    activeBand !== null && settings.eq.on && settings.eq.bands[activeBand]?.on
+      ? bandRange(settings.eq.bands[activeBand])
+      : null;
 
   return (
     <main className="app">
@@ -128,142 +114,109 @@ export function App() {
 
       <div className="layout">
         <div className="col-views">
-          <ViewsPanel engine={getEngine()} />
+          <ViewsPanel engine={getEngine()} settings={settings} highlight={highlight} activeBand={activeBand} />
         </div>
+
         <div className="col-controls">
+          <section className="panel">
+            <div className="panel-head">
+              <h2>Source</h2>
+              <div className="seg" role="group" aria-label="Source">
+                {SOURCES.map((s) => (
+                  <button key={s.id} className={source === s.id ? 'on' : ''} onClick={() => setSource(s.id)}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Kept mounted so the chosen clip survives switching to a test signal. */}
+            <div hidden={source !== 'clip'}>
+              <ClipPanel engine={getEngine()} />
+            </div>
+            {source === 'sine' && (
+              <>
+                <p className="muted small">A pure tone: anything above its frequency on the spectrum was added by the chain.</p>
+                <div className="knobs">
+                  <Knob label="Frequency" value={sineFreq} min={40} max={2000} scale="log" defaultValue={220} format={fmt.hz} onChange={setSineFreq} />
+                  <Knob label="Level" value={sineDb} min={-40} max={0} step={0.5} defaultValue={-12} format={fmt.db} onChange={setSineDb} />
+                </div>
+              </>
+            )}
+            {source === 'noise' && (
+              <p className="muted small">Pink noise is flat on this log spectrum, so the difference curve shows the chain's frequency response directly.</p>
+            )}
+            {source === 'sweep' && (
+              <p className="muted small">A 4 s sweep from 20 Hz to 20 kHz. Watch the spectrum peak travel across while filters change its height.</p>
+            )}
+          </section>
 
-      <section className="panel">
-        <h2>Clip</h2>
-        <div className="row">
-          <select
-            value={clipName && library?.some((r) => r.name === clipName) ? clipName : ''}
-            disabled={!library || library.length === 0}
-            onChange={(e) => {
-              const name = e.target.value;
-              if (name) void load(name, () => fetchRecording(name));
-            }}
-          >
-            <option value="">
-              {!apiOk ? 'Library offline' : library?.length ? 'Choose a recording…' : 'Library is empty'}
-            </option>
-            {library?.map((r) => (
-              <option key={r.name} value={r.name}>
-                {r.name}
-              </option>
-            ))}
-          </select>
-          <button onClick={() => fileInput.current?.click()}>
-            {apiOk ? 'Add WAV…' : 'Open WAV…'}
-          </button>
-          <input
-            ref={fileInput}
-            type="file"
-            accept="audio/*,.wav"
-            hidden
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void onFilePicked(file);
-              e.target.value = '';
-            }}
-          />
-        </div>
-        <p className="muted">
-          {clipName ? <strong>{clipName}</strong> : 'No clip loaded.'} {status}
-        </p>
-        {!apiOk && (
-          <p className="muted">
-            The api isn't reachable, so files open locally and aren't saved to the library.
-          </p>
-        )}
-      </section>
-
-      <section className="panel">
-        <h2>Transport</h2>
-        <div className="row">
-          <button className="primary" onClick={togglePlay} disabled={!duration}>
-            {playing ? 'Pause' : 'Play'}
-          </button>
-          <button onClick={() => getEngine().stop()} disabled={!duration}>
-            Stop
-          </button>
-          <label className="check">
-            <input type="checkbox" checked={loop} onChange={(e) => setLoop(e.target.checked)} />
-            Loop
-          </label>
-          <span className="time">
-            {formatTime(position)} / {formatTime(duration)}
-          </span>
-        </div>
-        <input
-          className="seek"
-          type="range"
-          min={0}
-          max={duration || 1}
-          step={0.01}
-          value={position}
-          disabled={!duration}
-          onChange={(e) => getEngine().seek(Number(e.target.value))}
-        />
-      </section>
-
-      <section className="panel">
-        <h2>A/B</h2>
-        <div className="ab">
-          <button
-            className={`ab-switch ${bypassed ? 'is-dry' : 'is-wet'}`}
-            onClick={() => setBypassed((b) => !b)}
-            aria-pressed={!bypassed}
-          >
-            <span className={bypassed ? 'on' : ''}>A · Dry</span>
-            <span className={bypassed ? '' : 'on'}>B · Processed</span>
-          </button>
-          <p className="muted">Press B to switch, Space to play or pause.</p>
-        </div>
-
-        <div className="row">
-          <label className="check">
+          <section className="panel">
+            <h2>Transport</h2>
+            <div className="row">
+              <button className="primary" onClick={togglePlay} disabled={!canPlay}>
+                {playing ? 'Pause' : 'Play'}
+              </button>
+              <button onClick={() => getEngine().stop()} disabled={!canPlay}>
+                Stop
+              </button>
+              <label className="check">
+                <input type="checkbox" checked={loop} onChange={(e) => setLoop(e.target.checked)} />
+                Loop
+              </label>
+              <span className="time">
+                {formatTime(position)} / {formatTime(duration)}
+              </span>
+            </div>
             <input
-              type="checkbox"
-              checked={levelMatch}
-              onChange={(e) => setLevelMatch(e.target.checked)}
+              className="seek"
+              type="range"
+              min={0}
+              max={duration || 1}
+              step={0.01}
+              value={position}
+              disabled={!duration}
+              onChange={(e) => getEngine().seek(Number(e.target.value))}
             />
-            Level matching
-          </label>
-          <span className="muted">
-            {levelMatch ? `Processed corrected by ${formatDb(levelMatchDb)}` : 'Off: louder will sound better'}
-          </span>
-        </div>
-      </section>
+          </section>
 
-      <section className="panel">
-        <h2>Effect</h2>
-        <p className="muted">
-          A plain gain stage stands in for the effect for now. With level matching on, A and B
-          should sound equally loud at any setting.
-        </p>
-        <div className="knobs">
-          <Knob
-            label="Test gain"
-            value={testGainDb}
-            min={-12}
-            max={18}
-            step={0.5}
-            defaultValue={6}
-            format={formatDb}
-            onChange={setTestGainDb}
-          />
-          <Knob
-            label="Volume"
-            value={masterDb}
-            min={-40}
-            max={0}
-            step={0.5}
-            defaultValue={-6}
-            format={formatDb}
-            onChange={setMasterDb}
-          />
-        </div>
-      </section>
+          <section className="panel">
+            <h2>A/B</h2>
+            <div className="ab">
+              <button
+                className={`ab-switch ${bypassed ? 'is-dry' : 'is-wet'}`}
+                onClick={() => setBypassed((b) => !b)}
+                aria-pressed={!bypassed}
+              >
+                <span className={bypassed ? 'on' : ''}>A · Dry</span>
+                <span className={bypassed ? '' : 'on'}>B · Processed</span>
+              </button>
+              <p className="muted">Press B to switch, Space to play or pause.</p>
+            </div>
+            <div className="row">
+              <label className="check">
+                <input type="checkbox" checked={levelMatch} onChange={(e) => setLevelMatch(e.target.checked)} />
+                Level matching
+              </label>
+              <span className="muted inline">
+                {levelMatch ? `Processed corrected by ${fmt.db(levelMatchDb)}` : 'Off: louder will sound better'}
+              </span>
+            </div>
+            <div className="knobs">
+              <Knob
+                label="Volume"
+                value={masterDb}
+                min={-40}
+                max={0}
+                step={0.5}
+                defaultValue={-6}
+                format={fmt.db}
+                onChange={setMasterDb}
+              />
+            </div>
+          </section>
+
+          <EqPanel eq={settings.eq} onChange={(eq) => patch('eq', eq)} onActiveBand={setActiveBand} />
+          <PedalPanel pedal={settings.pedal} onChange={(pedal) => patch('pedal', pedal)} />
         </div>
       </div>
     </main>

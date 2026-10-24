@@ -106,3 +106,20 @@ select { min-width: 220px; flex: 1; }
 .swatch.diff { background: #f0a848; }
 .swatch.alt { background: #6fa8ff; }
 select.compact { min-width: 0; flex: 0 0 auto; padding: 4px 8px; }
+
+.panel-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+.panel-head h2 { margin: 0; margin-right: auto; }
+.muted.small { font-size: 0.82rem; margin-top: 4px; }
+.muted.inline { margin: 0; }
+.disabled { opacity: 0.45; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 5px 10px; font-size: 0.82rem; background: transparent; color: var(--muted); }
+.seg button.on { background: #3a3e48; color: var(--text); }
+.eq-bands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.eq-band { border: 1px solid var(--border); border-radius: 8px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.eq-band.off { opacity: 0.5; }
+.band-title { font-size: 0.8rem; }
+.knob.small { width: 70px; }
+.knob.small .knob-dial { width: 40px; height: 40px; }
+.knob.small .knob-pointer::after { top: 3px; height: 10px; }
+.knobs.disabled { pointer-events: none; }

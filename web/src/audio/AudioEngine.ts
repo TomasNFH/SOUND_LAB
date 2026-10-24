@@ -3,10 +3,15 @@
 //
 //   source ─┬─────────────────────────────── dryGain ──┐
 //           │                                           ├─ master ─ destination
-//           └─ effect chain ─ levelMatch ─── wetGain ──┘
+//           └─ chain ──────── levelMatch ─── wetGain ──┘
 //
 // Dry and processed run in parallel all the time, so A/B is a crossfade
 // between dryGain and wetGain rather than a reconnect (no clicks).
+
+import { Chain } from './Chain';
+import type { ToneSettings } from './settings';
+import { makeLogSweep, makePinkNoise } from './signals';
+import { dbToGain, gainToDb } from './util';
 
 const CROSSFADE_TC = 0.01; // seconds; ~50 ms to settle
 const PARAM_TC = 0.02;
@@ -14,21 +19,28 @@ const MATCH_TC = 0.25;
 const MATCH_LIMIT_DB = 24;
 const SILENCE_RMS = 1e-4;
 
+// Where the signal comes from. The clip is for listening; the generated
+// signals are for analysis (harmonics, transfer, filter responses).
+export type SourceKind = 'clip' | 'sine' | 'noise' | 'sweep';
+
 export type EngineState = {
   playing: boolean;
+  canPlay: boolean;
+  source: SourceKind;
   position: number; // seconds into the buffer
   duration: number;
   levelMatchDb: number; // gain currently applied by level matching
 };
 
-const dbToGain = (db: number) => Math.pow(10, db / 20);
-const gainToDb = (g: number) => 20 * Math.log10(g);
-
 export class AudioEngine {
   readonly ctx: AudioContext;
 
-  private buffer: AudioBuffer | null = null;
-  private source: AudioBufferSourceNode | null = null;
+  private clip: AudioBuffer | null = null;
+  private generated = new Map<SourceKind, AudioBuffer>();
+  private kind: SourceKind = 'clip';
+  private source: AudioScheduledSourceNode | null = null;
+  private readonly sineLevel: GainNode;
+  private sineFreq = 220;
   private startedAt = 0; // ctx time when playback (re)started
   private offset = 0; // buffer position at startedAt
   private loop = true;
@@ -41,10 +53,8 @@ export class AudioEngine {
   private readonly wetGain: GainNode;
   private readonly master: GainNode;
 
-  // Phase 1 placeholder effect: a plain gain stage, enough to prove that
-  // level matching keeps A/B honest. Later phases replace the chain
-  // between effectIn and effectOut.
-  private readonly testGain: GainNode;
+  readonly chain: Chain;
+  private settings: ToneSettings | null = null;
 
   // Analysers used to measure loudness of each path for level matching.
   // They also become the before/after taps for the phase 2 views.
@@ -65,9 +75,12 @@ export class AudioEngine {
     const c = this.ctx;
 
     this.input = c.createGain();
+    this.sineLevel = c.createGain();
+    this.sineLevel.gain.value = dbToGain(-12);
+    this.sineLevel.connect(this.input);
     this.effectIn = c.createGain();
     this.effectOut = c.createGain();
-    this.testGain = c.createGain();
+    this.chain = new Chain(c);
     this.levelMatch = c.createGain();
     this.dryGain = c.createGain();
     this.wetGain = c.createGain();
@@ -86,7 +99,8 @@ export class AudioEngine {
     this.input.connect(this.dryAnalyser);
 
     this.input.connect(this.effectIn);
-    this.effectIn.connect(this.testGain).connect(this.effectOut);
+    this.effectIn.connect(this.chain.input);
+    this.chain.output.connect(this.effectOut);
     // Measure the effect before level matching, so the correction
     // doesn't feed back into its own measurement.
     this.effectOut.connect(this.wetAnalyser);
@@ -103,25 +117,75 @@ export class AudioEngine {
 
   async loadArrayBuffer(data: ArrayBuffer) {
     const buffer = await this.ctx.decodeAudioData(data);
-    this.stop();
-    this.buffer = buffer;
-    this.offset = 0;
-    this.dryPower = 0;
-    this.wetPower = 0;
+    this.clip = buffer;
+    if (this.kind === 'clip') this.resetTransport();
     return buffer;
   }
 
-  get hasBuffer() {
-    return this.buffer !== null;
+  get clipBuffer() {
+    return this.clip;
+  }
+
+  // Switching source stops playback; the level-match average starts over
+  // because the new signal has a different loudness.
+  setSource(kind: SourceKind) {
+    if (kind === this.kind) return;
+    this.kind = kind;
+    this.resetTransport();
+  }
+
+  get sourceKind() {
+    return this.kind;
+  }
+
+  setSine(freq: number, levelDb: number) {
+    this.sineFreq = freq;
+    if (this.source instanceof OscillatorNode) {
+      this.source.frequency.setTargetAtTime(freq, this.ctx.currentTime, 0.01);
+    }
+    this.sineLevel.gain.setTargetAtTime(dbToGain(levelDb), this.ctx.currentTime, PARAM_TC);
+  }
+
+  get canPlay() {
+    return this.kind !== 'clip' || this.clip !== null;
+  }
+
+  private get buffer(): AudioBuffer | null {
+    if (this.kind === 'clip') return this.clip;
+    if (this.kind === 'sine') return null;
+    let b = this.generated.get(this.kind);
+    if (!b) {
+      b = this.kind === 'noise' ? makePinkNoise(this.ctx, 8) : makeLogSweep(this.ctx, 4);
+      this.generated.set(this.kind, b);
+    }
+    return b;
+  }
+
+  private resetTransport() {
+    this.stop();
+    this.dryPower = 0;
+    this.wetPower = 0;
   }
 
   async play() {
-    if (!this.buffer || this.source) return;
+    if (this.source || !this.canPlay) return;
     if (this.ctx.state === 'suspended') await this.ctx.resume();
 
+    if (this.kind === 'sine') {
+      const osc = this.ctx.createOscillator();
+      osc.frequency.value = this.sineFreq;
+      osc.connect(this.sineLevel);
+      osc.start();
+      this.startedAt = this.ctx.currentTime;
+      this.source = osc;
+      return;
+    }
+
+    const buffer = this.buffer!;
     const src = this.ctx.createBufferSource();
-    src.buffer = this.buffer;
-    src.loop = this.loop;
+    src.buffer = buffer;
+    // Generated signals always loop; the clip follows the loop switch.
+    src.loop = this.kind !== 'clip' || this.loop;
     src.connect(this.input);
     src.onended = () => {
       // Fires on stop() too; only reset when the clip ran out by itself.
@@ -130,7 +194,7 @@ export class AudioEngine {
         this.offset = 0;
       }
     };
-    if (this.offset >= this.buffer.duration) this.offset = 0;
+    if (this.offset >= buffer.duration) this.offset = 0;
     src.start(0, this.offset);
     this.startedAt = this.ctx.currentTime;
     this.source = src;
@@ -157,7 +221,7 @@ export class AudioEngine {
 
   setLoop(loop: boolean) {
     this.loop = loop;
-    if (this.source) this.source.loop = loop;
+    if (this.source instanceof AudioBufferSourceNode && this.kind === 'clip') this.source.loop = loop;
   }
 
   // A/B switch: crossfade between the dry and processed paths.
@@ -177,8 +241,13 @@ export class AudioEngine {
     if (!on) this.levelMatch.gain.setTargetAtTime(1, this.ctx.currentTime, PARAM_TC);
   }
 
-  setTestGainDb(db: number) {
-    this.testGain.gain.setTargetAtTime(dbToGain(db), this.ctx.currentTime, PARAM_TC);
+  applySettings(settings: ToneSettings) {
+    this.settings = settings;
+    this.chain.apply(settings);
+  }
+
+  get currentSettings() {
+    return this.settings;
   }
 
   setMasterDb(db: number) {
@@ -194,8 +263,10 @@ export class AudioEngine {
   getState(): EngineState {
     return {
       playing: this.source !== null,
+      canPlay: this.canPlay,
+      source: this.kind,
       position: this.currentPosition(),
-      duration: this.buffer?.duration ?? 0,
+      duration: this.kind === 'sine' ? 0 : (this.buffer?.duration ?? 0),
       levelMatchDb: gainToDb(this.levelMatch.gain.value),
     };
   }
@@ -207,11 +278,13 @@ export class AudioEngine {
   }
 
   private currentPosition() {
-    if (!this.buffer) return 0;
+    if (this.kind === 'sine') return this.source ? this.ctx.currentTime - this.startedAt : 0;
+    const buffer = this.buffer;
+    if (!buffer) return 0;
     if (!this.source) return this.offset;
     const elapsed = this.offset + (this.ctx.currentTime - this.startedAt);
-    const d = this.buffer.duration;
-    return this.loop ? elapsed % d : Math.min(elapsed, d);
+    const loops = this.kind !== 'clip' || this.loop;
+    return loops ? elapsed % buffer.duration : Math.min(elapsed, buffer.duration);
   }
 
   private stopSource() {

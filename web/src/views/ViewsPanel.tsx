@@ -1,20 +1,26 @@
 import { useState } from 'react';
 import type { AudioEngine } from '../audio/AudioEngine';
+import { expectedResponseDb } from '../audio/response';
+import type { ToneSettings } from '../audio/settings';
+import { ResponseView } from './ResponseView';
 import { SpectrumView } from './SpectrumView';
 import { WaveformView } from './WaveformView';
 
 type Props = {
   engine: AudioEngine;
+  settings: ToneSettings;
   highlight?: { lo: number; hi: number } | null;
+  activeBand: number | null;
 };
 
 const TABS = [
   { id: 'spectrum', label: 'Spectrum' },
   { id: 'waveform', label: 'Waveform' },
+  { id: 'response', label: 'EQ response' },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
-export function ViewsPanel({ engine, highlight }: Props) {
+export function ViewsPanel({ engine, settings, highlight, activeBand }: Props) {
   const [tab, setTab] = useState<TabId>('spectrum');
   const [matchLevels, setMatchLevels] = useState(false);
   const [showDiff, setShowDiff] = useState(true);
@@ -37,8 +43,15 @@ export function ViewsPanel({ engine, highlight }: Props) {
       </div>
 
       {tab === 'spectrum' && (
-        <SpectrumView engine={engine} matchLevels={matchLevels} showDiff={showDiff} highlight={highlight} />
+        <SpectrumView
+          engine={engine}
+          matchLevels={matchLevels}
+          showDiff={showDiff}
+          highlight={highlight}
+          expected={(freqs) => expectedResponseDb(engine.ctx, settings, freqs)}
+        />
       )}
+      {tab === 'response' && <ResponseView ctx={engine.ctx} settings={settings} activeBand={activeBand} />}
       {tab === 'waveform' && <WaveformView engine={engine} windowMs={windowMs} matchLevels={matchLevels} />}
 
       <div className="row view-options">
@@ -46,7 +59,7 @@ export function ViewsPanel({ engine, highlight }: Props) {
           <i className="swatch dry" /> Before <i className="swatch wet" /> After
           {tab === 'spectrum' && showDiff && (
             <>
-              <i className="swatch diff" /> Difference
+              <i className="swatch diff" /> Measured <i className="swatch alt" /> Expected
             </>
           )}
         </span>

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import type { AudioEngine } from '../audio/AudioEngine';
-import { COLORS, dbToY, drawFreqGrid, freqToX, useCanvasLoop, xToFreq } from './canvas';
+import { COLORS, dbToY, drawFreqGrid, freqToX, logFrequencies, useCanvasLoop, xToFreq } from './canvas';
 
 type Props = {
   engine: AudioEngine;
@@ -8,6 +8,8 @@ type Props = {
   showDiff: boolean;
   // Frequency range to shade, e.g. the EQ band being edited.
   highlight?: { lo: number; hi: number } | null;
+  // Predicted after-minus-before curve, drawn dashed in the difference strip.
+  expected?: ((freqs: Float32Array) => Float32Array | null) | null;
 };
 
 const DB_MIN = -110;
@@ -17,7 +19,7 @@ const SILENCE_DB = -100;
 
 // Before/after spectrum on a log frequency axis, same dB scale for both,
 // with an optional "after minus before" strip underneath.
-export function SpectrumView({ engine, matchLevels, showDiff, highlight }: Props) {
+export function SpectrumView({ engine, matchLevels, showDiff, highlight, expected }: Props) {
   const raw = useRef<{ dry: Float32Array; wet: Float32Array } | null>(null);
 
   const canvasRef = useCanvasLoop((g, w, h) => {
@@ -81,6 +83,24 @@ export function SpectrumView({ engine, matchLevels, showDiff, highlight }: Props
     g.fillStyle = COLORS.label;
     g.font = '10px system-ui, sans-serif';
     g.fillText(`after − before, ±${DIFF_RANGE} dB`, 4, diffTop + 10);
+
+    const predicted = expected?.(logFrequencies(columns));
+    if (predicted) {
+      // The level-matching offset applies to the measurement, so apply it
+      // to the prediction as well.
+      g.strokeStyle = COLORS.accent2;
+      g.lineWidth = 1.5;
+      g.setLineDash([5, 4]);
+      g.beginPath();
+      for (let i = 0; i < columns; i++) {
+        const d = Math.max(-DIFF_RANGE, Math.min(DIFF_RANGE, predicted[i] + wetOffset));
+        const y = mid - (d / DIFF_RANGE) * (diffH / 2);
+        if (i === 0) g.moveTo(i, y);
+        else g.lineTo(i, y);
+      }
+      g.stroke();
+      g.setLineDash([]);
+    }
 
     g.strokeStyle = COLORS.diff;
     g.lineWidth = 1.5;
