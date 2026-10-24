@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS, type ToneSettings } from './audio/settings';
 import { AmpPanel } from './components/AmpPanel';
 import { ClipPanel } from './components/ClipPanel';
 import { EqPanel } from './components/EqPanel';
+import { LivePanel } from './components/LivePanel';
 import { FxPanel } from './components/FxPanel';
 import { fmt, Knob } from './components/Knob';
 import { PedalPanel } from './components/PedalPanel';
@@ -28,6 +29,7 @@ const SOURCES: { id: SourceKind; label: string }[] = [
   { id: 'sine', label: 'Sine' },
   { id: 'noise', label: 'Pink noise' },
   { id: 'sweep', label: 'Sweep' },
+  { id: 'live', label: 'Live' },
 ];
 
 const formatTime = (s: number) => {
@@ -148,6 +150,7 @@ export function App() {
             {source === 'noise' && (
               <p className="muted small">Pink noise is flat on this log spectrum, so the difference curve shows the chain's frequency response directly.</p>
             )}
+            {source === 'live' && <LivePanel engine={getEngine()} playing={playing} />}
             {source === 'sweep' && (
               <p className="muted small">A 4 s sweep from 20 Hz to 20 kHz. Watch the spectrum peak travel across while filters change its height.</p>
             )}

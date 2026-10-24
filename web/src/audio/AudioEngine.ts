@@ -22,7 +22,15 @@ const SILENCE_RMS = 1e-4;
 
 // Where the signal comes from. The clip is for listening; the generated
 // signals are for analysis (harmonics, transfer, filter responses).
-export type SourceKind = 'clip' | 'sine' | 'noise' | 'sweep';
+export type SourceKind = 'clip' | 'sine' | 'noise' | 'sweep' | 'live';
+
+export type LiveOptions = {
+  deviceId: string; // '' = the default input
+  channel: 'left' | 'right' | 'both'; // interfaces put input 1 on the left
+  trimDb: number;
+};
+
+type LiveInput = { stream: MediaStream; node: MediaStreamAudioSourceNode; splitter: ChannelSplitterNode };
 
 export type EngineState = {
   playing: boolean;
@@ -41,6 +49,11 @@ export class AudioEngine {
   private kind: SourceKind = 'clip';
   private source: AudioScheduledSourceNode | null = null;
   private readonly sineLevel: GainNode;
+  private live: LiveInput | null = null;
+  private liveOpts: LiveOptions = { deviceId: '', channel: 'left', trimDb: 0 };
+  private readonly liveTrim: GainNode;
+  private liveError: string | null = null;
+  private liveStarting = false; // a permission prompt can stay open a long time
   private sineFreq = 220;
   private startedAt = 0; // ctx time when playback (re)started
   private offset = 0; // buffer position at startedAt
@@ -79,6 +92,8 @@ export class AudioEngine {
     this.sineLevel = c.createGain();
     this.sineLevel.gain.value = dbToGain(-12);
     this.sineLevel.connect(this.input);
+    this.liveTrim = c.createGain();
+    this.liveTrim.connect(this.input);
     this.effectIn = c.createGain();
     this.effectOut = c.createGain();
     setIrDecoder(c);
@@ -153,12 +168,84 @@ export class AudioEngine {
   }
 
   get canPlay() {
+    if (this.kind === 'live') return !!navigator.mediaDevices?.getUserMedia;
     return this.kind !== 'clip' || this.clip !== null;
+  }
+
+  get liveInputError() {
+    return this.liveError;
+  }
+
+  // Seconds between sound arriving and leaving: the browser's own input
+  // and output buffering, plus whatever the device reports.
+  get latency() {
+    const track = this.live?.stream.getAudioTracks()[0];
+    const input = (track?.getSettings() as { latency?: number } | undefined)?.latency ?? 0;
+    return { base: this.ctx.baseLatency ?? 0, output: this.ctx.outputLatency ?? 0, input };
+  }
+
+  setLiveOptions(opts: LiveOptions) {
+    const restart = this.live && (opts.deviceId !== this.liveOpts.deviceId || opts.channel !== this.liveOpts.channel);
+    this.liveOpts = opts;
+    this.liveTrim.gain.setTargetAtTime(dbToGain(opts.trimDb), this.ctx.currentTime, PARAM_TC);
+    if (restart) {
+      this.stopLive();
+      void this.play();
+    }
+  }
+
+  private async startLive() {
+    if (this.liveStarting) return;
+    this.liveStarting = true;
+    this.liveError = null;
+    try {
+      // Every browser "voice" feature off: they are made for speech and
+      // would gate, filter and level the guitar.
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: this.liveOpts.deviceId ? { exact: this.liveOpts.deviceId } : undefined,
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          // Not in every browser's typings, but honoured where supported.
+          ...({ latency: 0 } as object),
+        },
+      });
+      if (this.kind !== 'live') {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      const node = this.ctx.createMediaStreamSource(stream);
+      const splitter = this.ctx.createChannelSplitter(2);
+      node.connect(splitter);
+      const { channel } = this.liveOpts;
+      const deviceChannels = stream.getAudioTracks()[0]?.getSettings().channelCount ?? 2;
+      if (channel === 'both' || deviceChannels < 2) {
+        node.disconnect();
+        node.connect(this.liveTrim);
+      } else {
+        splitter.connect(this.liveTrim, channel === 'left' ? 0 : 1);
+      }
+      this.live = { stream, node, splitter };
+      this.startedAt = this.ctx.currentTime;
+    } catch (err) {
+      this.liveError = (err as Error).message || 'Could not open the audio input';
+    } finally {
+      this.liveStarting = false;
+    }
+  }
+
+  private stopLive() {
+    if (!this.live) return;
+    this.live.stream.getTracks().forEach((t) => t.stop());
+    this.live.node.disconnect();
+    this.live.splitter.disconnect();
+    this.live = null;
   }
 
   private get buffer(): AudioBuffer | null {
     if (this.kind === 'clip') return this.clip;
-    if (this.kind === 'sine') return null;
+    if (this.kind === 'sine' || this.kind === 'live') return null;
     let b = this.generated.get(this.kind);
     if (!b) {
       b = this.kind === 'noise' ? makePinkNoise(this.ctx, 8) : makeLogSweep(this.ctx, 4);
@@ -174,8 +261,13 @@ export class AudioEngine {
   }
 
   async play() {
-    if (this.source || !this.canPlay) return;
+    if (this.source || this.live || !this.canPlay) return;
     if (this.ctx.state === 'suspended') await this.ctx.resume();
+
+    if (this.kind === 'live') {
+      await this.startLive();
+      return;
+    }
 
     if (this.kind === 'sine') {
       const osc = this.ctx.createOscillator();
@@ -207,6 +299,7 @@ export class AudioEngine {
   }
 
   pause() {
+    if (this.live) return this.stopLive();
     if (!this.source) return;
     this.offset = this.currentPosition();
     this.stopSource();
@@ -268,11 +361,11 @@ export class AudioEngine {
 
   getState(): EngineState {
     return {
-      playing: this.source !== null,
+      playing: this.source !== null || this.live !== null,
       canPlay: this.canPlay,
       source: this.kind,
       position: this.currentPosition(),
-      duration: this.kind === 'sine' ? 0 : (this.buffer?.duration ?? 0),
+      duration: this.kind === 'sine' || this.kind === 'live' ? 0 : (this.buffer?.duration ?? 0),
       levelMatchDb: gainToDb(this.levelMatch.gain.value),
     };
   }
@@ -284,7 +377,9 @@ export class AudioEngine {
   }
 
   private currentPosition() {
-    if (this.kind === 'sine') return this.source ? this.ctx.currentTime - this.startedAt : 0;
+    if (this.kind === 'sine' || this.kind === 'live') {
+      return this.source || this.live ? this.ctx.currentTime - this.startedAt : 0;
+    }
     const buffer = this.buffer;
     if (!buffer) return 0;
     if (!this.source) return this.offset;
@@ -294,6 +389,7 @@ export class AudioEngine {
   }
 
   private stopSource() {
+    this.stopLive();
     if (!this.source) return;
     const src = this.source;
     this.source = null;
@@ -307,7 +403,7 @@ export class AudioEngine {
   // Measured, not computed, so it keeps working once the effect is
   // nonlinear (distortion changes loudness in ways a formula can't predict).
   private updateLevelMatch() {
-    if (!this.levelMatchOn || !this.source) return;
+    if (!this.levelMatchOn || !(this.source || this.live)) return;
 
     this.dryAnalyser.getFloatTimeDomainData(this.dryData);
     this.wetAnalyser.getFloatTimeDomainData(this.wetData);
