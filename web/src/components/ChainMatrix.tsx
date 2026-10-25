@@ -56,7 +56,10 @@ const SOURCE_NAMES: Record<SourceKind, string> = {
 function describe(s: ToneSettings, block: BlockId): { on: boolean; detail: string; tag?: string } {
   switch (block) {
     case 'pedal':
-      return { on: s.pedal.on, detail: PEDAL_NAMES[s.pedal.type] };
+      return {
+        on: s.pedal.on,
+        detail: s.pedal.type === 'boost' && s.pedal.boostCircuit === 'eq' ? 'Boost + EQ 4558' : PEDAL_NAMES[s.pedal.type],
+      };
     case 'eq': {
       const boosted = s.eq.bands.filter((b) => b.on && b.gain !== 0).length;
       return {

@@ -1,5 +1,6 @@
 import { eqResponseDb } from './blocks/EqBlock';
 import { boostResponseDb } from './boost/boost4558';
+import { boostEqResponseDb } from './boost/boostEq';
 import type { ToneSettings } from './settings';
 
 // The response the chain should have, when every active block is linear
@@ -20,7 +21,7 @@ export function expectedResponseDb(
   const out = s.eq.on ? eqResponseDb(ctx, s.eq, freqs) : new Float32Array(freqs.length);
   if (s.pedal.on && s.pedal.type === 'boost') {
     // Small-signal: right as long as the boost isn't clipping.
-    const b = boostResponseDb(s.pedal.boost, freqs);
+    const b = s.pedal.boostCircuit === 'eq' ? boostEqResponseDb(s.pedal.boostEq, freqs) : boostResponseDb(s.pedal.boost, freqs);
     for (let i = 0; i < out.length; i++) out[i] += b[i];
   }
   return out;

@@ -1,5 +1,6 @@
 import { ampPreampTransfer } from './blocks/Amp';
 import { boostTransfer } from './boost/boost4558';
+import { boostEqTransfer } from './boost/boostEq';
 import { v2bTransfer } from './champ/circuit';
 import { bdTransfer } from './blocks/BluesDriver';
 import { ds2Transfer } from './blocks/Ds2';
@@ -15,6 +16,11 @@ export type Transfer = { fn: (x: number) => number; note: string };
 export function pedalTransfer(p: PedalSettings): Transfer {
   switch (p.type) {
     case 'boost':
+      if (p.boostCircuit === 'eq')
+        return {
+          fn: boostEqTransfer(p.boostEq),
+          note: 'At 1 kHz: straight until one of the three 4558 stages (boost, Baxandall, mids) runs out of supply voltage.',
+        };
       return {
         fn: boostTransfer(p.boost),
         note: 'A straight line (only louder) until the 4558 runs out of supply voltage, then it flattens.',

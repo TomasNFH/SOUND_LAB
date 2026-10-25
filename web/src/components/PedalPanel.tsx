@@ -1,5 +1,6 @@
 import { humpFrequency, tsGain, tsHighCut } from '../audio/blocks/TubeScreamer';
 import type { BdSettings, Ds2Settings, KlonSettings, PedalSettings, PedalType, TsSettings } from '../audio/settings';
+import { BoostEqPanel } from './BoostEqPanel';
 import { BoostPanel } from './BoostPanel';
 import { fmt, Knob } from './Knob';
 import { Ts4558Panel } from './Ts4558Panel';
@@ -13,7 +14,7 @@ const PEDALS: { id: PedalType; name: string; idea: string }[] = [
   {
     id: 'boost',
     name: 'Clean boost (4558)',
-    idea: 'A JRC4558 op-amp boost on 9 V, from clean_boost_4558.cir: louder with no new harmonics, until the op-amp runs out of supply voltage. Every part is editable.',
+    idea: 'JRC4558 op-amp boosts on 9 V: louder with no new harmonics, until the op-amp runs out of supply voltage. Simple: clean_boost_4558.cir. Boost + EQ: boost_eq_cortes_bypass_2x4558.cir, with cuts, a Baxandall and mids. Every part is editable.',
   },
   {
     id: 'ts',
@@ -69,7 +70,26 @@ export function PedalPanel({ pedal, onChange }: Props) {
       {info && <p className="muted small">{info.idea}</p>}
 
       <div className={pedal.on ? '' : 'disabled'}>
-        {pedal.type === 'boost' && <BoostPanel boost={pedal.boost} onChange={(boost) => onChange({ ...pedal, boost })} />}
+        {pedal.type === 'boost' && (
+          <div className="switches">
+            <div className="switch-row">
+              <span className="switch-label">Circuit</span>
+              <div className="seg">
+                {(['simple', 'eq'] as const).map((c) => (
+                  <button key={c} className={pedal.boostCircuit === c ? 'on' : ''} onClick={() => onChange({ ...pedal, boostCircuit: c })}>
+                    {c === 'simple' ? 'Simple' : 'Boost + EQ (2× 4558)'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        {pedal.type === 'boost' && pedal.boostCircuit !== 'eq' && (
+          <BoostPanel boost={pedal.boost} onChange={(boost) => onChange({ ...pedal, boost })} />
+        )}
+        {pedal.type === 'boost' && pedal.boostCircuit === 'eq' && (
+          <BoostEqPanel eq={pedal.boostEq} onChange={(boostEq) => onChange({ ...pedal, boostEq })} />
+        )}
 
         {pedal.type === 'ts' && (
           <div className="switches">

@@ -112,12 +112,119 @@ export const STOCK_BOOST: BoostSettings = {
   supply: 9,
 };
 
+// Boost + EQ with two JRC4558s, from boost_eq_cortes_bypass_2x4558.cir:
+// the clean boost, a passive bass/treble cut block with a bypass switch,
+// a Baxandall bass/treble stage, a mid boost/cut tuned by a gyrator and
+// the volume. Knob positions 0..1, then every part in ohms and farads.
+export type BoostEqSettings = {
+  gainPos: number; // BOOST, A250k
+  lowCut: number; // CORTE G, B10k: 0 = least cut
+  highCut: number; // CORTE A, B1k: 0 = least cut
+  bypass: boolean; // the SPDT that skips the cut block
+  bass: number; // GRAVES, B100k: 0.5 flat
+  treble: number; // AGUDOS, B100k: 0.5 flat
+  mid: number; // MEDIOS, B10k: 0.5 flat
+  freq: number; // FREC, B100k: 0 = lowest mid frequency
+  width: number; // Q, B1k: 0 = narrowest
+  volPos: number; // VOLUMEN, A10k
+  // U2A boost
+  r1: number;
+  c1: number;
+  gainPot: number;
+  r2: number;
+  c2: number;
+  // cut block
+  clc: number;
+  rlc: number; // fixed, in series with the low-cut pot
+  lowCutPot: number;
+  rhc: number; // fixed, in series with the high-cut pot
+  highCutPot: number;
+  chc: number;
+  // U2B Baxandall
+  rb1: number;
+  bassPot: number;
+  cb1: number;
+  cb2: number;
+  rb2: number;
+  rb3: number;
+  ct1: number;
+  treblePot: number;
+  ct2: number;
+  rt3: number;
+  // U1A mids + U1B gyrator
+  ra: number;
+  rb: number;
+  midPot: number;
+  rq: number; // fixed, in series with the Q pot
+  qPot: number;
+  cres: number;
+  ca: number;
+  rf: number; // fixed, in series with the FREC pot
+  freqPot: number;
+  rs: number;
+  // output
+  c3: number;
+  volPot: number;
+  supply: 9 | 18;
+};
+
+// The values in boost_eq_cortes_bypass_2x4558.cir (knobs at its .param
+// line, except the boost and volume, set like the simple boost).
+export const STOCK_BOOST_EQ: BoostEqSettings = {
+  gainPos: 0.5,
+  lowCut: 0,
+  highCut: 0,
+  bypass: false,
+  bass: 0.5,
+  treble: 0.5,
+  mid: 0.5,
+  freq: 0.7, // FREC = 30k
+  width: 0,
+  volPos: 0.85,
+  r1: 1.65e6,
+  c1: 0.1e-6,
+  gainPot: 250e3,
+  r2: 10e3,
+  c2: 10e-6,
+  clc: 1e-6,
+  rlc: 1e3,
+  lowCutPot: 10e3,
+  rhc: 100,
+  highCutPot: 1e3,
+  chc: 47e-9,
+  rb1: 10e3,
+  bassPot: 100e3,
+  cb1: 22e-9,
+  cb2: 22e-9,
+  rb2: 10e3,
+  rb3: 3.3e3,
+  ct1: 4.7e-9,
+  treblePot: 100e3,
+  ct2: 4.7e-9,
+  rt3: 3.3e3,
+  ra: 1.5e3,
+  rb: 1.5e3,
+  midPot: 10e3,
+  rq: 100,
+  qPot: 1e3,
+  cres: 220e-9,
+  ca: 47e-9,
+  rf: 4.7e3,
+  freqPot: 100e3,
+  rs: 220,
+  c3: 10e-6,
+  volPot: 10e3,
+  supply: 9,
+};
+
 export type PedalType = 'boost' | 'ts' | 'bd' | 'ds2' | 'klon';
 
 export type PedalSettings = {
   on: boolean;
   type: PedalType;
   boost: BoostSettings;
+  boostCircuit: 'simple' | 'eq'; // which clean boost netlist
+  boostEq: BoostEqSettings;
   ts: TsSettings;
   bd: BdSettings;
   ds2: Ds2Settings;
@@ -216,6 +323,8 @@ export const DEFAULT_SETTINGS: ToneSettings = {
     on: true,
     type: 'ts',
     boost: STOCK_BOOST,
+    boostCircuit: 'simple',
+    boostEq: STOCK_BOOST_EQ,
     ts: { drive: 0.3, tone: 0.5, level: -9, clip: 'sym', hump: 720, bassPath: true, highCut: true, mode: 'classic', c4558: STOCK_TS4558 },
     bd: { gain: 0.5, tone: 0.5, level: -9 },
     ds2: { dist: 0.5, tone: 0.5, level: -7, turbo: false },
