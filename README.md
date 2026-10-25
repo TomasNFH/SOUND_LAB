@@ -1,10 +1,17 @@
-# Tone Lab
+# SoundLab
 
-A browser lab for learning how guitar effects shape sound: load a clean DI
-recording (or a test signal, or play live), run it through pedals, an amp
-and effects modelled stage by stage, and compare before and after by ear
-and on screen. See [the plan](Guitar%20tone%20lab%20implementation%20plan.md)
-for the why.
+A browser lab for guitarists, in three sections:
+
+- **Tone Lab:** learn how guitar effects shape sound. Load a clean DI
+  recording (or a test signal, or play live), run it through pedals, an amp
+  and effects modelled stage by stage, and compare before and after by ear
+  and on screen. See [the plan](Guitar%20tone%20lab%20implementation%20plan.md)
+  for the why.
+- **Theory Lab:** a circle of fifths, the notes and chords of a key, and a
+  12-fret fretboard showing any scale by note name or interval.
+- **Drum Lab:** a drummer to play along with: simple beats and real
+  drummers' grooves on a recorded kit, at any tempo. It keeps playing while
+  you use the other sections.
 
 **Try it online: https://tomasnfh.github.io/SOUND_LAB/**
 
@@ -43,7 +50,7 @@ presets added there stay in the visitor's browser (IndexedDB, see
   are allowed to deploy by the `github-pages` environment's tag rule.
 
 ```bash
-git tag v0.2.0 && git push origin v0.2.0
+git tag v0.3.0 && git push origin v0.3.0
 ```
 
 The `Deploy to GitHub Pages` workflow (`.github/workflows/pages.yml`) builds
