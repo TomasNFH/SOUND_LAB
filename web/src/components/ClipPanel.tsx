@@ -9,7 +9,7 @@ type Props = {
 
 // Clips shipped with the app (web/public/clips), so there is something to
 // play straight away, with or without the api. The first one loads on start.
-const INCLUDED_CLIPS = ['hat.wav', 'jenry.wav'];
+const INCLUDED_CLIPS = ['hat.wav', 'jenry.wav', 'calamar.wav'];
 
 const INCLUDED = 'included:';
 const LIBRARY = 'library:';
