@@ -13,6 +13,7 @@
 import { Chain } from './Chain';
 import type { BranchId, Branches } from './settings';
 import { setIrDecoder } from './ir';
+import { preferPlaybackSession, unlockPlayback } from './iosAudio';
 import { makeLogSweep, makePinkNoise } from './signals';
 import { dbToGain, gainToDb } from './util';
 
@@ -84,6 +85,7 @@ export class AudioEngine {
   private listening: BranchId = 'b';
 
   constructor() {
+    preferPlaybackSession();
     // 48 kHz matches the recording format in the plan, so clips aren't resampled.
     this.ctx = new AudioContext({ latencyHint: 'interactive', sampleRate: 48000 });
     const c = this.ctx;
@@ -259,7 +261,10 @@ export class AudioEngine {
 
   async play() {
     if (this.source || this.live || !this.canPlay) return;
-    if (this.ctx.state === 'suspended') await this.ctx.resume();
+    unlockPlayback();
+    // Safari also reports "interrupted" (after a call, or coming back from
+    // the background), which needs a resume as well.
+    if (this.ctx.state !== 'running') await this.ctx.resume();
 
     if (this.kind === 'live') {
       await this.startLive();
