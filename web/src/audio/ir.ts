@@ -41,17 +41,51 @@ export function runBiquad(data: Float32Array, sr: number, s: BiquadSpec) {
   }
 }
 
-// A small open-back combo with one small speaker, built from filters:
-// little below ~90 Hz, a cabinet resonance, presence peaks from cone
-// break-up, then a steep fall above ~5 kHz. The steep top is what takes
-// the fizz off distortion; it matters as much as the amp.
-export function synthCabinetIR(ctx: BaseAudioContext) {
-  const sr = ctx.sampleRate;
-  const n = Math.round(0.08 * sr);
-  const buffer = ctx.createBuffer(1, n, sr);
-  const d = buffer.getChannelData(0);
-  d[0] = 1;
-  const chain: BiquadSpec[] = [
+// Built-in speakers, as filter shapes turned into impulse responses.
+// Each has a low end set by cone size and cabinet, resonance and cone
+// break-up peaks, and a steep fall above ~5 kHz. That steep top is what
+// takes the fizz off distortion; it matters as much as the amp.
+export const BUILT_IN_CABS = {
+  champ6: 'Champion 6" (stock)',
+  smooth6: 'Upgraded 6" (smoother)',
+  cab10: '10" cabinet',
+  builtin: 'Generic small combo',
+} as const;
+export type BuiltInCab = keyof typeof BUILT_IN_CABS;
+export const isBuiltInCab = (c: string): c is BuiltInCab => c in BUILT_IN_CABS;
+
+const CAB_VOICINGS: Record<BuiltInCab, BiquadSpec[]> = {
+  // Small 6" in a small open-back box: little below ~130 Hz, a forward,
+  // slightly harsh upper-mid peak, early top-end roll-off.
+  champ6: [
+    { type: 'highpass', f: 130, q: 0.9 },
+    { type: 'highpass', f: 90, q: 0.6 },
+    { type: 'peaking', f: 180, q: 1.6, gain: 3 },
+    { type: 'peaking', f: 1100, q: 1.0, gain: 2 },
+    { type: 'peaking', f: 3000, q: 2.2, gain: 5 },
+    { type: 'lowpass', f: 5500, q: 0.8 },
+    { type: 'lowpass', f: 6000, q: 0.6 },
+  ],
+  // Same size, better speaker: fuller low-mids, a tamer upper-mid peak.
+  smooth6: [
+    { type: 'highpass', f: 115, q: 0.8 },
+    { type: 'highpass', f: 85, q: 0.6 },
+    { type: 'peaking', f: 220, q: 1.2, gain: 3 },
+    { type: 'peaking', f: 3000, q: 2.0, gain: 2 },
+    { type: 'lowpass', f: 5200, q: 0.8 },
+    { type: 'lowpass', f: 6000, q: 0.6 },
+  ],
+  // A 10" in a bigger box: an octave more bass, darker top.
+  cab10: [
+    { type: 'highpass', f: 75, q: 0.8 },
+    { type: 'highpass', f: 55, q: 0.6 },
+    { type: 'peaking', f: 110, q: 1.4, gain: 4 },
+    { type: 'peaking', f: 450, q: 1.2, gain: -2 },
+    { type: 'peaking', f: 2200, q: 1.5, gain: 3 },
+    { type: 'lowpass', f: 4600, q: 0.8 },
+    { type: 'lowpass', f: 5200, q: 0.6 },
+  ],
+  builtin: [
     { type: 'highpass', f: 85, q: 0.8 },
     { type: 'highpass', f: 60, q: 0.6 },
     { type: 'peaking', f: 120, q: 1.4, gain: 4 },
@@ -61,8 +95,16 @@ export function synthCabinetIR(ctx: BaseAudioContext) {
     { type: 'lowpass', f: 4800, q: 0.8 },
     { type: 'lowpass', f: 5200, q: 0.6 },
     { type: 'lowpass', f: 7000, q: 0.5 },
-  ];
-  for (const s of chain) runBiquad(d, sr, s);
+  ],
+};
+
+export function synthCabinetIR(ctx: BaseAudioContext, voicing: BuiltInCab = 'builtin') {
+  const sr = ctx.sampleRate;
+  const n = Math.round(0.08 * sr);
+  const buffer = ctx.createBuffer(1, n, sr);
+  const d = buffer.getChannelData(0);
+  d[0] = 1;
+  for (const s of CAB_VOICINGS[voicing]) runBiquad(d, sr, s);
   return buffer;
 }
 

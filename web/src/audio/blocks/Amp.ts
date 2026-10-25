@@ -1,11 +1,17 @@
-import { levelIr, loadIr, synthCabinetIR } from '../ir';
+import { isBuiltInCab, levelIr, loadIr, synthCabinetIR } from '../ir';
 import type { AmpSettings } from '../settings';
 import { dbToGain, lerp, setParam, ShaperStage, Slot, type Block } from '../util';
+import { ChampAmp } from './ChampAmp';
 import { asymSoftClip, tubeClip } from './clippers';
 
-// Small Fender combo in the spirit of the Champion 600, as stages:
+// The amp block holds two models that share the cabinet:
 //
-//   in ─ preamp gain ─ tube stage ─ tone stack ─ power drive ─ power stage ─ sag ─ cabinet ─ out
+//   in ─┬─ Champion 600 (circuit model, AudioWorklet) ─┬─ cabinet ─ out
+//       └─ generic small combo ─────────────────────────┘
+//
+// Generic: a hand-tuned small Fender combo, as stages:
+//
+//   preamp gain ─ tube stage ─ tone stack ─ power drive ─ power stage ─ sag
 //
 // Volume pushes both the preamp and the power stage: low is clean, high
 // breaks up, and a pedal in front breaks it up sooner. The tone stack is
@@ -41,6 +47,10 @@ export class Amp implements Block {
   private readonly makeup: GainNode;
   private readonly cab: ConvolverNode;
   private readonly cabSlot: Slot;
+  private readonly champ: ChampAmp;
+  private readonly champSel: GainNode;
+  private readonly genericSel: GainNode;
+  private model: AmpSettings['model'] | null = null;
   private cabName: string | null = null;
   private pending: Promise<void> = Promise.resolve();
 
@@ -66,7 +76,7 @@ export class Amp implements Block {
     this.makeup = ctx.createGain();
     this.cab = ctx.createConvolver();
     this.cab.normalize = false;
-    this.cab.buffer = levelIr(ctx, synthCabinetIR(ctx));
+    this.cab.buffer = levelIr(ctx, synthCabinetIR(ctx, 'champ6'));
     const cabBlock = { input: this.cab, output: this.cab };
     this.cabSlot = new Slot(ctx, cabBlock);
 
@@ -75,12 +85,26 @@ export class Amp implements Block {
     prev = pre.output.connect(coupling);
     for (const f of this.stack) prev = prev.connect(f);
     prev.connect(this.powerGain).connect(power.input);
-    power.output.connect(dc).connect(this.sag).connect(this.makeup).connect(this.cabSlot.input);
+    this.genericSel = ctx.createGain();
+    this.genericSel.gain.value = 0;
+    power.output.connect(dc).connect(this.sag).connect(this.makeup).connect(this.genericSel).connect(this.cabSlot.input);
+
+    this.champ = new ChampAmp(ctx);
+    this.champSel = ctx.createGain();
+    this.champSel.gain.value = 0;
+    this.input.connect(this.champ.input);
+    this.champ.output.connect(this.champSel).connect(this.cabSlot.input);
     this.cabSlot.output.connect(this.output);
   }
 
   apply(s: AmpSettings) {
     const c = this.ctx;
+    this.champ.apply(s);
+    if (s.model !== this.model) {
+      this.model = s.model;
+      setParam(this.champSel.gain, s.model === 'champ600' ? 1 : 0, c);
+      setParam(this.genericSel.gain, s.model === 'generic' ? 1 : 0, c);
+    }
     const { pre, power } = ampStages(s.volume);
     setParam(this.preGain.gain, pre, c);
     toneStackSpecs(s).forEach((spec, i) => {
@@ -102,15 +126,15 @@ export class Amp implements Block {
 
   // Resolves when the selected cabinet IR is loaded and in place.
   ready() {
-    return this.pending;
+    return Promise.all([this.pending, this.champ.ready()]).then(() => undefined);
   }
 
   private setCab(cab: string) {
     this.cabSlot.setEnabled(cab !== 'off');
     if (cab === this.cabName || cab === 'off') return;
     this.cabName = cab;
-    if (cab === 'builtin') {
-      this.cab.buffer = levelIr(this.ctx, synthCabinetIR(this.ctx));
+    if (isBuiltInCab(cab)) {
+      this.cab.buffer = levelIr(this.ctx, synthCabinetIR(this.ctx, cab));
       this.pending = Promise.resolve();
       return;
     }

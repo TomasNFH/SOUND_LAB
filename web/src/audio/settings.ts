@@ -38,13 +38,51 @@ export type PedalSettings = {
   klon: KlonSettings;
 };
 
+// Fender Champion 600 built from its schematic. Every field is a part of
+// the real circuit; the defaults are the stock amp.
+export type ChampSettings = {
+  input: 'high' | 'low';
+  // stock: fixed resistors · knobs: pots instead · liftR19: R19 lifted
+  // (no ground return) · bypass: switched around, 5F1-style
+  toneStack: 'stock' | 'knobs' | 'liftR19' | 'bypass';
+  treble: number; // pot positions, used when toneStack is 'knobs'
+  bass: number;
+  middle: number;
+  c1: 250 | 500; // pF; 500 = a second 250 pF in parallel with C1
+  v2aCap: '22u' | '1u' | '470n'; // C3, first-stage cathode bypass
+  v2bCap: '22u' | 'none'; // C10, second-stage cathode bypass
+  feedback: 'stock' | 'less' | 'off'; // R7 2.2k / 4.7k / removed
+  bias: 470 | 560 | 680; // R10, 6V6 cathode resistor in ohms
+  tube: '12AX7' | '5751' | '12AT7'; // V2
+};
+
+export type AmpModel = 'champ600' | 'generic';
+
+export const STOCK_CHAMP: ChampSettings = {
+  input: 'high',
+  toneStack: 'stock',
+  treble: 75 / 255,
+  bass: 0.3,
+  middle: 0.6,
+  c1: 250,
+  v2aCap: '22u',
+  v2bCap: '22u',
+  feedback: 'stock',
+  bias: 470,
+  tube: '12AX7',
+};
+
 export type AmpSettings = {
   on: boolean;
+  model: AmpModel;
+  champ: ChampSettings;
   volume: number; // 0..1: clean at the bottom, breaks up near the top
   bass: number;
   middle: number;
   treble: number;
-  cab: string; // 'builtin', 'off', or a file name in irs/cabinets
+  // 'champ6' (stock 6"), 'smooth6' (upgraded 6"), 'cab10', 'builtin'
+  // (generic small combo), 'off', or a file name in irs/cabinets
+  cab: string;
 };
 
 export type DelaySettings = {
@@ -95,7 +133,16 @@ export const DEFAULT_SETTINGS: ToneSettings = {
     ds2: { dist: 0.5, tone: 0.5, level: -7, turbo: false },
     klon: { gain: 0.35, treble: 0.5, output: 3 },
   },
-  amp: { on: true, volume: 0.3, bass: 0.5, middle: 0.5, treble: 0.6, cab: 'builtin' },
+  amp: {
+    on: true,
+    model: 'champ600',
+    champ: STOCK_CHAMP,
+    volume: 0.4,
+    bass: 0.5,
+    middle: 0.5,
+    treble: 0.6,
+    cab: 'champ6',
+  },
   fxPosition: 'post',
   delay: { on: false, mode: 'tape', time: 0.38, feedback: 0.45, mix: 0.35, tone: 0.4, wow: 0.3 },
   reverb: { on: false, type: 'spring', mix: 0.3, tone: 0.6 },
@@ -104,7 +151,14 @@ export const DEFAULT_SETTINGS: ToneSettings = {
 // Merge saved settings over the defaults, so presets saved by an older
 // version still load after new controls are added.
 export function withDefaults(partial: unknown): ToneSettings {
-  return deepMerge(structuredClone(DEFAULT_SETTINGS), partial) as ToneSettings;
+  const p = partial as { amp?: { model?: unknown; cab?: unknown } } | null;
+  // Presets saved before the Champion model existed used the generic amp.
+  // (A saved amp always has a cab; built-in presets only list what they change.)
+  const amp = p && typeof p === 'object' ? p.amp : undefined;
+  const legacy = !!amp && typeof amp === 'object' && amp.cab !== undefined && amp.model === undefined;
+  const merged = deepMerge(structuredClone(DEFAULT_SETTINGS), partial) as ToneSettings;
+  if (legacy) merged.amp.model = 'generic';
+  return merged;
 }
 
 function deepMerge(base: unknown, over: unknown): unknown {

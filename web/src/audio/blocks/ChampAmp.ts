@@ -1,0 +1,62 @@
+import workletUrl from '../champ/champ.worklet.ts?worker&url';
+import { workletParams } from '../champ/circuit';
+import type { AmpSettings } from '../settings';
+import type { Block } from '../util';
+
+const OVERSAMPLE = 4;
+
+// The worklet module has to be added to every context that uses it: the
+// live one and each offline export context.
+const loaded = new WeakMap<BaseAudioContext, Promise<void>>();
+function loadWorklet(ctx: BaseAudioContext) {
+  let p = loaded.get(ctx);
+  if (!p) {
+    p = ctx.audioWorklet.addModule(workletUrl);
+    loaded.set(ctx, p);
+  }
+  return p;
+}
+
+// Champion 600 preamp and power amp (everything before the speaker),
+// running in an AudioWorklet. Silent until the module has loaded, which
+// takes a moment at startup; ready() resolves once it is in place.
+export class ChampAmp implements Block {
+  readonly input: GainNode;
+  readonly output: GainNode;
+  private node: AudioWorkletNode | null = null;
+  private last: AmpSettings | null = null;
+  private postedKey = '';
+  private readonly loading: Promise<void>;
+
+  constructor(private readonly ctx: BaseAudioContext) {
+    this.input = ctx.createGain();
+    this.output = ctx.createGain();
+    this.loading = loadWorklet(ctx).then(() => {
+      this.node = new AudioWorkletNode(ctx, 'champ600', {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        outputChannelCount: [1],
+      });
+      this.input.connect(this.node).connect(this.output);
+      if (this.last) this.post(this.last);
+    });
+  }
+
+  ready() {
+    return this.loading;
+  }
+
+  apply(amp: AmpSettings) {
+    this.last = amp;
+    if (this.node) this.post(amp);
+  }
+
+  private post(amp: AmpSettings) {
+    // Settings are re-applied on every change to either branch; only send
+    // coefficients when this amp's circuit actually changed.
+    const key = JSON.stringify([amp.champ, amp.volume]);
+    if (!this.node || key === this.postedKey) return;
+    this.postedKey = key;
+    this.node.port.postMessage(workletParams(amp.champ, amp.volume, this.ctx.sampleRate * OVERSAMPLE));
+  }
+}
