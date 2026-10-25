@@ -5,9 +5,30 @@
 
 type AudioSessionNavigator = Navigator & { audioSession?: { type: string } };
 
-export function preferPlaybackSession() {
+const setSessionType = (type: string) => {
   const session = (navigator as AudioSessionNavigator).audioSession;
-  if (session) session.type = 'playback';
+  if (session && session.type !== type) session.type = type;
+};
+
+// Inputs open right now. Safari refuses audio capture in a "playback"
+// session, so while any is open the session is "play-and-record" (which
+// still plays in silent mode) and nothing switches it back.
+let openInputs = 0;
+
+export function preferPlaybackSession() {
+  if (openInputs === 0) setSessionType('playback');
+}
+
+// Call before getUserMedia, and inputClosed() once that input is done
+// (or failed to open).
+export function inputOpening() {
+  openInputs++;
+  setSessionType('play-and-record');
+}
+
+export function inputClosed() {
+  openInputs = Math.max(0, openInputs - 1);
+  if (openInputs === 0) setSessionType('playback');
 }
 
 let unlocked = false;

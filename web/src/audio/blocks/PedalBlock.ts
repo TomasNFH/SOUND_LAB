@@ -1,5 +1,5 @@
 import type { PedalSettings, PedalType } from '../settings';
-import { setParam, type Block } from '../util';
+import { clippersReady, setGate, type Block } from '../util';
 import { AmpLikeDrive } from './AmpLikeDrive';
 import { BoostEqPedal } from './BoostEqPedal';
 import { BoostPedal } from './BoostPedal';
@@ -12,93 +12,120 @@ type Model = Block & { apply(s: PedalSettings): void };
 
 // The pedal slot: every model is built once and runs in parallel; picking
 // a pedal crossfades to it. Switching pedals mid-playback is click-free,
-// and each model keeps its own knob settings.
+// and each model keeps its own knob settings. Unselected models get true
+// silence at their input, so their clippers idle.
+//
+// With `only`, just the circuit those settings select is built (Live:
+// nothing unheard runs at all); picking another pedal then needs a new
+// PedalBlock.
 export class PedalBlock implements Block {
   readonly input: GainNode;
   readonly output: GainNode;
-  readonly models: Record<PedalType, Model>;
-  private readonly selectors = new Map<PedalType, GainNode>();
+  private readonly models = new Map<PedalType, Model>();
+  private readonly gates = new Map<PedalType, GainNode[]>();
   private current: PedalType | null = null;
-  private readonly boost: BoostPedal;
-  private readonly boostEq: BoostEqPedal;
-  private readonly ts4558: Drive4558Pedal;
+  private readonly loading: Promise<unknown>[] = [];
 
-  constructor(private readonly ctx: BaseAudioContext) {
+  constructor(
+    private readonly ctx: BaseAudioContext,
+    only?: PedalSettings,
+  ) {
     this.input = ctx.createGain();
     this.output = ctx.createGain();
+    const want = (type: PedalType) => !only || only.type === type;
 
-    const simple = new BoostPedal(ctx);
-    const boostEq = new BoostEqPedal(ctx);
-    this.boost = simple;
-    this.boostEq = boostEq;
-    const boost = this.twoModes(simple, boostEq, (s) => {
-      simple.apply(s.boost);
-      boostEq.apply(s.boostEq);
-      return s.boostCircuit === 'eq';
-    });
-    const classic = new MidHumpDrive(ctx);
-    const ts4558 = new Drive4558Pedal(ctx);
-    this.ts4558 = ts4558;
-    const ts = this.twoModes(classic, ts4558, (s) => {
-      classic.apply(s.ts);
-      ts4558.apply(s.ts.c4558);
-      return s.ts.mode === '4558';
-    });
-    const bd = new AmpLikeDrive(ctx);
-    const ds2 = new HardDistortion(ctx);
-    const klon = new CleanBlendDrive(ctx);
-    this.models = {
-      boost,
-      ts,
-      bd: { input: bd.input, output: bd.output, apply: (s) => bd.apply(s.bd) },
-      ds2: { input: ds2.input, output: ds2.output, apply: (s) => ds2.apply(s.ds2) },
-      klon: { input: klon.input, output: klon.output, apply: (s) => klon.apply(s.klon) },
-    };
-
-    for (const [type, model] of Object.entries(this.models) as [PedalType, Model][]) {
-      const sel = ctx.createGain();
-      sel.gain.value = 0;
-      this.input.connect(model.input);
-      model.output.connect(sel).connect(this.output);
-      this.selectors.set(type, sel);
+    if (want('boost')) {
+      const eq = only?.boostCircuit === 'eq';
+      const simple = !only || !eq ? new BoostPedal(ctx) : null;
+      const boostEq = !only || eq ? new BoostEqPedal(ctx) : null;
+      this.loading.push(simple?.ready() ?? Promise.resolve(), boostEq?.ready() ?? Promise.resolve());
+      this.add(
+        'boost',
+        this.twoModes(simple, boostEq, (s) => {
+          simple?.apply(s.boost);
+          boostEq?.apply(s.boostEq);
+          return s.boostCircuit === 'eq';
+        }),
+      );
+    }
+    if (want('ts')) {
+      const c4558 = only?.ts.mode === '4558';
+      const classic = !only || !c4558 ? new MidHumpDrive(ctx) : null;
+      const ts4558 = !only || c4558 ? new Drive4558Pedal(ctx) : null;
+      this.loading.push(ts4558?.ready() ?? Promise.resolve());
+      this.add(
+        'ts',
+        this.twoModes(classic, ts4558, (s) => {
+          classic?.apply(s.ts);
+          ts4558?.apply(s.ts.c4558);
+          return s.ts.mode === '4558';
+        }),
+      );
+    }
+    if (want('bd')) {
+      const bd = new AmpLikeDrive(ctx);
+      this.add('bd', { input: bd.input, output: bd.output, apply: (s) => bd.apply(s.bd) });
+    }
+    if (want('ds2')) {
+      const ds2 = new HardDistortion(ctx);
+      this.add('ds2', { input: ds2.input, output: ds2.output, apply: (s) => ds2.apply(s.ds2) });
+    }
+    if (want('klon')) {
+      const klon = new CleanBlendDrive(ctx);
+      this.add('klon', { input: klon.input, output: klon.output, apply: (s) => klon.apply(s.klon) });
     }
   }
 
-  // A pedal with two circuits, both running (the clean boost's two
-  // netlists, the mid-hump overdrive's classic and 4558 modes): `apply` sets
-  // both and returns whether the second one is selected; the choice
-  // crossfades between them.
-  private twoModes(first: Block, second: Block, apply: (s: PedalSettings) => boolean): Model {
+  // Wire a model between an input gate and an output switch.
+  private add(type: PedalType, model: Model) {
+    const inGate = this.ctx.createGain();
+    const outGate = this.ctx.createGain();
+    inGate.gain.value = 0;
+    outGate.gain.value = 0;
+    this.input.connect(inGate).connect(model.input);
+    model.output.connect(outGate).connect(this.output);
+    this.models.set(type, model);
+    this.gates.set(type, [inGate, outGate]);
+  }
+
+  // A pedal with two circuits (the clean boost's two netlists, the
+  // mid-hump overdrive's classic and 4558 modes), either of which may be
+  // left out: `apply` sets them and returns whether the second one is
+  // selected; the choice crossfades between them.
+  private twoModes(first: Block | null, second: Block | null, apply: (s: PedalSettings) => boolean): Model {
     const input = this.ctx.createGain();
     const output = this.ctx.createGain();
-    const a = this.ctx.createGain();
-    const b = this.ctx.createGain();
-    b.gain.value = 0;
-    input.connect(first.input);
-    input.connect(second.input);
-    first.output.connect(a).connect(output);
-    second.output.connect(b).connect(output);
+    const gates = [first, second].map((circuit) => {
+      const inGate = this.ctx.createGain();
+      const outGate = this.ctx.createGain();
+      inGate.gain.value = 0;
+      outGate.gain.value = 0;
+      if (circuit) {
+        input.connect(inGate).connect(circuit.input);
+        circuit.output.connect(outGate).connect(output);
+      }
+      return [inGate, outGate];
+    });
     return {
       input,
       output,
       apply: (s) => {
         const useSecond = apply(s);
-        setParam(a.gain, useSecond ? 0 : 1, this.ctx);
-        setParam(b.gain, useSecond ? 1 : 0, this.ctx);
+        gates.forEach((pair, i) => pair.forEach((g) => setGate(g.gain, (i === 1) === useSecond, this.ctx)));
       },
     };
   }
 
   // Resolves once every model that loads something (worklets) is ready.
   ready() {
-    return Promise.all([this.boost.ready(), this.boostEq.ready(), this.ts4558.ready()]).then(() => undefined);
+    return Promise.all([...this.loading, clippersReady(this.ctx)]).then(() => undefined);
   }
 
   apply(s: PedalSettings) {
-    for (const model of Object.values(this.models)) model.apply(s);
+    for (const model of this.models.values()) model.apply(s);
     if (s.type !== this.current) {
       this.current = s.type;
-      for (const [type, sel] of this.selectors) setParam(sel.gain, type === s.type ? 1 : 0, this.ctx);
+      for (const [type, gates] of this.gates) for (const g of gates) setGate(g.gain, type === s.type, this.ctx);
     }
   }
 }

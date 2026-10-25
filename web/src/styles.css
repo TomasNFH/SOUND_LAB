@@ -492,3 +492,42 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .drum-legend i.ghost { opacity: 0.3; width: 7px; height: 7px; }
 .drum-legend i.open { background: transparent; border: 2px solid var(--text); box-sizing: border-box; }
 .drum-legend i.pedal { border-radius: 2px; width: 10px; height: 5px; }
+
+/* Live */
+.live-lab .panel h2 { margin: 0 0 8px; }
+.live-lab .panel-head h2 { margin: 0; }
+.live-status { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 3px 8px; border-radius: 5px; border: 1px solid var(--border); }
+.live-status.on { color: #fff; background: #d64545; border-color: transparent; }
+.live-start { display: flex; align-items: center; gap: 16px; margin-top: 14px; flex-wrap: wrap; }
+.live-btn { min-width: 110px; padding: 12px 20px; font-size: 1.05rem; }
+.live-btn.stop { background: #d64545; color: #fff; }
+.live-meter { flex: 1; min-width: 180px; }
+.live-meter-bar { position: relative; height: 14px; border-radius: 4px; background: #24262d; overflow: hidden; }
+.live-meter-fill {
+  /* The colours belong to the scale: the whole bar is painted and the
+     level reveals it from the left. */
+  position: absolute; inset: 0; border-radius: 4px;
+  background: linear-gradient(90deg, var(--accent) 0 70%, #e0c04a 85%, #d64545 98%);
+}
+.live-meter-hold { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--text); transform: translateX(-1px); }
+/* -18 dBFS: a healthy level to aim for. */
+.live-meter-target { position: absolute; top: 0; bottom: 0; left: 70%; width: 1px; background: rgba(255, 255, 255, 0.35); }
+.live-meter-scale { position: relative; display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); margin-top: 3px; }
+.live-meter-scale span:nth-child(2) { position: absolute; left: 70%; transform: translateX(-50%); }
+.live-clip { min-width: 70px; font-size: 0.85rem; font-variant-numeric: tabular-nums; color: var(--muted); }
+.live-clip.on { color: #ff6b6b; font-weight: 700; }
+.live-rows { display: flex; flex-direction: column; gap: 10px; }
+.live-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.live-row select { max-width: 420px; }
+.live-tone button { padding: 7px 14px; font-size: 0.88rem; }
+.live-latency { margin: 12px 0 0; }
+.live-latency strong { font-size: 1.6rem; font-variant-numeric: tabular-nums; margin-right: 4px; }
+.live-tips { margin: 12px 0 0; padding-left: 18px; line-height: 1.6; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #d64545; animation: live-blink 1.6s ease-in-out infinite; }
+@keyframes live-blink { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+.section-tabs .live-dot.tab-pulse { display: none; vertical-align: middle; margin-left: 6px; }
+@media (max-width: 899px) {
+  .header .live-mini { display: none; }
+  .section-tabs .live-dot.tab-pulse { display: inline-block; }
+}

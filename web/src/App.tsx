@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Logo } from './components/Logo';
 import { DrumTabPulse, DrumTransport } from './drums/DrumTransport';
+import { LiveIndicator, LiveTabDot } from './live/LiveIndicator';
 import { DrumLab } from './sections/DrumLab';
+import { LiveLab } from './sections/LiveLab';
 import { TheoryLab } from './sections/TheoryLab';
 import { ToneLab } from './ToneLab';
 
-type Section = 'tone' | 'theory' | 'drums';
+type Section = 'tone' | 'theory' | 'drums' | 'live';
 
 const SECTIONS: { id: Section; label: string; short: string }[] = [
   { id: 'tone', label: 'Tone Lab', short: 'Tone' },
   { id: 'theory', label: 'Theory Lab', short: 'Theory' },
   { id: 'drums', label: 'Drum Lab', short: 'Drums' },
+  { id: 'live', label: 'Live', short: 'Live' },
 ];
 
 // The section lives in the URL hash (#/tone, #/theory, #/drums) so links and
@@ -43,12 +46,14 @@ export function App() {
               <span className="long">{s.label}</span>
               <span className="short">{s.short}</span>
               {s.id === 'drums' && section !== 'drums' && <DrumTabPulse />}
+              {s.id === 'live' && section !== 'live' && <LiveTabDot />}
             </a>
           ))}
         </nav>
         {/* Actions for the open section only, so the header never crowds,
             plus a stop control while a beat plays in another section. */}
         <div className="header-actions">
+          {section !== 'live' && <LiveIndicator />}
           {section !== 'drums' && <DrumTransport />}
           {section === 'tone' && (
             <button className="header-btn" onClick={() => setShowPresets((v) => !v)} aria-expanded={showPresets}>
@@ -61,6 +66,7 @@ export function App() {
       <ToneLab active={section === 'tone'} showPresets={showPresets} />
       {section === 'theory' && <TheoryLab />}
       {section === 'drums' && <DrumLab />}
+      {section === 'live' && <LiveLab active />}
 
       <footer className="site-footer muted small">
         SoundLab is an independent educational project, MIT licensed. Its pedal and amp models have generic names and

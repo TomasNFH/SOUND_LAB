@@ -4,7 +4,7 @@ import { EqBlock } from './blocks/EqBlock';
 import { PedalBlock } from './blocks/PedalBlock';
 import { Reverb, reverbTail } from './blocks/Reverb';
 import type { ToneSettings } from './settings';
-import { Slot } from './util';
+import { clippersReady, Slot } from './util';
 
 // The processing chain between the source and the A/B switch. It only
 // depends on a BaseAudioContext, so the same chain can be built in an
@@ -52,7 +52,7 @@ export class Chain {
 
   // Resolves once anything the chain loads asynchronously is in place.
   async ready() {
-    await Promise.all([this.amp.ready(), this.reverb.ready(), this.delay.ready(), this.pedal.ready()]);
+    await Promise.all([this.amp.ready(), this.reverb.ready(), this.delay.ready(), this.pedal.ready(), clippersReady(this.ctx)]);
   }
 
   apply(s: ToneSettings) {

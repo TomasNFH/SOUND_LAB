@@ -13,7 +13,7 @@
 import { Chain } from './Chain';
 import type { BranchId, Branches } from './settings';
 import { setIrDecoder } from './ir';
-import { preferPlaybackSession, unlockPlayback } from './iosAudio';
+import { inputClosed, inputOpening, preferPlaybackSession, unlockPlayback } from './iosAudio';
 import { makeLogSweep, makePinkNoise } from './signals';
 import { dbToGain, gainToDb } from './util';
 
@@ -197,6 +197,8 @@ export class AudioEngine {
     if (this.liveStarting) return;
     this.liveStarting = true;
     this.liveError = null;
+    inputOpening();
+    let kept = false;
     try {
       // Every browser "voice" feature off: they are made for speech and
       // would gate, filter and level the guitar.
@@ -227,10 +229,12 @@ export class AudioEngine {
       }
       this.live = { stream, node, splitter };
       this.startedAt = this.ctx.currentTime;
+      kept = true;
     } catch (err) {
       this.liveError = (err as Error).message || 'Could not open the audio input';
     } finally {
       this.liveStarting = false;
+      if (!kept) inputClosed();
     }
   }
 
@@ -240,6 +244,7 @@ export class AudioEngine {
     this.live.node.disconnect();
     this.live.splitter.disconnect();
     this.live = null;
+    inputClosed();
   }
 
   private get buffer(): AudioBuffer | null {
@@ -340,6 +345,14 @@ export class AudioEngine {
   setLevelMatch(on: boolean) {
     this.levelMatchOn = on;
     if (!on) this.levelMatch.gain.setTargetAtTime(1, this.ctx.currentTime, PARAM_TC);
+  }
+
+  // Stop and let the audio thread rest (Live mode wants the CPU); play()
+  // wakes it up again.
+  async sleep() {
+    this.stopLive();
+    this.stopSource();
+    if (this.ctx.state === 'running') await this.ctx.suspend();
   }
 
   applySettings(settings: Branches) {

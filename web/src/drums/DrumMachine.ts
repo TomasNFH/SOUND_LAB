@@ -107,6 +107,12 @@ class DrumMachine {
   stop() {
     window.clearInterval(this.timer);
     this.set({ playing: false });
+    // Let the audio thread rest until the next Play (it keeps running, and
+    // using CPU, while a context is open even when silent).
+    const ctx = this.ctx;
+    window.setTimeout(() => {
+      if (ctx && !this.state.playing && ctx.state === 'running') void ctx.suspend();
+    }, 2000);
   }
 
   toggle() {

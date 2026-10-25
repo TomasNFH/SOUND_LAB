@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AudioEngine, type EngineState, type SourceKind } from './audio/AudioEngine';
+import { type EngineState, type SourceKind } from './audio/AudioEngine';
+import { getEngine } from './audio/toneEngine';
 import { bandRange } from './audio/blocks/EqBlock';
 import {
   defaultBranches,
@@ -20,18 +21,6 @@ import { fmt, Knob } from './components/Knob';
 import { PedalPanel } from './components/PedalPanel';
 import { PresetPanel } from './components/PresetPanel';
 import { DEFAULT_VIEW, ViewsPanel, type ViewOptions } from './views/ViewsPanel';
-
-// One engine for the page's lifetime; created outside React so re-renders
-// (and StrictMode double effects) never rebuild the audio graph.
-let engine: AudioEngine | null = null;
-const getEngine = () => {
-  if (!engine) {
-    engine = new AudioEngine();
-    // Handy for poking at the graph from the browser console in dev.
-    if (import.meta.env.DEV) (window as unknown as { engine: AudioEngine }).engine = engine;
-  }
-  return engine;
-};
 
 const SOURCES: { id: SourceKind; label: string }[] = [
   { id: 'clip', label: 'Clip' },

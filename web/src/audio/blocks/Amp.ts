@@ -1,6 +1,6 @@
 import { isBuiltInCab, levelIr, loadIr, synthCabinetIR } from '../ir';
-import type { AmpSettings } from '../settings';
-import { dbToGain, lerp, setParam, ShaperStage, Slot, type Block } from '../util';
+import type { AmpModel, AmpSettings } from '../settings';
+import { clippersReady, dbToGain, lerp, LowLatencyCompressor, setGate, setParam, ShaperStage, Slot, type Block } from '../util';
 import { ComboAmp } from './ComboAmp';
 import { asymSoftClip, tubeClip } from './clippers';
 
@@ -43,18 +43,25 @@ export class Amp implements Block {
   private readonly preGain: GainNode;
   private readonly stack: BiquadFilterNode[];
   private readonly powerGain: GainNode;
-  private readonly sag: DynamicsCompressorNode;
+  private readonly sag: LowLatencyCompressor;
   private readonly makeup: GainNode;
   private readonly cab: ConvolverNode;
   private readonly cabSlot: Slot;
-  private readonly champ: ComboAmp;
+  private readonly champ: ComboAmp | null = null;
+  // Each model's input and output switch; the unheard model gets silence.
+  private readonly comboIn: GainNode;
   private readonly comboSel: GainNode;
+  private readonly genericIn: GainNode;
   private readonly genericSel: GainNode;
   private model: AmpSettings['model'] | null = null;
   private cabName: string | null = null;
   private pending: Promise<void> = Promise.resolve();
 
-  constructor(private readonly ctx: BaseAudioContext) {
+  // `only` builds just that model (Live, where nothing unheard should run).
+  constructor(
+    private readonly ctx: BaseAudioContext,
+    only?: AmpModel,
+  ) {
     this.input = ctx.createGain();
     this.output = ctx.createGain();
     this.preGain = ctx.createGain();
@@ -69,10 +76,8 @@ export class Amp implements Block {
     dc.type = 'highpass';
     dc.frequency.value = 20;
     // Power supply sag: loud passages pull the level down a little.
-    this.sag = ctx.createDynamicsCompressor();
-    this.sag.knee.value = 12;
-    this.sag.attack.value = 0.01;
-    this.sag.release.value = 0.15;
+    this.sag = new LowLatencyCompressor(ctx);
+    this.sag.set({ knee: 12, attack: 0.01, release: 0.15 });
     this.makeup = ctx.createGain();
     this.cab = ctx.createConvolver();
     this.cab.normalize = false;
@@ -80,30 +85,39 @@ export class Amp implements Block {
     const cabBlock = { input: this.cab, output: this.cab };
     this.cabSlot = new Slot(ctx, cabBlock);
 
-    let prev: AudioNode = this.input.connect(this.preGain);
-    prev.connect(pre.input);
-    prev = pre.output.connect(coupling);
-    for (const f of this.stack) prev = prev.connect(f);
-    prev.connect(this.powerGain).connect(power.input);
+    this.genericIn = ctx.createGain();
     this.genericSel = ctx.createGain();
-    this.genericSel.gain.value = 0;
-    power.output.connect(dc).connect(this.sag).connect(this.makeup).connect(this.genericSel).connect(this.cabSlot.input);
-
-    this.champ = new ComboAmp(ctx);
+    this.comboIn = ctx.createGain();
     this.comboSel = ctx.createGain();
-    this.comboSel.gain.value = 0;
-    this.input.connect(this.champ.input);
-    this.champ.output.connect(this.comboSel).connect(this.cabSlot.input);
+    for (const g of [this.genericIn, this.genericSel, this.comboIn, this.comboSel]) g.gain.value = 0;
+
+    if (only !== 'champ600') {
+      let prev: AudioNode = this.input.connect(this.genericIn).connect(this.preGain);
+      prev.connect(pre.input);
+      prev = pre.output.connect(coupling);
+      for (const f of this.stack) prev = prev.connect(f);
+      prev.connect(this.powerGain).connect(power.input);
+      power.output.connect(dc).connect(this.sag.input);
+      this.sag.output.connect(this.makeup).connect(this.genericSel).connect(this.cabSlot.input);
+    }
+    if (only !== 'generic') {
+      this.champ = new ComboAmp(ctx);
+      this.input.connect(this.comboIn).connect(this.champ.input);
+      this.champ.output.connect(this.comboSel).connect(this.cabSlot.input);
+    }
     this.cabSlot.output.connect(this.output);
   }
 
   apply(s: AmpSettings) {
     const c = this.ctx;
-    this.champ.apply(s);
+    this.champ?.apply(s);
     if (s.model !== this.model) {
       this.model = s.model;
-      setParam(this.comboSel.gain, s.model === 'champ600' ? 1 : 0, c);
-      setParam(this.genericSel.gain, s.model === 'generic' ? 1 : 0, c);
+      const combo = s.model === 'champ600';
+      setGate(this.comboIn.gain, combo, c);
+      setGate(this.comboSel.gain, combo, c);
+      setGate(this.genericIn.gain, !combo, c);
+      setGate(this.genericSel.gain, !combo, c);
     }
     const { pre, power } = ampStages(s.volume);
     setParam(this.preGain.gain, pre, c);
@@ -116,8 +130,7 @@ export class Amp implements Block {
     });
     setParam(this.powerGain.gain, power, c);
     // Sag starts to act as the power stage gets pushed.
-    setParam(this.sag.threshold, lerp(-6, -24, s.volume), c);
-    setParam(this.sag.ratio, lerp(1.5, 4, s.volume), c);
+    this.sag.set({ threshold: lerp(-6, -24, s.volume), ratio: lerp(1.5, 4, s.volume) });
     // Keep the overall output in a sensible range across the volume knob
     // (level matching does the exact job for A/B).
     setParam(this.makeup.gain, dbToGain(lerp(0, -6, s.volume)), c);
@@ -126,7 +139,7 @@ export class Amp implements Block {
 
   // Resolves when the selected cabinet IR is loaded and in place.
   ready() {
-    return Promise.all([this.pending, this.champ.ready()]).then(() => undefined);
+    return Promise.all([this.pending, this.champ?.ready(), clippersReady(this.ctx)]).then(() => undefined);
   }
 
   private setCab(cab: string) {
