@@ -319,6 +319,9 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .corner-table th { color: var(--muted); font-weight: 500; font-size: 0.75rem; }
 .corner-table tr.moved td:nth-child(2) { color: #f0a848; font-weight: 600; }
 
+/* Circuit panels: part groups */
+.part-section { margin: 10px 0 2px; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px; }
+
 /* Clean boost schematic */
 .schematic-wrap { background: #111216; border: 1px solid var(--border); border-radius: 8px; padding: 8px; overflow-x: auto; }
 .schematic { display: block; width: 100%; min-width: 560px; height: auto; }

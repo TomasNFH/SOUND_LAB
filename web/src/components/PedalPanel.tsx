@@ -2,6 +2,7 @@ import { humpFrequency, tsGain, tsHighCut } from '../audio/blocks/TubeScreamer';
 import type { BdSettings, Ds2Settings, KlonSettings, PedalSettings, PedalType, TsSettings } from '../audio/settings';
 import { BoostPanel } from './BoostPanel';
 import { fmt, Knob } from './Knob';
+import { Ts4558Panel } from './Ts4558Panel';
 
 type Props = {
   pedal: PedalSettings;
@@ -17,7 +18,7 @@ const PEDALS: { id: PedalType; name: string; idea: string }[] = [
   {
     id: 'ts',
     name: 'Tube Screamer',
-    idea: 'Mid hump, clean bass path, soft diode clipping. Only the highpassed branch is driven into the diodes.',
+    idea: 'Mid hump, clean bass path, soft diode clipping. Classic: the idea, simplified. 4558: the TS808 circuit with every part editable.',
   },
   {
     id: 'bd',
@@ -71,6 +72,25 @@ export function PedalPanel({ pedal, onChange }: Props) {
         {pedal.type === 'boost' && <BoostPanel boost={pedal.boost} onChange={(boost) => onChange({ ...pedal, boost })} />}
 
         {pedal.type === 'ts' && (
+          <div className="switches">
+            <div className="switch-row">
+              <span className="switch-label">Mode</span>
+              <div className="seg">
+                {(['classic', '4558'] as const).map((m) => (
+                  <button key={m} className={pedal.ts.mode === m ? 'on' : ''} onClick={() => setTs({ mode: m })}>
+                    {m === 'classic' ? 'Classic' : '4558'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {pedal.type === 'ts' && pedal.ts.mode === '4558' && (
+          <Ts4558Panel ts={pedal.ts.c4558} onChange={(c4558) => setTs({ c4558 })} />
+        )}
+
+        {pedal.type === 'ts' && pedal.ts.mode !== '4558' && (
           <>
             <div className="knobs">
               <Knob label="Drive" value={pedal.ts.drive} min={0} max={1} step={0.01} defaultValue={0.3} format={fmt.pct} onChange={(drive) => setTs({ drive })} />

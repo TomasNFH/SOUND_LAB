@@ -5,6 +5,7 @@ import { bdTransfer } from './blocks/BluesDriver';
 import { ds2Transfer } from './blocks/Ds2';
 import { klonTransfer } from './blocks/Klon';
 import { tsTransfer } from './blocks/TubeScreamer';
+import { tsTransfer4558 } from './ts4558/ts4558';
 import type { AmpSettings, PedalSettings, ToneSettings } from './settings';
 
 export type Transfer = { fn: (x: number) => number; note: string };
@@ -19,6 +20,11 @@ export function pedalTransfer(p: PedalSettings): Transfer {
         note: 'A straight line (only louder) until the 4558 runs out of supply voltage, then it flattens.',
       };
     case 'ts':
+      if (p.ts.mode === '4558')
+        return {
+          fn: tsTransfer4558(p.ts.c4558),
+          note: 'IC1a output for mid frequencies: the input plus the feedback voltage, which the diodes cap. Before tone and level.',
+        };
       return {
         fn: tsTransfer(p.ts),
         note: 'Clipping stage for mid frequencies (above the hump), before tone and level.',

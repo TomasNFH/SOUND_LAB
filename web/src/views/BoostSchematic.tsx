@@ -1,99 +1,12 @@
-import type { ReactNode } from 'react';
 import { boostValues } from '../audio/boost/boost4558';
 import { STOCK_BOOST, type BoostSettings } from '../audio/settings';
+import { Cap, Dot, farads, Ground, Label, ohms, OpAmp, Resistor, Wire } from './schematicParts';
 
 type Props = { boost: BoostSettings };
 
 // The complete clean_boost_4558.cir schematic, drawn from the current
 // settings: values update live and parts that differ from the netlist are
 // highlighted.
-
-const ohms = (v: number) => (v >= 1e6 ? `${+(v / 1e6).toFixed(2)}M` : v >= 1e3 ? `${+(v / 1e3).toFixed(1)}k` : `${Math.round(v)}`);
-const farads = (v: number) =>
-  v >= 1e-6 ? `${+(v * 1e6).toFixed(2)}µ` : v >= 1e-9 ? `${+(v * 1e9).toFixed(1)}n` : `${Math.round(v * 1e12)}p`;
-
-// --- Symbols -------------------------------------------------------------
-
-// Resistor zigzag between two points on a horizontal or vertical line.
-function Resistor({ x1, y1, x2, y2, hot }: { x1: number; y1: number; x2: number; y2: number; hot?: boolean }) {
-  const vertical = x1 === x2;
-  const len = vertical ? y2 - y1 : x2 - x1;
-  const body = 32;
-  const lead = (len - body) / 2;
-  const pts: string[] = [];
-  const steps = 6;
-  for (let i = 0; i <= steps; i++) {
-    const t = lead + (body * i) / steps;
-    const off = i === 0 || i === steps ? 0 : i % 2 ? 5 : -5;
-    pts.push(vertical ? `${x1 + off},${y1 + t}` : `${x1 + t},${y1 + off}`);
-  }
-  const d = vertical
-    ? `M${x1} ${y1} V${y1 + lead} L${pts.join(' L')} V${y2}`
-    : `M${x1} ${y1} H${x1 + lead} L${pts.join(' L')} H${x2}`;
-  return <path className={`sch-part ${hot ? 'hot' : ''}`} d={d} />;
-}
-
-// Capacitor: two plates across the line; `polar` marks an electrolytic's +.
-function Cap({ x1, y1, x2, y2, hot, polar }: { x1: number; y1: number; x2: number; y2: number; hot?: boolean; polar?: 'start' | 'end' }) {
-  const vertical = x1 === x2;
-  const mx = (x1 + x2) / 2;
-  const my = (y1 + y2) / 2;
-  const g = 3;
-  const w = 9;
-  const cls = `sch-part ${hot ? 'hot' : ''}`;
-  return vertical ? (
-    <g className={cls}>
-      <path d={`M${x1} ${y1} V${my - g} M${mx - w} ${my - g} H${mx + w} M${mx - w} ${my + g} H${mx + w} M${x1} ${my + g} V${y2}`} />
-      {polar && (
-        <text className="sch-plus" x={mx + w + 2} y={polar === 'start' ? my - g - 2 : my + g + 9}>
-          +
-        </text>
-      )}
-    </g>
-  ) : (
-    <g className={cls}>
-      <path d={`M${x1} ${y1} H${mx - g} M${mx - g} ${my - w} V${my + w} M${mx + g} ${my - w} V${my + w} M${mx + g} ${y1} H${x2}`} />
-      {polar && (
-        <text className="sch-plus" x={polar === 'start' ? mx - g - 9 : mx + g + 2} y={my + w + 10}>
-          +
-        </text>
-      )}
-    </g>
-  );
-}
-
-const Ground = ({ x, y }: { x: number; y: number }) => (
-  <path className="sch-wire" d={`M${x} ${y} V${y + 6} M${x - 8} ${y + 6} H${x + 8} M${x - 5} ${y + 9} H${x + 5} M${x - 2} ${y + 12} H${x + 2}`} />
-);
-
-const Dot = ({ x, y }: { x: number; y: number }) => <circle className="sch-dot" cx={x} cy={y} r="2.5" />;
-
-const Wire = ({ d }: { d: string }) => <path className="sch-wire" d={d} />;
-
-const Label = ({ x, y, children, anchor = 'start', hot }: { x: number; y: number; children: ReactNode; anchor?: 'start' | 'middle' | 'end'; hot?: boolean }) => (
-  <text className={`sch-label ${hot ? 'hot' : ''}`} x={x} y={y} textAnchor={anchor}>
-    {children}
-  </text>
-);
-
-// Op-amp triangle pointing right; inputs on the left (+ on top).
-function OpAmp({ x, y, h = 70, name }: { x: number; y: number; h?: number; name: string }) {
-  const w = h * 0.95;
-  return (
-    <g>
-      <path className="sch-part" d={`M${x} ${y} V${y + h} L${x + w} ${y + h / 2} Z`} />
-      <text className="sch-pin" x={x + 5} y={y + h * 0.3 + 4}>
-        +
-      </text>
-      <text className="sch-pin" x={x + 5} y={y + h * 0.7 + 4}>
-        −
-      </text>
-      <text className="sch-label" x={x + w * 0.32} y={y + h / 2 + 4}>
-        {name}
-      </text>
-    </g>
-  );
-}
 
 // --- The circuit -----------------------------------------------------------
 

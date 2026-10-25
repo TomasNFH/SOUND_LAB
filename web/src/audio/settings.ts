@@ -33,6 +33,65 @@ export type TsSettings = {
   hump: 340 | 720 | 1500; // Hz, from the cap in the 4.7 kΩ leg
   bassPath: boolean; // the clean "+1" path that keeps the bass undistorted
   highCut: boolean; // the 51 pF cap across the drive pot
+  mode: 'classic' | '4558'; // classic: the simplified model above · 4558: the circuit, part by part
+  c4558: Ts4558Settings;
+};
+
+// Tube Screamer built from its circuit (TS808 style, JRC4558): pot
+// positions and every part, in ohms, farads and volts.
+export type Ts4558Settings = {
+  drive: number; // drive pot rotation, 0..1 (A500k)
+  tone: number; // 0 dark .. 1 bright
+  level: number; // level pot rotation, 0..1 (A100k)
+  rIn: number; // input bias
+  cIn: number; // input cap
+  cCouple: number; // buffer to IC1a coupling cap
+  rBias: number; // IC1a + input bias
+  rFixed: number; // in series with the drive pot (feedback)
+  drivePot: number;
+  cFb: number; // across the drive (high cut)
+  rGnd: number; // feedback leg to ground: sets max gain
+  cGnd: number; // ... and the hump
+  diodes: 'si' | 'ge' | 'led' | 'asym' | 'none';
+  r7: number; // passive lowpass after IC1a
+  c6: number;
+  rTone: number; // into IC1b +
+  tonePot: number;
+  r8: number; // tone pot wiper to C7
+  c7: number;
+  rToneFb: number; // IC1b feedback
+  cOut: number; // output cap
+  rOut: number; // in series with the level pot
+  levelPot: number;
+  supply: 9 | 18;
+};
+
+// TS808 values (the common published schematic).
+export const STOCK_TS4558: Ts4558Settings = {
+  drive: 0.5,
+  tone: 0.5,
+  level: 0.5,
+  rIn: 1e6,
+  cIn: 0.02e-6,
+  cCouple: 1e-6,
+  rBias: 10e3,
+  rFixed: 51e3,
+  drivePot: 500e3,
+  cFb: 51e-12,
+  rGnd: 4.7e3,
+  cGnd: 0.047e-6,
+  diodes: 'si',
+  r7: 1e3,
+  c6: 0.22e-6,
+  rTone: 1e3,
+  tonePot: 20e3,
+  r8: 220,
+  c7: 0.22e-6,
+  rToneFb: 1e3,
+  cOut: 1e-6,
+  rOut: 100,
+  levelPot: 100e3,
+  supply: 9,
 };
 
 export type BdSettings = { gain: number; tone: number; level: number };
@@ -157,7 +216,7 @@ export const DEFAULT_SETTINGS: ToneSettings = {
     on: true,
     type: 'ts',
     boost: STOCK_BOOST,
-    ts: { drive: 0.3, tone: 0.5, level: -9, clip: 'sym', hump: 720, bassPath: true, highCut: true },
+    ts: { drive: 0.3, tone: 0.5, level: -9, clip: 'sym', hump: 720, bassPath: true, highCut: true, mode: 'classic', c4558: STOCK_TS4558 },
     bd: { gain: 0.5, tone: 0.5, level: -9 },
     ds2: { dist: 0.5, tone: 0.5, level: -7, turbo: false },
     klon: { gain: 0.35, treble: 0.5, output: 3 },

@@ -3,30 +3,11 @@ import { STOCK_BOOST, type BoostSettings } from '../audio/settings';
 import { BoostResponseView } from '../views/BoostResponseView';
 import { BoostSchematic } from '../views/BoostSchematic';
 import { fmt, Knob } from './Knob';
+import { farads, hz, ohms, potLabel, snap } from './parts';
 
 type Props = { boost: BoostSettings; onChange: (b: BoostSettings) => void };
 
 type PartKey = 'r1' | 'c1' | 'r2' | 'c2' | 'c3';
-
-const E12 = [1.0, 1.2, 1.5, 1.8, 2.2, 2.7, 3.3, 3.9, 4.7, 5.6, 6.8, 8.2];
-
-// Snap to the nearest standard (E12) value, so turning a knob picks parts
-// you can buy. The stock value is kept even when it isn't E12 (R1 is two
-// 3.3M in parallel = 1.65M).
-function snap(v: number, stock: number) {
-  if (Math.abs(v - stock) / stock < 0.03) return stock;
-  const decade = Math.pow(10, Math.floor(Math.log10(v)));
-  const m = v / decade;
-  let best = E12[0];
-  for (const e of [...E12, 10]) if (Math.abs(Math.log(m / e)) < Math.abs(Math.log(m / best))) best = e;
-  return best * decade;
-}
-
-const ohms = (v: number) =>
-  v >= 1e6 ? `${+(v / 1e6).toFixed(2)} MΩ` : v >= 1e3 ? `${+(v / 1e3).toFixed(1)} kΩ` : `${Math.round(v)} Ω`;
-const farads = (v: number) =>
-  v >= 1e-6 ? `${+(v * 1e6).toFixed(2)} µF` : v >= 1e-9 ? `${+(v * 1e9).toFixed(1)} nF` : `${Math.round(v * 1e12)} pF`;
-const hz = (f: number) => (f >= 1000 ? `${+(f / 1000).toFixed(1)} kHz` : f >= 10 ? `${Math.round(f)} Hz` : `${f.toFixed(1)} Hz`);
 
 const PARTS: { key: PartKey; label: string; min: number; max: number; format: (v: number) => string; role: string }[] = [
   { key: 'r1', label: 'R1', min: 100e3, max: 10e6, format: ohms, role: 'input bias' },
@@ -101,7 +82,7 @@ export function BoostPanel({ boost, onChange }: Props) {
           <div className="seg">
             {[50e3, 100e3, 250e3, 500e3, 1e6].map((r) => (
               <button key={r} className={boost.gainPot === r ? 'on' : ''} onClick={() => set({ gainPot: r })}>
-                {ohms(r).replace(' kΩ', 'k').replace(' MΩ', 'M')}
+                {potLabel(r)}
               </button>
             ))}
           </div>
@@ -111,7 +92,7 @@ export function BoostPanel({ boost, onChange }: Props) {
           <div className="seg">
             {[10e3, 25e3, 50e3, 100e3].map((r) => (
               <button key={r} className={boost.volPot === r ? 'on' : ''} onClick={() => set({ volPot: r })}>
-                {ohms(r).replace(' kΩ', 'k')}
+                {potLabel(r)}
               </button>
             ))}
           </div>
