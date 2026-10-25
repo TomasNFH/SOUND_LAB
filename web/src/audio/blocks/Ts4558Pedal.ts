@@ -6,7 +6,7 @@ import { loadWorklet } from '../worklets';
 
 const OVERSAMPLE = 4;
 
-// Tube Screamer built from its circuit around a JRC4558, every part
+// Mid-hump overdrive built from its circuit around a JRC4558, every part
 // a setting, running in an AudioWorklet. Silent until the module loads;
 // ready() resolves once it is in place.
 export class Ts4558Pedal implements Block {

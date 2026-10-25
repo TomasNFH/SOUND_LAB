@@ -1,4 +1,4 @@
-// Tube transfer curves for the Champion 600 model, shared by the audio
+// Tube transfer curves for the 6V6 combo model, shared by the audio
 // worklet and the transfer view.
 
 // Straight until near the limit v, then flattening; `p` sets how sudden

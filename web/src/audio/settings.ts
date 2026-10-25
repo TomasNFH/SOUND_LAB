@@ -37,7 +37,7 @@ export type TsSettings = {
   c4558: Ts4558Settings;
 };
 
-// Tube Screamer built from its circuit (TS808 style, JRC4558): pot
+// Mid-hump overdrive built from its circuit (classic op-amp design, JRC4558): pot
 // positions and every part, in ohms, farads and volts.
 export type Ts4558Settings = {
   drive: number; // drive pot rotation, 0..1 (A500k)
@@ -66,7 +66,7 @@ export type Ts4558Settings = {
   supply: 9 | 18;
 };
 
-// TS808 values (the common published schematic).
+// Stock values (the commonly published schematic).
 export const STOCK_TS4558: Ts4558Settings = {
   drive: 0.5,
   tone: 0.5,
@@ -231,12 +231,12 @@ export type PedalSettings = {
   klon: KlonSettings;
 };
 
-// Fender Champion 600 built from its schematic. Every field is a part of
+// Small single-ended 6V6 combo built from its schematic. Every field is a part of
 // the real circuit; the defaults are the stock amp.
 export type ChampSettings = {
   input: 'high' | 'low';
   // stock: fixed resistors · knobs: pots instead · liftR19: R19 lifted
-  // (no ground return) · bypass: switched around, 5F1-style
+  // (no ground return) · bypass: switched around, 1950s-style
   toneStack: 'stock' | 'knobs' | 'liftR19' | 'bypass';
   treble: number; // pot positions, used when toneStack is 'knobs'
   bass: number;
@@ -349,7 +349,7 @@ export const DEFAULT_SETTINGS: ToneSettings = {
 // version still load after new controls are added.
 export function withDefaults(partial: unknown): ToneSettings {
   const p = partial as { amp?: { model?: unknown; cab?: unknown } } | null;
-  // Presets saved before the Champion model existed used the generic amp.
+  // Presets saved before the 6V6 combo model existed used the generic amp.
   // (A saved amp always has a cab; built-in presets only list what they change.)
   const amp = p && typeof p === 'object' ? p.amp : undefined;
   const legacy = !!amp && typeof amp === 'object' && amp.cab !== undefined && amp.model === undefined;

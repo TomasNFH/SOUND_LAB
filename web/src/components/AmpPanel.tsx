@@ -54,7 +54,7 @@ export function AmpPanel({ amp, onChange, otherBranch, onStockToOther }: Props) 
         </label>
         <div className="seg" role="group" aria-label="Amp model">
           <button className={amp.model === 'champ600' ? 'on' : ''} onClick={() => set({ model: 'champ600' })}>
-            Champion 600
+            6V6 combo
           </button>
           <button className={amp.model === 'generic' ? 'on' : ''} onClick={() => set({ model: 'generic' })}>
             Generic
@@ -63,8 +63,8 @@ export function AmpPanel({ amp, onChange, otherBranch, onStockToOther }: Props) 
       </div>
       <p className="muted small">
         {amp.model === 'champ600'
-          ? 'Built from the Fender service schematic (722CAX003): two 12AX7 stages, a fixed tone stack, a single-ended 6V6 and its feedback loop.'
-          : 'A hand-tuned small Fender combo. Volume drives the preamp and power stage: low is clean, high breaks up.'}
+          ? 'A small single-ended combo built from its service schematic: two 12AX7 stages, a fixed tone stack, a single-ended 6V6 and its feedback loop.'
+          : 'A hand-tuned small combo. Volume drives the preamp and power stage: low is clean, high breaks up.'}
       </p>
 
       <div className={amp.on ? '' : 'disabled'}>

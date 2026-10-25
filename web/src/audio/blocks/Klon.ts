@@ -2,7 +2,7 @@ import type { KlonSettings } from '../settings';
 import { dbToGain, latencyMatchedPath, lerp, setParam, ShaperStage, type Block } from '../util';
 import { softClip } from './clippers';
 
-// Klon Centaur, simplified: a clean path and a clipped path, summed.
+// Clean-blend overdrive, simplified: a clean path and a clipped path, summed.
 // Germanium diodes clip early and very softly. The gain pot is dual-gang:
 // turning it up raises the dirty path's gain and, at the same time, makes
 // the clean path a smaller part of the mix. At low gain the clean signal

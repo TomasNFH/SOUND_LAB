@@ -120,7 +120,7 @@ export function ViewsPanel({ engine, branches, editing, highlight, activeBand, v
           <CircuitView amp={settings.amp} branch={editing.toUpperCase()} />
         ) : (
           <p className="muted small view-caption">
-            Branch {editing.toUpperCase()} uses the generic amp. Pick Champion 600 in its Amp block to see the circuit.
+            Branch {editing.toUpperCase()} uses the generic amp. Pick the 6V6 combo in its Amp block to see the circuit.
           </p>
         ))}
       {tab === 'harmonics' && <HarmonicsView engine={engine} />}

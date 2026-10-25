@@ -9,7 +9,7 @@ const DB_MAX = 6;
 
 const usesChamp = (b: Branches[keyof Branches]) => b.amp.on && b.amp.model === 'champ600';
 
-// Champion 600 tone stack, from V2-A's plate to V2-B's grid with the
+// The 6V6 combo's tone stack, from V2-A's plate to V2-B's grid with the
 // volume full up, in absolute dB: the scoop and the level the stack throws
 // away. Branch A grey, branch B colour.
 export function ChampStackView({ branches }: Props) {
@@ -35,7 +35,7 @@ export function ChampStackView({ branches }: Props) {
   if (!usesChamp(branches.a) && !usesChamp(branches.b)) return null;
   return (
     <>
-      <p className="muted small view-caption">Champion 600 tone stack (V2-A plate → V2-B grid, volume full up)</p>
+      <p className="muted small view-caption">Tone stack (V2-A plate → V2-B grid, volume full up)</p>
       <canvas ref={canvasRef} className="view-canvas" />
       <p className="muted small">
         <i className="swatch dry" /> A <i className="swatch wet" /> B. 0 dB would be no loss at all: the stock

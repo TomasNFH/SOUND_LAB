@@ -4,7 +4,7 @@
   --border: #2d3039;
   --text: #e8e6e1;
   --muted: #9a9ca5;
-  --accent: #6fcf6f; /* Tube Screamer green */
+  --accent: #6fcf6f; /* overdrive green */
   --dry: #9a9ca5;
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   color: var(--text);
@@ -228,7 +228,7 @@ button.mx-end { font: inherit; color: inherit; text-align: left; cursor: pointer
   .mx-auto-track { flex-basis: 100%; }
 }
 
-/* Champion 600 panel */
+/* 6V6 combo panel */
 .champ h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .mods-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 8px; }
 .mods-head h3 { margin-right: 4px; }
@@ -333,3 +333,6 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .sch-label.hot { fill: #f0a848; font-weight: 600; }
 .sch-pin { fill: var(--muted); font-size: 10px; }
 .sch-plus { fill: var(--muted); font-size: 10px; stroke: none; }
+
+/* Footer: license and trademark notice */
+.site-footer { margin: 32px auto 16px; max-width: 760px; text-align: center; line-height: 1.5; }

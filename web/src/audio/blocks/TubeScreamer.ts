@@ -1,7 +1,7 @@
 import type { TsSettings } from '../settings';
 import { dbToGain, latencyMatchedPath, lerp, setParam, ShaperStage, type Block } from '../util';
 
-// Tube Screamer (TS808/TS9) clipping stage, split into its parts:
+// Mid-hump overdrive clipping stage, split into its parts:
 //
 //   input ─┬─ hump highpass ─ drive gain ─ diode clipper ─ high cut ─┐
 //          │                                                         ├─ tone ─ level ─ out

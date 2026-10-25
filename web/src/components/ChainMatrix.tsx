@@ -37,10 +37,10 @@ const AUTO_INTERVALS = [2, 5, 10];
 
 const PEDAL_NAMES: Record<PedalType, string> = {
   boost: 'Clean boost 4558',
-  ts: 'Tube Screamer',
-  bd: 'Blues Driver',
-  ds2: 'DS-2 Turbo',
-  klon: 'Klon',
+  ts: 'Mid-hump OD',
+  bd: 'Amp-like OD',
+  ds2: 'Hard distortion',
+  klon: 'Clean-blend OD',
 };
 
 const SOURCE_NAMES: Record<SourceKind, string> = {
@@ -73,7 +73,7 @@ function describe(s: ToneSettings, block: BlockId): { on: boolean; detail: strin
       const mods = changedMods(s.amp.champ, STOCK_CHAMP).length + (s.amp.cab !== 'champ6' ? 1 : 0);
       return {
         on: s.amp.on,
-        detail: `Champ · ${fmt.pct(s.amp.volume)}`,
+        detail: `6V6 · ${fmt.pct(s.amp.volume)}`,
         tag: mods ? `${mods} mod${mods > 1 ? 's' : ''}` : undefined,
       };
     }

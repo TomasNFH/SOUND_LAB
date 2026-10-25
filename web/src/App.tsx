@@ -139,7 +139,7 @@ export function App() {
     setBranches((b) => ({ ...b, [to]: structuredClone(b[from]) }));
   }, []);
 
-  // The other branch gets this whole chain with a stock Champion 600, so
+  // The other branch gets this whole chain with a stock 6V6 combo, so
   // the amp mods are the only difference between A and B.
   const stockToOther = useCallback(() => {
     setBranches((b) => {
@@ -361,6 +361,11 @@ export function App() {
           />
         </div>
       )}
+      <footer className="site-footer muted small">
+        Tone Lab is an independent educational project, MIT licensed. Its pedal and amp models have generic names and
+        are approximations; any product names or trademarks belong to their owners, and this project is not affiliated
+        with or endorsed by them.
+      </footer>
     </main>
   );
 }

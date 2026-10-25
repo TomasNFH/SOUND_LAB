@@ -6,7 +6,7 @@ import { loadWorklet } from '../worklets';
 
 const OVERSAMPLE = 4;
 
-// Champion 600 preamp and power amp (everything before the speaker),
+// 6V6 combo preamp and power amp (everything before the speaker),
 // running in an AudioWorklet. Silent until the module has loaded, which
 // takes a moment at startup; ready() resolves once it is in place.
 export class ChampAmp implements Block {

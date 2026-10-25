@@ -46,7 +46,7 @@ export function runBiquad(data: Float32Array, sr: number, s: BiquadSpec) {
 // break-up peaks, and a steep fall above ~5 kHz. That steep top is what
 // takes the fizz off distortion; it matters as much as the amp.
 export const BUILT_IN_CABS = {
-  champ6: 'Champion 6" (stock)',
+  champ6: 'Stock 6"',
   smooth6: 'Upgraded 6" (smoother)',
   cab10: '10" cabinet',
   builtin: 'Generic small combo',

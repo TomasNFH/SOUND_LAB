@@ -1,4 +1,4 @@
-// Fender Champion 600 (2007 reissue) from its service schematic,
+// Small single-ended 6V6 combo (2007 design) from its service schematic,
 // drawing 722CAX003 rev A. Everything here is plain maths on component
 // values: the audio worklet, the views and the test-point check all use
 // it, so the sound, the curves and the numbers can't disagree.
@@ -199,7 +199,7 @@ const VOLUME_POT = 1e6; // R13, 1 MΩ audio taper
 const CATHODE_CAPS: Record<ChampSettings['v2aCap'], number> = { '22u': 22e-6, '1u': 1e-6, '470n': 0.47e-6 };
 const FEEDBACK_R: Record<ChampSettings['feedback'], number> = { stock: 2200, less: 4700, off: Infinity };
 
-// Fender's test-point levels for 25 mV at the High input, volume full up.
+// The service manual's test-point levels for 25 mV at the High input, volume full up.
 export const FENDER_TEST_POINTS = { tp2: 1.18, tp3: 0.18, tp4: 0.18, tp5: 7.0, tp9: 175, tp13: 3.35 };
 // Output transformer voltage ratio from TP9 (plate) and TP13 (speaker).
 const OT_RATIO = FENDER_TEST_POINTS.tp13 / FENDER_TEST_POINTS.tp9;
@@ -219,7 +219,7 @@ export function interstage(s: ChampSettings, volume: number): Network {
     { kind: 'R', a: 'V', b: 'gnd', value: Math.max(1, r * VOLUME_POT), name: 'R13 lower' },
   ];
   if (s.toneStack === 'bypass') {
-    // A switch around the stack: plate → coupling cap → volume (5F1-style).
+    // A switch around the stack: plate → coupling cap → volume (1950s-style).
     return {
       input: 'P',
       sourceR,
@@ -253,7 +253,7 @@ export function interstage(s: ChampSettings, volume: number): Network {
 // R19 15k).
 export const stockKnobs = (midPot: number) => ({ treble: 75 / 255, bass: 0.3, middle: Math.min(1, 15 / midPot) });
 
-// The flattest setting a Fender stack can reach: treble and bass down,
+// The flattest setting this stack can reach: treble and bass down,
 // middle up. Found by searching every position for the least deviation
 // from 80 Hz to 5 kHz; it is flat within ~1.3 dB with the 25k pot and
 // ~0.6 dB with 250k, and a bigger middle pot loses less level doing it

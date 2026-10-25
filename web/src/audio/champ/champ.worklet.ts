@@ -1,4 +1,4 @@
-// Champion 600 as one AudioWorklet processor, so the global negative
+// The 6V6 combo as one AudioWorklet processor, so the global negative
 // feedback (speaker → R7 → V2-B cathode) can be a real loop: per sample,
 // at 4x the sample rate. Every coefficient is computed on the main thread
 // (circuit.ts) and posted here; this file only runs the signal.

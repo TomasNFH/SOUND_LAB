@@ -64,7 +64,7 @@ export function ampTransfer(a: AmpSettings): Transfer {
   if (a.model === 'champ600') {
     return {
       fn: v2bTransfer(a.champ),
-      note: 'Champion V2-B, grid to plate (inverted, as a tube does). Grid conduction flattens one side early; cutoff rounds the other.',
+      note: 'Second preamp stage (V2-B), grid to plate (inverted, as a tube does). Grid conduction flattens one side early; cutoff rounds the other.',
     };
   }
   return {

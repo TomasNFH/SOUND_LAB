@@ -10,7 +10,7 @@ type Props = { amp: AmpSettings; branch: string };
 const STAGE_INFO: Record<StageId, string> = {
   input: 'Two jacks into a 68k/68k/1M network. High is the normal input; Low is about 6 dB quieter, for hot pickups.',
   v2a: 'Half of the 12AX7: the first amplifier, 100k plate resistor, 1.5k cathode resistor bypassed by C3. 25 mV in becomes about 1.2 V.',
-  stack: 'A Fender treble/bass/middle network with fixed resistors where the pots would be. It gives the scooped Fender voice and loses most of the level.',
+  stack: 'A classic treble/bass/middle network with fixed resistors where the pots would be. It gives the classic scooped voice and loses most of the level.',
   volume: 'R13, 1 MΩ audio taper, after the tone stack: it sets how hard V2-B and the 6V6 are driven, so the amp gets cleaner as you turn it down.',
   v2b: 'The other half of the 12AX7. Most of the breakup happens here at high volume. R23 (47 Ω) under its cathode is where the feedback enters.',
   feedback: 'R7 (2.2k) brings about 2% of the speaker signal back to V2-B’s cathode: less gain, less distortion, tighter bass.',
@@ -115,8 +115,8 @@ export function CircuitView({ amp, branch }: Props) {
 
   return (
     <div className="circuit-view">
-      <p className="muted small view-caption">Branch {branch} · Champion 600 · tap a stage</p>
-      <svg viewBox={`0 0 ${L.width} ${height}`} className="circuit-svg" role="img" aria-label="Champion 600 signal path">
+      <p className="muted small view-caption">Branch {branch} · 6V6 combo · tap a stage</p>
+      <svg viewBox={`0 0 ${L.width} ${height}`} className="circuit-svg" role="img" aria-label="6V6 combo signal path">
         <defs>
           <marker id="cv-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
             <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

@@ -13,7 +13,7 @@ type Props = {
 const unit = { min: 0, max: 1, step: 0.01, format: fmt.pct };
 const db = (x: number) => 20 * Math.log10(x);
 
-// Controls for the Champion 600 circuit model: the real amp's one knob,
+// Controls for the 6V6 combo circuit model: the real amp's one knob,
 // and every mod as a switch, stock first.
 export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props) {
   const champ = amp.champ;
@@ -89,9 +89,9 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
                   </div>
                   <p className="muted small">
                     Treble and bass are 250k; the middle pot is {champ.midPot}k
-                    {champ.midPot === 25 ? ' (the usual Fender value)' : ', bigger than Fender’s 25k: the stack loses less level, so the amp is louder and breaks up sooner'}
+                    {champ.midPot === 25 ? ' (the usual value)' : ', bigger than the usual 25k: the stack loses less level, so the amp is louder and breaks up sooner'}
                     . At {fmt.pct(stockPos.treble)} / {fmt.pct(stockPos.bass)} / {fmt.pct(stockPos.middle)} the knobs match the stock
-                    resistors exactly. Treble 0, bass low and middle full up is the flattest a Fender stack gets.{' '}
+                    resistors exactly. Treble 0, bass low and middle full up is the flattest this kind of stack gets.{' '}
                     <button className="link" onClick={() => set({ ...stockPos })}>
                       Set to stock
                     </button>{' '}
@@ -123,7 +123,7 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
       </div>
 
       <details className="testpoints">
-        <summary>Test points: model vs Fender service manual</summary>
+        <summary>Test points: model vs the service manual</summary>
         <p className="muted small">25 mV at 1 kHz into High, volume full up, as in the service manual.</p>
         <table>
           <thead>
@@ -131,7 +131,7 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
               <th>Point</th>
               <th>Where</th>
               <th>Model</th>
-              <th>Fender</th>
+              <th>Manual</th>
             </tr>
           </thead>
           <tbody>
@@ -148,7 +148,7 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
             ))}
           </tbody>
         </table>
-        <p className="muted small">With mods the model column moves away from Fender's: that is the mod's effect on gain.</p>
+        <p className="muted small">With mods the model column moves away from the manual's: that is the mod's effect on gain.</p>
       </details>
     </div>
   );

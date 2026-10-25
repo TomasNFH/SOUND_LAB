@@ -1,4 +1,4 @@
-// Tube Screamer (TS808-style) at component level, built around a JRC4558:
+// Mid-hump overdrive (classic op-amp design) at component level, built around a JRC4558:
 //
 //   in ─ C_in/R_in ─ buffer ─ C_couple/R_bias ─ IC1a ─ R7/C6 ─ IC1b tone ─ C_out ─ level ─ buffer ─ out
 //                                                │

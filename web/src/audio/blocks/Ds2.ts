@@ -2,10 +2,10 @@ import type { Ds2Settings } from '../settings';
 import { dbToGain, lerp, setParam, ShaperStage, type Block } from '../util';
 import { hardClip } from './clippers';
 
-// Boss DS-2 Turbo Distortion, simplified: high gain into hard clipping
+// Hard distortion, simplified: high gain into hard clipping
 // diodes, then a tone control that blends a lowpass and a highpass. The
 // blend leaves a dip between them: the scooped-mid distortion sound.
-// Turbo (mode II) adds a mid boost before the clipper, so the mids are
+// Mode II adds a mid boost before the clipper, so the mids are
 // clipped harder and come through thicker.
 //
 //   in ─ HP 100 Hz ─ [turbo: mid boost] ─ gain ─ hard clip ─┬─ LP ─┐

@@ -65,7 +65,7 @@ export class PedalBlock implements Block {
   }
 
   // A pedal with two circuits, both running (the clean boost's two
-  // netlists, the Tube Screamer's classic and 4558 modes): `apply` sets
+  // netlists, the mid-hump overdrive's classic and 4558 modes): `apply` sets
   // both and returns whether the second one is selected; the choice
   // crossfades between them.
   private twoModes(first: Block, second: Block, apply: (s: PedalSettings) => boolean): Model {

@@ -6,16 +6,16 @@ import { asymSoftClip, tubeClip } from './clippers';
 
 // The amp block holds two models that share the cabinet:
 //
-//   in ─┬─ Champion 600 (circuit model, AudioWorklet) ─┬─ cabinet ─ out
+//   in ─┬─ 6V6 combo (circuit model, AudioWorklet) ──┬─ cabinet ─ out
 //       └─ generic small combo ─────────────────────────┘
 //
-// Generic: a hand-tuned small Fender combo, as stages:
+// Generic: a hand-tuned small combo, as stages:
 //
 //   preamp gain ─ tube stage ─ tone stack ─ power drive ─ power stage ─ sag
 //
 // Volume pushes both the preamp and the power stage: low is clean, high
 // breaks up, and a pedal in front breaks it up sooner. The tone stack is
-// a Fender-style bass / middle / treble approximated with three filters
+// a classic bass / middle / treble approximated with three filters
 // (the real one is a passive network whose controls interact).
 
 export const ampStages = (volume: number) => ({
@@ -32,7 +32,7 @@ export const ampPreampTransfer = (s: AmpSettings) => {
 
 export const toneStackSpecs = (s: AmpSettings) => [
   { type: 'lowshelf' as const, freq: 120, gain: lerp(-12, 6, s.bass), q: 0.7 },
-  // Fender stacks always scoop the mids; "middle" fills the scoop back in.
+  // These stacks always scoop the mids; "middle" fills the scoop back in.
   { type: 'peaking' as const, freq: 500, gain: lerp(-12, 0, s.middle), q: 0.8 },
   { type: 'highshelf' as const, freq: 2500, gain: lerp(-12, 8, s.treble), q: 0.7 },
 ];

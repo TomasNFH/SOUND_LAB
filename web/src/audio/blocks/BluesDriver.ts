@@ -2,10 +2,10 @@ import type { BdSettings } from '../settings';
 import { dbToGain, lerp, setParam, ShaperStage, type Block } from '../util';
 import { asymSoftClip, softClip } from './clippers';
 
-// Boss Blues Driver (BD-2), simplified: discrete transistor gain stages
+// Amp-like overdrive, simplified: discrete transistor gain stages
 // that each clip a little, in series, with gentle filtering between them.
 // No mid hump and no clean blend: the full band is driven, so it stays
-// flatter and more amp-like than a Tube Screamer, and the clipping builds
+// flatter and more amp-like than the mid-hump overdrive, and the clipping builds
 // up gradually across stages instead of all at once.
 //
 //   in ─ HP 70 Hz ─ gain A ─ clip 1 ─ LP 5 kHz ─ gain B ─ clip 2 ─ tone ─ level ─ out

@@ -1,4 +1,4 @@
-// The 4558 Tube Screamer, per sample at 4x so the diode and rail
+// The 4558 mid-hump overdrive, per sample at 4x so the diode and rail
 // clipping don't alias. Coefficients come from ts4558.ts on the main
 // thread.
 

@@ -4,7 +4,7 @@ import { Cap, Diode, Dot, farads, Ground, Label, Npn, ohms, OpAmp, Resistor, Wir
 
 type Props = { ts: Ts4558Settings };
 
-// The complete 4558 Tube Screamer, drawn from the current settings:
+// The complete 4558 mid-hump overdrive, drawn from the current settings:
 // values update live and parts that differ from stock are highlighted.
 // Bypass switching and the power filtering are left out.
 
@@ -41,7 +41,7 @@ export function TsSchematic({ ts: t }: Props) {
   const d = t.diodes;
 
   return (
-    <svg className="schematic" viewBox="0 0 1040 480" role="img" aria-label="Schematic of the Tube Screamer built around a JRC4558">
+    <svg className="schematic" viewBox="0 0 1040 480" role="img" aria-label="Schematic of the mid-hump overdrive built around a JRC4558">
       {/* Input: jack, C_in, R_in to VREF, Q1 emitter follower */}
       <circle className="sch-part" cx="20" cy={Y} r="6" />
       <Label x={8} y={Y - 14}>

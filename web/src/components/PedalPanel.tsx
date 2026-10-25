@@ -18,22 +18,22 @@ const PEDALS: { id: PedalType; name: string; idea: string }[] = [
   },
   {
     id: 'ts',
-    name: 'Tube Screamer',
-    idea: 'Mid hump, clean bass path, soft diode clipping. Classic: the idea, simplified. 4558: the TS808 circuit with every part editable.',
+    name: 'Mid-hump overdrive',
+    idea: 'Mid hump, clean bass path, soft diode clipping. Classic: the idea, simplified. 4558: the classic op-amp circuit with every part editable.',
   },
   {
     id: 'bd',
-    name: 'Blues Driver',
+    name: 'Amp-like overdrive',
     idea: 'Gentle clipping in two stages, full range, flatter mids: closer to an amp breaking up.',
   },
   {
     id: 'ds2',
-    name: 'DS-2 Turbo',
-    idea: 'Hard clipping and a scooped tone control. Turbo boosts the mids before the clipper.',
+    name: 'Hard distortion',
+    idea: 'Hard clipping and a scooped tone control. Mode II boosts the mids before the clipper.',
   },
   {
     id: 'klon',
-    name: 'Klon Centaur',
+    name: 'Clean-blend overdrive',
     idea: 'Clean signal blended with soft clipping, so the attack of each note survives.',
   },
 ];
@@ -179,7 +179,7 @@ export function PedalPanel({ pedal, onChange }: Props) {
                     I
                   </button>
                   <button className={pedal.ds2.turbo ? 'on' : ''} onClick={() => setDs2({ turbo: true })}>
-                    II · Turbo
+                    II · Mid boost
                   </button>
                 </div>
               </div>

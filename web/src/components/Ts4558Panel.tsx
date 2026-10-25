@@ -94,7 +94,7 @@ export function Ts4558Panel({ ts, onChange }: Props) {
 
       <div className="mods-head">
         <h3>Parts</h3>
-        <span className="muted inline">{changedCount ? `${changedCount} changed from stock` : 'All stock (TS808)'}</span>
+        <span className="muted inline">{changedCount ? `${changedCount} changed from stock` : 'All stock'}</span>
         <button onClick={() => onChange({ ...STOCK_TS4558, drive: ts.drive, tone: ts.tone, level: ts.level })} disabled={!changedCount}>
           Reset parts
         </button>
@@ -222,13 +222,13 @@ export function Ts4558Panel({ ts, onChange }: Props) {
 
       <div className="mods-head">
         <h3>Schematic</h3>
-        <span className="muted inline">TS808 with a JRC4558 · changed parts in orange</span>
+        <span className="muted inline">Classic op-amp overdrive with a JRC4558 · changed parts in orange</span>
       </div>
       <div className="schematic-wrap">
         <TsSchematic ts={ts} />
       </div>
       <p className="muted small">
-        Values from the common published TS808 schematic. The two transistor buffers (Q1, Q2) are drawn but modelled
+        Values from the commonly published schematic of this classic circuit. The two transistor buffers (Q1, Q2) are drawn but modelled
         as perfect followers; the bypass switching and power filtering are left out.
       </p>
     </div>
