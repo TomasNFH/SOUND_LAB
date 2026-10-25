@@ -54,6 +54,7 @@ export function CircuitView({ amp, branch }: Props) {
   const volDb = 20 * Math.log10(Math.max(1e-4, audioTaper(amp.volume)));
   const stageChanged = (id: StageId) =>
     MODS.some((m) => m.stage === id && c[m.key] !== STOCK_CHAMP[m.key]) ||
+    (id === 'stack' && c.toneStack === 'knobs' && c.midPot !== STOCK_CHAMP.midPot) ||
     (id === 'speaker' && amp.cab !== 'champ6');
   const cabName = isBuiltInCab(amp.cab) ? BUILT_IN_CABS[amp.cab] : amp.cab === 'off' ? 'No speaker' : amp.cab;
 
@@ -68,7 +69,10 @@ export function CircuitView({ amp, branch }: Props) {
     {
       id: 'stack',
       title: 'Tone stack',
-      lines: [optionLabel('toneStack', c.toneStack), `${stackDb.toFixed(1)} dB at 1 kHz`],
+      lines: [
+        c.toneStack === 'knobs' ? `Tone knobs · ${c.midPot}k mid` : optionLabel('toneStack', c.toneStack),
+        `${stackDb.toFixed(1)} dB at 1 kHz`,
+      ],
     },
     { id: 'volume', title: 'Volume R13', lines: [`${Math.round(amp.volume * 100)}%`, `${volDb.toFixed(0)} dB`] },
     {

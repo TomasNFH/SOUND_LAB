@@ -48,6 +48,7 @@ export type ChampSettings = {
   treble: number; // pot positions, used when toneStack is 'knobs'
   bass: number;
   middle: number;
+  midPot: 25 | 50 | 100 | 250; // kΩ, the middle pot when toneStack is 'knobs'
   c1: 250 | 500; // pF; 500 = a second 250 pF in parallel with C1
   v2aCap: '22u' | '1u' | '470n'; // C3, first-stage cathode bypass
   v2bCap: '22u' | 'none'; // C10, second-stage cathode bypass
@@ -64,6 +65,7 @@ export const STOCK_CHAMP: ChampSettings = {
   treble: 75 / 255,
   bass: 0.3,
   middle: 0.6,
+  midPot: 25,
   c1: 250,
   v2aCap: '22u',
   v2bCap: '22u',

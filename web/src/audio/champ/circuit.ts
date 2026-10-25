@@ -231,7 +231,7 @@ export function interstage(s: ChampSettings, volume: number): Network {
   const trebleTop = knobs ? (1 - t) * 250e3 : 180e3; // R21
   const trebleBottom = knobs ? t * 250e3 : 75e3; // R20
   const bass = knobs ? Math.max(1, s.bass * 250e3) : 75e3; // R22
-  const mid = knobs ? Math.max(1, s.middle * 25e3) : 15e3; // R19
+  const mid = knobs ? Math.max(1, s.middle * s.midPot * 1e3) : 15e3; // R19
   const c1 = s.c1 * 1e-12;
   const parts: Part[] = [
     { kind: 'C', a: 'P', b: 'T', value: c1, name: 'C1' },
@@ -248,9 +248,17 @@ export function interstage(s: ChampSettings, volume: number): Network {
   return { input: 'P', sourceR, parts };
 }
 
-// Stock tone-stack knob positions: where 250k/250k/25k pots reproduce the
-// fixed resistors (R21+R20 split, R22 75k, R19 15k).
-export const STOCK_KNOBS = { treble: 75 / 255, bass: 0.3, middle: 0.6 };
+// Stock tone-stack knob positions: where 250k treble and bass pots and the
+// chosen middle pot reproduce the fixed resistors (R21+R20 split, R22 75k,
+// R19 15k).
+export const stockKnobs = (midPot: number) => ({ treble: 75 / 255, bass: 0.3, middle: Math.min(1, 15 / midPot) });
+
+// The flattest setting a Fender stack can reach: treble and bass down,
+// middle up. Found by searching every position for the least deviation
+// from 80 Hz to 5 kHz; it is flat within ~1.3 dB with the 25k pot and
+// ~0.6 dB with 250k, and a bigger middle pot loses less level doing it
+// (about −15 dB with 25k, −4 dB with 250k).
+export const flatKnobs = (midPot: number) => ({ treble: 0, bass: midPot >= 250 ? 0.2 : 0.05, middle: 1 });
 
 // Triode gain with a partly bypassed cathode: flat A_lf at low frequency,
 // A_hf above the bypass cap's corner. Returned as (gain, τz, τp) for

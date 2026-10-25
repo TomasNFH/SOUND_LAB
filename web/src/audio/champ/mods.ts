@@ -62,7 +62,7 @@ export const MODS: Mod[] = [
       { value: 'liftR19', label: 'R19 lifted' },
       { value: 'bypass', label: 'Bypassed' },
     ],
-    what: 'A Fender treble/bass/middle stack with fixed resistors. It scoops the mids and throws away about 17 dB. Knobs swap the resistors for pots; lifting R19 removes its ground return; bypassing routes around it (like a 5F1 Champ).',
+    what: 'A Fender treble/bass/middle stack with fixed resistors. It scoops the mids and throws away about 17 dB. Knobs swap the resistors for pots (a bigger middle pot than Fender’s 25k loses less level and can reach flat); lifting R19 removes its ground return; bypassing routes around it (like a 5F1 Champ).',
     listen: 'Lifted or bypassed, the amp gets much louder and breaks up at lower volume, with flat mids instead of the scoop.',
     look: 'Filters: the Champion curve shows the scoop and the level loss for each version.',
   }),

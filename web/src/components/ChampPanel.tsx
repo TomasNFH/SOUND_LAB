@@ -1,4 +1,4 @@
-import { powerTube, stageGains, STOCK_KNOBS, testPoints } from '../audio/champ/circuit';
+import { flatKnobs, interstageResponseDb, powerTube, stageGains, stockKnobs, testPoints } from '../audio/champ/circuit';
 import { MODS } from '../audio/champ/mods';
 import { STOCK_CHAMP, type AmpSettings, type ChampSettings } from '../audio/settings';
 import { fmt, Knob } from './Knob';
@@ -21,6 +21,10 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
   const g = stageGains(champ);
   const pt = powerTube(champ.bias);
   const changed = MODS.filter((m) => champ[m.key] !== STOCK_CHAMP[m.key]).length;
+  const stockPos = stockKnobs(champ.midPot);
+  // Level through the stack at 1 kHz, volume full up: shows the loss
+  // shrinking as the middle pot gets bigger.
+  const stackDb = interstageResponseDb(champ, 1, new Float32Array([1000]))[0];
 
   return (
     <div className="champ">
@@ -68,15 +72,32 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
               {m.key === 'toneStack' && champ.toneStack === 'knobs' && (
                 <div className="mod-knobs">
                   <div className="knobs">
-                    <Knob size="small" label="Treble" value={champ.treble} {...unit} defaultValue={STOCK_KNOBS.treble} onChange={(treble) => set({ treble })} />
-                    <Knob size="small" label="Bass" value={champ.bass} {...unit} defaultValue={STOCK_KNOBS.bass} onChange={(bass) => set({ bass })} />
-                    <Knob size="small" label="Middle" value={champ.middle} {...unit} defaultValue={STOCK_KNOBS.middle} onChange={(middle) => set({ middle })} />
+                    <Knob size="small" label="Treble" value={champ.treble} {...unit} defaultValue={stockPos.treble} onChange={(treble) => set({ treble })} />
+                    <Knob size="small" label="Bass" value={champ.bass} {...unit} defaultValue={stockPos.bass} onChange={(bass) => set({ bass })} />
+                    <Knob size="small" label="Middle" value={champ.middle} {...unit} defaultValue={stockPos.middle} onChange={(middle) => set({ middle })} />
+                  </div>
+                  <div className="switch-row mid-pot">
+                    <span className="switch-label">Middle pot</span>
+                    <div className="seg">
+                      {([25, 50, 100, 250] as const).map((k) => (
+                        <button key={k} className={champ.midPot === k ? 'on' : ''} onClick={() => set({ midPot: k })}>
+                          {k}k
+                        </button>
+                      ))}
+                    </div>
+                    <span className="muted inline">{stackDb.toFixed(1)} dB at 1 kHz</span>
                   </div>
                   <p className="muted small">
-                    250k / 250k / 25k pots. At {fmt.pct(STOCK_KNOBS.treble)} / {fmt.pct(STOCK_KNOBS.bass)} /{' '}
-                    {fmt.pct(STOCK_KNOBS.middle)} they match the stock resistors exactly.{' '}
-                    <button className="link" onClick={() => set({ ...STOCK_KNOBS })}>
+                    Treble and bass are 250k; the middle pot is {champ.midPot}k
+                    {champ.midPot === 25 ? ' (the usual Fender value)' : ', bigger than Fender’s 25k: the stack loses less level, so the amp is louder and breaks up sooner'}
+                    . At {fmt.pct(stockPos.treble)} / {fmt.pct(stockPos.bass)} / {fmt.pct(stockPos.middle)} the knobs match the stock
+                    resistors exactly. Treble 0, bass low and middle full up is the flattest a Fender stack gets.{' '}
+                    <button className="link" onClick={() => set({ ...stockPos })}>
                       Set to stock
+                    </button>{' '}
+                    ·{' '}
+                    <button className="link" onClick={() => set({ ...flatKnobs(champ.midPot) })}>
+                      Flat
                     </button>
                   </p>
                 </div>

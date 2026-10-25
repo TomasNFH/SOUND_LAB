@@ -28,6 +28,13 @@ const champ = (name: string, about: string, patch: Partial<ChampSettings>, extra
 export const BUILT_IN_PRESETS: BuiltInPreset[] = [
   champ('Champion 600 stock', 'The amp as it ships, at 60% volume. Load a mod into the other branch to compare.', {}),
   champ('Champion: tone knobs', 'Pots instead of the fixed resistors, set to stock positions: turn them.', { toneStack: 'knobs' }),
+  champ('Champion: flat tone knobs, 250k middle', 'Tone knobs with a 250k middle pot, set flat: no scoop and little level lost.', {
+    toneStack: 'knobs',
+    midPot: 250,
+    treble: 0,
+    bass: 0.2,
+    middle: 1,
+  }),
   champ('Champion: R19 lifted', 'The stack loses its ground return: much more gain, a darker sound.', { toneStack: 'liftR19' }),
   champ('Champion: no tone stack (5F1-style)', 'The stack switched out, like a 1950s tweed Champ: loud and raw.', { toneStack: 'bypass' }),
   champ('Champion: brighter (C1 doubled)', 'A second 250 pF across C1: more treble through the stack.', { c1: 500 }),

@@ -305,3 +305,4 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
   .views.mini .filters-pair .view-canvas { height: 80px; }
   .app.with-mini { padding-bottom: 240px; }
 }
+.mid-pot { margin-top: 8px; }
