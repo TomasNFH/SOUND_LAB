@@ -1,3 +1,5 @@
+import * as browserStore from './browserStore';
+
 export type AudioFile = { name: string; size: number; modified: string };
 export type Recording = AudioFile;
 export type AudioFolder = 'recordings' | 'exports' | 'cabinets' | 'reverbs';
@@ -15,35 +17,31 @@ async function check(res: Response, what: string) {
   return res;
 }
 
-export async function listFiles(folder: AudioFolder): Promise<AudioFile[]> {
+async function serverListFiles(folder: AudioFolder): Promise<AudioFile[]> {
   return (await check(await fetch(`/api/${folder}`), 'Listing')).json();
 }
 
-export async function fetchFile(folder: AudioFolder, name: string): Promise<ArrayBuffer> {
+async function serverFetchFile(folder: AudioFolder, name: string): Promise<ArrayBuffer> {
   return (await check(await fetch(`/api/${folder}/${encodeURIComponent(name)}`), `Loading ${name}`)).arrayBuffer();
 }
 
-export async function uploadFile(folder: AudioFolder, file: Blob, name: string): Promise<AudioFile> {
+async function serverUploadFile(folder: AudioFolder, file: Blob, name: string): Promise<AudioFile> {
   const body = new FormData();
   body.append('file', file, name);
   return (await check(await fetch(`/api/${folder}`, { method: 'POST', body }), 'Upload')).json();
 }
 
-export const listRecordings = () => listFiles('recordings');
-export const fetchRecording = (name: string) => fetchFile('recordings', name);
-export const uploadRecording = (file: File) => uploadFile('recordings', file, file.name);
-
 export type PresetInfo = { name: string; modified: string };
 
-export async function listPresets(): Promise<PresetInfo[]> {
+async function serverListPresets(): Promise<PresetInfo[]> {
   return (await check(await fetch('/api/presets'), 'Listing presets')).json();
 }
 
-export async function loadPreset(name: string): Promise<unknown> {
+async function serverLoadPreset(name: string): Promise<unknown> {
   return (await check(await fetch(`/api/presets/${encodeURIComponent(name)}`), 'Loading preset')).json();
 }
 
-export async function savePreset(name: string, data: unknown) {
+async function serverSavePreset(name: string, data: unknown) {
   await check(
     await fetch(`/api/presets/${encodeURIComponent(name)}`, {
       method: 'PUT',
@@ -54,6 +52,25 @@ export async function savePreset(name: string, data: unknown) {
   );
 }
 
-export async function deletePreset(name: string) {
+async function serverDeletePreset(name: string) {
   await check(await fetch(`/api/presets/${encodeURIComponent(name)}`, { method: 'DELETE' }), 'Deleting preset');
 }
+
+// The static build (VITE_STATIC=1, for GitHub Pages) has no api and keeps
+// files and presets in the browser instead; the dev setup uses the api.
+const server = {
+  listFiles: serverListFiles,
+  fetchFile: serverFetchFile,
+  uploadFile: serverUploadFile,
+  listPresets: serverListPresets,
+  loadPreset: serverLoadPreset,
+  savePreset: serverSavePreset,
+  deletePreset: serverDeletePreset,
+};
+const backend = import.meta.env.VITE_STATIC ? browserStore : server;
+
+export const { listFiles, fetchFile, uploadFile, listPresets, loadPreset, savePreset, deletePreset } = backend;
+
+export const listRecordings = () => listFiles('recordings');
+export const fetchRecording = (name: string) => fetchFile('recordings', name);
+export const uploadRecording = (file: File) => uploadFile('recordings', file, file.name);

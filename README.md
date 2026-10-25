@@ -28,6 +28,28 @@ Put clean WAVs (48 kHz, 24-bit, mono, peaks around -12 dBFS) in
 `recordings/`, or add them from the page. Cabinet and reverb impulse
 responses go in `irs/cabinets/` and `irs/reverbs/`.
 
+## The public version
+
+The online version runs on GitHub Pages without the api. It's the same
+app built with `VITE_STATIC=1`, and recordings, impulse responses and
+presets added there stay in the visitor's browser (IndexedDB, see
+`web/src/browserStore.ts`). Exports are only downloaded.
+
+Day-to-day work happens on `main` with Docker as above. Pushing a version
+tag publishes it:
+
+```bash
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+The `Deploy to GitHub Pages` workflow (`.github/workflows/pages.yml`) builds
+and deploys it. To try the static build locally on
+http://localhost:4173/SOUND_LAB/:
+
+```bash
+cd web && VITE_STATIC=1 BASE_PATH=/SOUND_LAB/ npm run build && BASE_PATH=/SOUND_LAB/ npx vite preview
+```
+
 ## What's in it
 
 | Part | Where |

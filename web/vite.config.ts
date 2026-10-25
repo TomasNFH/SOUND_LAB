@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react';
 const apiTarget = process.env.API_URL ?? 'http://localhost:3001';
 
 export default defineConfig({
+  // The GitHub Pages build is served from /<repo>/ and sets BASE_PATH.
+  base: process.env.BASE_PATH ?? '/',
   plugins: [react()],
   server: {
     host: true,
