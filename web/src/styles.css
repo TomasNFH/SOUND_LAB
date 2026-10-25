@@ -306,3 +306,15 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
   .app.with-mini { padding-bottom: 240px; }
 }
 .mid-pot { margin-top: 8px; }
+
+/* Clean boost (4558) panel */
+.boost-parts { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+.boost-part { border: 1px solid var(--border); border-radius: 8px; padding: 6px 2px; display: flex; justify-content: center; }
+.boost-part.changed { border-color: #f0a848; }
+.boost-part .knob.small { width: 92px; }
+.boost-part .knob-label { text-align: center; text-transform: none; letter-spacing: 0; }
+.view-canvas.boost-canvas { height: 200px; margin-top: 4px; }
+.corner-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.corner-table th, .corner-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--border); }
+.corner-table th { color: var(--muted); font-weight: 500; font-size: 0.75rem; }
+.corner-table tr.moved td:nth-child(2) { color: #f0a848; font-weight: 600; }

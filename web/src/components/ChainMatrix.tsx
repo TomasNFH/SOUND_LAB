@@ -36,7 +36,7 @@ const BRANCHES: BranchId[] = ['a', 'b'];
 const AUTO_INTERVALS = [2, 5, 10];
 
 const PEDAL_NAMES: Record<PedalType, string> = {
-  boost: 'Clean boost',
+  boost: 'Clean boost 4558',
   ts: 'Tube Screamer',
   bd: 'Blues Driver',
   ds2: 'DS-2 Turbo',

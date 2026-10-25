@@ -10,7 +10,20 @@ export type EqSettings = {
   bands: EqBand[];
 };
 
-export type BoostSettings = { gain: number }; // dB
+// Clean boost (JRC4558): pot positions and every part value, in ohms,
+// farads and volts.
+export type BoostSettings = {
+  gainPos: number; // gain pot rotation, 0..1 (A250k as a variable resistor)
+  volPos: number; // volume pot rotation, 0..1 (A10k)
+  r1: number; // input bias resistor
+  c1: number; // input cap
+  gainPot: number; // gain pot value
+  r2: number; // gain-setting resistor to C2
+  c2: number;
+  c3: number; // output cap
+  volPot: number; // volume pot value
+  supply: 9 | 18;
+};
 
 export type TsSettings = {
   drive: number; // 0..1, pot rotation
@@ -25,6 +38,20 @@ export type TsSettings = {
 export type BdSettings = { gain: number; tone: number; level: number };
 export type Ds2Settings = { dist: number; tone: number; level: number; turbo: boolean };
 export type KlonSettings = { gain: number; treble: number; output: number };
+
+// The values in clean_boost_4558.cir.
+export const STOCK_BOOST: BoostSettings = {
+  gainPos: 0.5,
+  volPos: 0.85,
+  r1: 1.65e6, // two 3.3M in parallel
+  c1: 0.1e-6,
+  gainPot: 250e3,
+  r2: 10e3,
+  c2: 10e-6,
+  c3: 10e-6,
+  volPot: 10e3,
+  supply: 9,
+};
 
 export type PedalType = 'boost' | 'ts' | 'bd' | 'ds2' | 'klon';
 
@@ -129,7 +156,7 @@ export const DEFAULT_SETTINGS: ToneSettings = {
   pedal: {
     on: true,
     type: 'ts',
-    boost: { gain: 0 },
+    boost: STOCK_BOOST,
     ts: { drive: 0.3, tone: 0.5, level: -9, clip: 'sym', hump: 720, bassPath: true, highCut: true },
     bd: { gain: 0.5, tone: 0.5, level: -9 },
     ds2: { dist: 0.5, tone: 0.5, level: -7, turbo: false },

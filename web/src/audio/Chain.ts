@@ -52,7 +52,7 @@ export class Chain {
 
   // Resolves once anything the chain loads asynchronously is in place.
   async ready() {
-    await Promise.all([this.amp.ready(), this.reverb.ready(), this.delay.ready()]);
+    await Promise.all([this.amp.ready(), this.reverb.ready(), this.delay.ready(), this.pedal.ready()]);
   }
 
   apply(s: ToneSettings) {

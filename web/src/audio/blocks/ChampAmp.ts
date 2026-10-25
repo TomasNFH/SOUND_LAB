@@ -2,20 +2,9 @@ import workletUrl from '../champ/champ.worklet.ts?worker&url';
 import { workletParams } from '../champ/circuit';
 import type { AmpSettings } from '../settings';
 import type { Block } from '../util';
+import { loadWorklet } from '../worklets';
 
 const OVERSAMPLE = 4;
-
-// The worklet module has to be added to every context that uses it: the
-// live one and each offline export context.
-const loaded = new WeakMap<BaseAudioContext, Promise<void>>();
-function loadWorklet(ctx: BaseAudioContext) {
-  let p = loaded.get(ctx);
-  if (!p) {
-    p = ctx.audioWorklet.addModule(workletUrl);
-    loaded.set(ctx, p);
-  }
-  return p;
-}
 
 // Champion 600 preamp and power amp (everything before the speaker),
 // running in an AudioWorklet. Silent until the module has loaded, which
@@ -31,7 +20,7 @@ export class ChampAmp implements Block {
   constructor(private readonly ctx: BaseAudioContext) {
     this.input = ctx.createGain();
     this.output = ctx.createGain();
-    this.loading = loadWorklet(ctx).then(() => {
+    this.loading = loadWorklet(ctx, workletUrl).then(() => {
       this.node = new AudioWorkletNode(ctx, 'champ600', {
         numberOfInputs: 1,
         numberOfOutputs: 1,

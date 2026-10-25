@@ -17,12 +17,14 @@ export class PedalBlock implements Block {
   readonly models: Record<PedalType, Model>;
   private readonly selectors = new Map<PedalType, GainNode>();
   private current: PedalType | null = null;
+  private readonly boost: BoostPedal;
 
   constructor(private readonly ctx: BaseAudioContext) {
     this.input = ctx.createGain();
     this.output = ctx.createGain();
 
     const boost = new BoostPedal(ctx);
+    this.boost = boost;
     const ts = new TubeScreamer(ctx);
     const bd = new BluesDriver(ctx);
     const ds2 = new Ds2(ctx);
@@ -42,6 +44,11 @@ export class PedalBlock implements Block {
       model.output.connect(sel).connect(this.output);
       this.selectors.set(type, sel);
     }
+  }
+
+  // Resolves once every model that loads something (worklets) is ready.
+  ready() {
+    return this.boost.ready();
   }
 
   apply(s: PedalSettings) {

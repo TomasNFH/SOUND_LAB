@@ -1,11 +1,11 @@
 import { ampPreampTransfer } from './blocks/Amp';
+import { boostTransfer } from './boost/boost4558';
 import { v2bTransfer } from './champ/circuit';
 import { bdTransfer } from './blocks/BluesDriver';
 import { ds2Transfer } from './blocks/Ds2';
 import { klonTransfer } from './blocks/Klon';
 import { tsTransfer } from './blocks/TubeScreamer';
 import type { AmpSettings, PedalSettings, ToneSettings } from './settings';
-import { dbToGain } from './util';
 
 export type Transfer = { fn: (x: number) => number; note: string };
 
@@ -13,10 +13,11 @@ export type Transfer = { fn: (x: number) => number; note: string };
 // transfer view. Pure functions of the settings, no audio nodes.
 export function pedalTransfer(p: PedalSettings): Transfer {
   switch (p.type) {
-    case 'boost': {
-      const g = dbToGain(p.boost.gain);
-      return { fn: (x) => g * x, note: 'A straight line: louder or quieter, never a new shape.' };
-    }
+    case 'boost':
+      return {
+        fn: boostTransfer(p.boost),
+        note: 'A straight line (only louder) until the 4558 runs out of supply voltage, then it flattens.',
+      };
     case 'ts':
       return {
         fn: tsTransfer(p.ts),

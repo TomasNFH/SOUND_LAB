@@ -1,5 +1,6 @@
 import { humpFrequency, tsGain, tsHighCut } from '../audio/blocks/TubeScreamer';
 import type { BdSettings, Ds2Settings, KlonSettings, PedalSettings, PedalType, TsSettings } from '../audio/settings';
+import { BoostPanel } from './BoostPanel';
 import { fmt, Knob } from './Knob';
 
 type Props = {
@@ -8,7 +9,11 @@ type Props = {
 };
 
 const PEDALS: { id: PedalType; name: string; idea: string }[] = [
-  { id: 'boost', name: 'Clean boost', idea: 'Only louder: no new harmonics. The reference for every other pedal.' },
+  {
+    id: 'boost',
+    name: 'Clean boost (4558)',
+    idea: 'A JRC4558 op-amp boost on 9 V, from clean_boost_4558.cir: louder with no new harmonics, until the op-amp runs out of supply voltage. Every part is editable.',
+  },
   {
     id: 'ts',
     name: 'Tube Screamer',
@@ -63,20 +68,7 @@ export function PedalPanel({ pedal, onChange }: Props) {
       {info && <p className="muted small">{info.idea}</p>}
 
       <div className={pedal.on ? '' : 'disabled'}>
-        {pedal.type === 'boost' && (
-          <div className="knobs">
-            <Knob
-              label="Gain"
-              value={pedal.boost.gain}
-              min={-12}
-              max={18}
-              step={0.5}
-              defaultValue={0}
-              format={fmt.db}
-              onChange={(gain) => onChange({ ...pedal, boost: { gain } })}
-            />
-          </div>
-        )}
+        {pedal.type === 'boost' && <BoostPanel boost={pedal.boost} onChange={(boost) => onChange({ ...pedal, boost })} />}
 
         {pedal.type === 'ts' && (
           <>
