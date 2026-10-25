@@ -1,0 +1,208 @@
+{
+ "kick": [
+  {
+   "file": "kick-1-2.m4a",
+   "layer": 1,
+   "peak": 0.031,
+   "level": 0.0161,
+   "seconds": 1.0
+  },
+  {
+   "file": "kick-1-1.m4a",
+   "layer": 1,
+   "peak": 0.033,
+   "level": 0.0164,
+   "seconds": 1.0
+  },
+  {
+   "file": "kick-2-1.m4a",
+   "layer": 2,
+   "peak": 0.092,
+   "level": 0.0513,
+   "seconds": 1.0
+  },
+  {
+   "file": "kick-2-2.m4a",
+   "layer": 2,
+   "peak": 0.109,
+   "level": 0.0603,
+   "seconds": 1.0
+  },
+  {
+   "file": "kick-3-2.m4a",
+   "layer": 3,
+   "peak": 0.229,
+   "level": 0.1091,
+   "seconds": 1.0
+  },
+  {
+   "file": "kick-3-1.m4a",
+   "layer": 3,
+   "peak": 0.309,
+   "level": 0.1461,
+   "seconds": 1.0
+  },
+  {
+   "file": "kick-4-1.m4a",
+   "layer": 4,
+   "peak": 0.88,
+   "level": 0.4036,
+   "seconds": 1.0
+  },
+  {
+   "file": "kick-4-2.m4a",
+   "layer": 4,
+   "peak": 0.89,
+   "level": 0.4094,
+   "seconds": 1.0
+  }
+ ],
+ "snare": [
+  {
+   "file": "snare-4.m4a",
+   "layer": 4,
+   "peak": 0.03,
+   "level": 0.007,
+   "seconds": 0.9
+  },
+  {
+   "file": "snare-6.m4a",
+   "layer": 6,
+   "peak": 0.045,
+   "level": 0.0122,
+   "seconds": 0.9
+  },
+  {
+   "file": "snare-14.m4a",
+   "layer": 14,
+   "peak": 0.109,
+   "level": 0.0251,
+   "seconds": 0.9
+  },
+  {
+   "file": "snare-16.m4a",
+   "layer": 16,
+   "peak": 0.125,
+   "level": 0.0305,
+   "seconds": 0.9
+  },
+  {
+   "file": "snare-24.m4a",
+   "layer": 24,
+   "peak": 0.297,
+   "level": 0.0602,
+   "seconds": 0.9
+  },
+  {
+   "file": "snare-26.m4a",
+   "layer": 26,
+   "peak": 0.331,
+   "level": 0.0702,
+   "seconds": 0.9
+  },
+  {
+   "file": "snare-33.m4a",
+   "layer": 33,
+   "peak": 0.72,
+   "level": 0.1544,
+   "seconds": 0.9
+  },
+  {
+   "file": "snare-35.m4a",
+   "layer": 35,
+   "peak": 0.89,
+   "level": 0.1738,
+   "seconds": 0.9
+  }
+ ],
+ "hat": [
+  {
+   "file": "hat-1-1.m4a",
+   "layer": 1,
+   "peak": 0.023,
+   "level": 0.0014,
+   "seconds": 0.45
+  },
+  {
+   "file": "hat-1-2.m4a",
+   "layer": 1,
+   "peak": 0.031,
+   "level": 0.0018,
+   "seconds": 0.45
+  },
+  {
+   "file": "hat-2-2.m4a",
+   "layer": 2,
+   "peak": 0.061,
+   "level": 0.0045,
+   "seconds": 0.45
+  },
+  {
+   "file": "hat-2-1.m4a",
+   "layer": 2,
+   "peak": 0.067,
+   "level": 0.0047,
+   "seconds": 0.45
+  },
+  {
+   "file": "hat-3-1.m4a",
+   "layer": 3,
+   "peak": 0.124,
+   "level": 0.0089,
+   "seconds": 0.45
+  },
+  {
+   "file": "hat-3-2.m4a",
+   "layer": 3,
+   "peak": 0.106,
+   "level": 0.0092,
+   "seconds": 0.45
+  },
+  {
+   "file": "hat-4-1.m4a",
+   "layer": 4,
+   "peak": 0.363,
+   "level": 0.0373,
+   "seconds": 0.45
+  },
+  {
+   "file": "hat-4-2.m4a",
+   "layer": 4,
+   "peak": 0.52,
+   "level": 0.0391,
+   "seconds": 0.45
+  }
+ ],
+ "open": [
+  {
+   "file": "open-2-1.m4a",
+   "layer": 2,
+   "peak": 0.105,
+   "level": 0.0087,
+   "seconds": 1.4
+  },
+  {
+   "file": "open-4-1.m4a",
+   "layer": 4,
+   "peak": 0.89,
+   "level": 0.0719,
+   "seconds": 1.4
+  }
+ ],
+ "pedal": [
+  {
+   "file": "pedal-2-2.m4a",
+   "layer": 2,
+   "peak": 0.048,
+   "level": 0.0093,
+   "seconds": 0.5
+  },
+  {
+   "file": "pedal-2-1.m4a",
+   "layer": 2,
+   "peak": 0.053,
+   "level": 0.0116,
+   "seconds": 0.5
+  }
+ ]
+}

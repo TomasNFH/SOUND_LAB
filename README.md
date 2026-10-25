@@ -104,3 +104,20 @@ approximations that don't claim to reproduce any commercial product.
 
 Code: [MIT](LICENSE). The audio clips in `web/public/clips/` are not part
 of the MIT grant; publish only clips you have the right to share.
+
+### Drum Lab sounds and grooves
+
+- **Drum samples** in `web/public/drums/kit/` come from
+  [Virtuosity Drums](https://versilian-studios.com/virtuosity-drums/) by
+  Versilian Studios, released under
+  [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). A few kick,
+  snare and hi-hat hits were mixed from their close, overhead and room mics
+  and encoded as AAC.
+- **Real drummer grooves** in `web/src/drums/grooves.ts` are two-bar excerpts
+  from the [Groove MIDI Dataset](https://magenta.tensorflow.org/datasets/groove)
+  by Google LLC, used under
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Changes: cut to
+  two bars, aligned to the bar line, mapped to five drums and velocities
+  scaled. Dataset paper: Jon Gillick, Adam Roberts, Jesse Engel, Douglas Eck
+  and David Bamman, "Learning to Groove with Inverse Sequence
+  Transformations", ICML 2019.

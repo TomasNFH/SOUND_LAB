@@ -1,11 +1,13 @@
 import { preferPlaybackSession, unlockPlayback } from '../audio/iosAudio';
-import { hit } from './kit';
-import { patternById, patternLength, VOICES, velocityAt, type PatternId } from './patterns';
+import { hit, kitReady, loadKit } from './kit';
+import { grooveById, type Groove } from './patterns';
 
 export interface DrumState {
   playing: boolean;
+  // True while the samples download before the first beat.
+  loading: boolean;
   bpm: number;
-  patternId: PatternId;
+  grooveId: string;
   volume: number;
 }
 
@@ -16,19 +18,29 @@ export const MAX_BPM = 220;
 // and books every hit in the next 120 ms on the audio clock, which is.
 const LOOKAHEAD = 0.12;
 const TICK_MS = 25;
+// Real drummers sometimes hit the downbeat a hair early; start the clock
+// this many beats before 1 so those notes are not lost on the first loop.
+const PRE_ROLL = 0.25;
+
+// Programmed beats get this much random timing and level, so they breathe.
+const HUMAN_MS = 6;
+const HUMAN_VEL = 0.08;
 
 // One drum machine for the page, outside React, so the beat keeps going when
 // you switch to another section (playing along while reading a scale).
 class DrumMachine {
-  private state: DrumState = { playing: false, bpm: 90, patternId: 'rock', volume: 0.8 };
+  private state: DrumState = { playing: false, loading: false, bpm: 90, grooveId: 'rock', volume: 0.8 };
   private listeners = new Set<() => void>();
   private ctx: AudioContext | null = null;
   private out: GainNode | null = null;
   private timer = 0;
-  private nextStep = 0;
-  private nextTime = 0;
-  // Steps already booked, so the UI can light the one being heard now.
-  private booked: { step: number; time: number }[] = [];
+  // Beats count up from the first downbeat; tempo changes re-anchor them.
+  private anchorTime = 0;
+  private anchorBeat = 0;
+  private scheduledTo = 0;
+  // A groove picked mid-play takes over at this beat.
+  private pending: { grooveId: string; at: number } | null = null;
+  private current: Groove = grooveById(this.state.grooveId);
 
   subscribe = (fn: () => void) => {
     this.listeners.add(fn);
@@ -42,13 +54,21 @@ class DrumMachine {
     this.listeners.forEach((fn) => fn());
   }
 
-  private stepSeconds(patternId = this.state.patternId) {
-    return 60 / this.state.bpm / patternById(patternId).stepsPerBeat;
+  private beatAt(t: number) {
+    return this.anchorBeat + ((t - this.anchorTime) * this.state.bpm) / 60;
+  }
+
+  private timeAt(beat: number) {
+    return this.anchorTime + ((beat - this.anchorBeat) * 60) / this.state.bpm;
+  }
+
+  preload() {
+    void loadKit().catch(() => {});
   }
 
   // Call from inside a click or key handler (browsers only start audio then).
-  play() {
-    if (this.state.playing) return;
+  async play() {
+    if (this.state.playing || this.state.loading) return;
     if (!this.ctx) {
       preferPlaybackSession();
       this.ctx = new AudioContext();
@@ -66,9 +86,19 @@ class DrumMachine {
     }
     unlockPlayback();
     void this.ctx.resume();
-    this.nextStep = 0;
-    this.nextTime = this.ctx.currentTime + 0.06;
-    this.booked = [];
+    if (!kitReady()) {
+      this.set({ loading: true });
+      try {
+        await loadKit();
+      } finally {
+        this.set({ loading: false });
+      }
+    }
+    this.current = grooveById(this.state.grooveId);
+    this.pending = null;
+    this.anchorTime = this.ctx.currentTime + 0.1;
+    this.anchorBeat = 0;
+    this.scheduledTo = -PRE_ROLL;
     this.timer = window.setInterval(this.tick, TICK_MS);
     this.set({ playing: true });
     this.tick();
@@ -76,17 +106,23 @@ class DrumMachine {
 
   stop() {
     window.clearInterval(this.timer);
-    this.booked = [];
     this.set({ playing: false });
   }
 
   toggle() {
     if (this.state.playing) this.stop();
-    else this.play();
+    else void this.play();
   }
 
   setBpm(bpm: number) {
-    this.set({ bpm: Math.round(Math.min(MAX_BPM, Math.max(MIN_BPM, bpm))) });
+    const next = Math.round(Math.min(MAX_BPM, Math.max(MIN_BPM, bpm)));
+    if (this.ctx && this.state.playing) {
+      // Keep the beat where it is and change speed from here on.
+      const now = this.ctx.currentTime;
+      this.anchorBeat = this.beatAt(now);
+      this.anchorTime = now;
+    }
+    this.set({ bpm: next });
   }
 
   setVolume(volume: number) {
@@ -94,48 +130,60 @@ class DrumMachine {
     this.set({ volume });
   }
 
-  // Changing beat mid-play waits for the next beat, then starts the new
-  // pattern from that beat, so the groove never stumbles.
-  setPattern(patternId: PatternId) {
-    const from = patternById(this.state.patternId);
-    if (this.state.playing && patternId !== from.id) {
-      const to = patternById(patternId);
-      const toBeat = (from.stepsPerBeat - (this.nextStep % from.stepsPerBeat)) % from.stepsPerBeat;
-      this.nextTime += toBeat * this.stepSeconds();
-      const beat = Math.floor((this.nextStep + toBeat) / from.stepsPerBeat);
-      this.nextStep = (beat * to.stepsPerBeat) % patternLength(to);
-    }
-    this.set({ patternId });
+  // A new groove waits for the next beat, then joins at the same place in
+  // the bar, so the groove never stumbles.
+  setGroove(grooveId: string) {
+    if (this.state.playing) this.pending = { grooveId, at: Math.ceil(this.scheduledTo) };
+    else this.current = grooveById(grooveId);
+    this.set({ grooveId });
   }
 
-  // The step sounding right now, or -1 when stopped.
-  currentStep() {
+  // Where the listener is now: beats into the loop, or -1 when stopped.
+  position() {
     if (!this.ctx || !this.state.playing) return -1;
-    const now = this.ctx.currentTime;
-    while (this.booked.length > 1 && this.booked[1].time <= now) this.booked.shift();
-    const first = this.booked[0];
-    return first && first.time <= now ? first.step : -1;
+    const beat = this.beatAt(this.ctx.currentTime);
+    if (beat < 0) return -1;
+    const groove = this.pending && beat >= this.pending.at ? grooveById(this.pending.grooveId) : this.current;
+    return beat % groove.beats;
   }
 
   private tick = () => {
     const ctx = this.ctx!;
-    const pattern = patternById(this.state.patternId);
-    // A background tab slows timers to about once a second; skip the steps
+    const now = ctx.currentTime;
+    // A background tab slows timers to about once a second; skip the beats
     // that went by rather than playing them all at once.
-    while (this.nextTime < ctx.currentTime) {
-      this.nextTime += this.stepSeconds();
-      this.nextStep = (this.nextStep + 1) % patternLength(pattern);
-    }
-    while (this.nextTime < ctx.currentTime + LOOKAHEAD) {
-      for (const { id } of VOICES) {
-        const v = velocityAt(pattern, id, this.nextStep);
-        if (v > 0) hit(ctx, this.out!, id, this.nextTime, v);
+    this.scheduledTo = Math.max(this.scheduledTo, this.beatAt(now));
+    const end = this.beatAt(now + LOOKAHEAD);
+    while (this.scheduledTo < end) {
+      const until = this.pending ? Math.min(end, this.pending.at) : end;
+      this.book(this.current, this.scheduledTo, until);
+      this.scheduledTo = until;
+      if (this.pending && until >= this.pending.at) {
+        this.current = grooveById(this.pending.grooveId);
+        this.pending = null;
       }
-      this.booked.push({ step: this.nextStep, time: this.nextTime });
-      this.nextTime += this.stepSeconds();
-      this.nextStep = (this.nextStep + 1) % patternLength(pattern);
     }
   };
+
+  // Book every hit of the looping groove that falls in [from, to) beats.
+  private book(groove: Groove, from: number, to: number) {
+    const length = groove.beats;
+    const hits: [number, Groove['events'][number]][] = [];
+    for (let loop = Math.floor(from / length) - 1; loop * length < to + 1; loop++) {
+      for (const e of groove.events) {
+        // Hits a hair before the loop start belong to the end of the loop.
+        const beat = loop * length + (((e[0] % length) + length) % length);
+        if (beat >= from && beat < to) hits.push([beat, e]);
+      }
+    }
+    hits.sort((a, b) => a[0] - b[0]);
+    const human = !groove.source;
+    for (const [beat, [, voice, velocity]] of hits) {
+      const jitter = human ? ((Math.random() * 2 - 1) * HUMAN_MS) / 1000 : 0;
+      const v = human ? velocity * (1 + (Math.random() * 2 - 1) * HUMAN_VEL) : velocity;
+      hit(this.ctx!, this.out!, voice, Math.max(this.ctx!.currentTime, this.timeAt(beat) + jitter), v);
+    }
+  }
 }
 
 export const drums = new DrumMachine();

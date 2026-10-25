@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Knob } from '../components/Knob';
 import { drums, MAX_BPM, MIN_BPM } from '../drums/DrumMachine';
-import { patternById, patternLength, PATTERNS, VOICES, velocityAt } from '../drums/patterns';
+import { GROOVE_GROUPS, grooveById, ROWS, type Groove, type Voice } from '../drums/patterns';
 import { useCurrentStep, useDrums } from '../drums/useDrums';
 
 // How each step is counted out loud: "1 e & a" in sixteenths, "1 & a" in triplets.
@@ -22,13 +22,40 @@ function useTapTempo() {
   };
 }
 
+interface Cell {
+  voice: Voice;
+  velocity: number;
+}
+
+// Snap each hit to the nearest grid step for display (the sound keeps the
+// drummer's real timing). When two hits share a step, the louder one shows.
+function gridOf(groove: Groove) {
+  const steps = groove.beats * groove.stepsPerBeat;
+  const cells = new Map<string, Cell>();
+  for (const [beat, voice, velocity] of groove.events) {
+    const step = (((Math.round(beat * groove.stepsPerBeat) % steps) + steps) % steps);
+    const row = ROWS.findIndex((r) => r.voices.includes(voice));
+    const key = `${row}:${step}`;
+    if ((cells.get(key)?.velocity ?? 0) < velocity) cells.set(key, { voice, velocity });
+  }
+  return cells;
+}
+
 export function DrumLab() {
-  const { playing, bpm, patternId, volume } = useDrums();
-  const step = useCurrentStep(playing);
+  const { playing, loading, bpm, grooveId, volume } = useDrums();
+  const groove = grooveById(grooveId);
+  const spb = groove.stepsPerBeat;
+  const stepsPerBar = 4 * spb;
+  const bars = groove.beats / 4;
+  const step = useCurrentStep(playing, spb);
   const tap = useTapTempo();
-  const pattern = patternById(patternId);
-  const length = patternLength(pattern);
-  const counts = COUNTS[pattern.stepsPerBeat];
+  const [viewBar, setViewBar] = useState(0);
+  // While playing, the grid follows the bar being heard.
+  const bar = step >= 0 ? Math.floor(step / stepsPerBar) % bars : Math.min(viewBar, bars - 1);
+  const cells = gridOf(groove);
+  const counts = COUNTS[spb];
+
+  useEffect(() => drums.preload(), []);
 
   // Space = play/stop while Drum Lab is open.
   useEffect(() => {
@@ -48,19 +75,40 @@ export function DrumLab() {
     <section className="panel drum-lab">
       <div className="panel-head">
         <h2>Beat</h2>
-        <div className="seg" role="group" aria-label="Beat">
-          {PATTERNS.map((p) => (
-            <button key={p.id} className={patternId === p.id ? 'on' : ''} onClick={() => drums.setPattern(p.id)}>
-              {p.label}
-            </button>
-          ))}
-        </div>
       </div>
-      <p className="muted small">{pattern.description} It keeps playing when you switch to another section.</p>
+      <div className="groove-groups">
+        {GROOVE_GROUPS.map((group) => (
+          <div key={group.label} className="groove-group">
+            <span className="groove-group-label">{group.label}</span>
+            <div className="seg" role="group" aria-label={`${group.label} beats`}>
+              {group.grooves.map((g) => (
+                <button key={g.id} className={grooveId === g.id ? 'on' : ''} onClick={() => drums.setGroove(g.id)}>
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="muted small">
+        {groove.description}{' '}
+        {groove.source ? (
+          <>
+            Played by a real drummer at {groove.bpm} BPM, with their timing and dynamics.{' '}
+            {bpm !== groove.bpm && (
+              <button className="link-btn" onClick={() => drums.setBpm(groove.bpm)}>
+                Use {groove.bpm} BPM
+              </button>
+            )}
+          </>
+        ) : (
+          'Programmed, with a little random timing so it breathes.'
+        )}
+      </p>
 
       <div className="drum-transport">
-        <button className="primary drum-play" onClick={() => drums.toggle()} title="Space">
-          {playing ? 'Stop' : 'Play'}
+        <button className="primary drum-play" onClick={() => drums.toggle()} disabled={loading} title="Space">
+          {loading ? 'Loading…' : playing ? 'Stop' : 'Play'}
         </button>
         <div className="bpm">
           <button onClick={() => drums.setBpm(bpm - 1)} aria-label="Slower" disabled={bpm <= MIN_BPM}>
@@ -88,30 +136,45 @@ export function DrumLab() {
         aria-label="Tempo in BPM"
       />
 
-      <div className="step-grid" style={{ '--steps': length } as React.CSSProperties} aria-label={`${pattern.label} pattern`}>
+      {bars > 1 && (
+        <div className="bar-picker" role="group" aria-label="Bar shown">
+          {Array.from({ length: bars }, (_, b) => (
+            <button key={b} className={bar === b ? 'on' : ''} onClick={() => setViewBar(b)} disabled={playing}>
+              Bar {b + 1}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="step-grid" style={{ '--steps': stepsPerBar } as React.CSSProperties} aria-label={`${groove.label}, bar ${bar + 1}`}>
         <span />
-        {Array.from({ length }, (_, i) => (
-          <span key={i} className={`step-count ${i % pattern.stepsPerBeat === 0 ? 'beat' : ''} ${step === i ? 'now' : ''}`}>
-            {i % pattern.stepsPerBeat === 0 ? i / pattern.stepsPerBeat + 1 : counts[i % pattern.stepsPerBeat]}
+        {Array.from({ length: stepsPerBar }, (_, i) => (
+          <span key={i} className={`step-count ${i % spb === 0 ? 'beat' : ''} ${step === bar * stepsPerBar + i ? 'now' : ''}`}>
+            {i % spb === 0 ? i / spb + 1 : counts[i % spb]}
           </span>
         ))}
-        {VOICES.map((voice) => (
-          <div className="step-row" key={voice.id}>
-            <span className="step-voice">{voice.label}</span>
-            {Array.from({ length }, (_, i) => {
-              const v = velocityAt(pattern, voice.id, i);
+        {ROWS.map((row, r) => (
+          <div className="step-row" key={row.label}>
+            <span className="step-voice">{row.label}</span>
+            {Array.from({ length: stepsPerBar }, (_, i) => {
+              const at = bar * stepsPerBar + i;
+              const cell = cells.get(`${r}:${at}`);
+              const strength = cell && (cell.velocity >= 0.8 ? 'accent' : cell.velocity < 0.4 ? 'ghost' : '');
               return (
-                <span
-                  key={i}
-                  className={`step ${i % pattern.stepsPerBeat === 0 ? 'beat' : ''} ${step === i ? 'now' : ''}`}
-                >
-                  {v > 0 && <i className={v >= 1 ? 'accent' : v < 0.5 ? 'ghost' : ''} />}
+                <span key={i} className={`step ${i % spb === 0 ? 'beat' : ''} ${step === at ? 'now' : ''}`}>
+                  {cell && <i className={`${strength} ${cell.voice === 'open' ? 'open' : cell.voice === 'pedal' ? 'pedal' : ''}`} />}
                 </span>
               );
             })}
           </div>
         ))}
       </div>
+      <p className="muted small drum-legend">
+        {[['accent', 'accent'], ['', 'normal'], ['ghost', 'ghost note'], ['open', 'open hi-hat'], ['pedal', 'hi-hat pedal']].map(([kind, label]) => (
+          <span key={label}>
+            <i className={kind} /> {label}
+          </span>
+        ))}
+      </p>
     </section>
   );
 }

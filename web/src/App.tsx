@@ -66,6 +66,11 @@ export function App() {
         SoundLab is an independent educational project, MIT licensed. Its pedal and amp models have generic names and
         are approximations; any product names or trademarks belong to their owners, and this project is not affiliated
         with or endorsed by them.
+        <br />
+        Drum Lab plays samples from{' '}
+        <a href="https://versilian-studios.com/virtuosity-drums/">Virtuosity Drums</a> by Versilian Studios (CC0) and
+        grooves from the <a href="https://magenta.tensorflow.org/datasets/groove">Groove MIDI Dataset</a> by Google
+        (<a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>), cut to two-bar loops.
       </footer>
     </main>
   );

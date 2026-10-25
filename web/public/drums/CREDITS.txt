@@ -1,0 +1,17 @@
+Drum samples (kit/*.m4a)
+  Virtuosity Drums by Versilian Studios
+  https://versilian-studios.com/virtuosity-drums/
+  License: CC0 1.0 Universal (public domain dedication)
+  https://creativecommons.org/publicdomain/zero/1.0/
+  Kick, snare and hi-hat hits mixed from close, overhead and room mics,
+  trimmed and encoded as AAC for SoundLab.
+
+Drum grooves (web/src/drums/grooves.ts in the source)
+  Groove MIDI Dataset by Google LLC
+  https://magenta.tensorflow.org/datasets/groove
+  License: CC BY 4.0
+  https://creativecommons.org/licenses/by/4.0/
+  Two-bar excerpts, aligned to the bar line, mapped to five drums and
+  with velocities scaled.
+  Gillick, Roberts, Engel, Eck and Bamman, "Learning to Groove with
+  Inverse Sequence Transformations", ICML 2019.
