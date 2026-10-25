@@ -6,6 +6,8 @@ and effects modelled stage by stage, and compare before and after by ear
 and on screen. See [the plan](Guitar%20tone%20lab%20implementation%20plan.md)
 for the why.
 
+**Try it online: https://tomasnfh.github.io/SOUND_LAB/**
+
 ## Run it
 
 With Docker (app on http://localhost:5173, files in the `tone-data` volume):
@@ -30,13 +32,15 @@ responses go in `irs/cabinets/` and `irs/reverbs/`.
 
 ## The public version
 
-The online version runs on GitHub Pages without the api. It's the same
+The [online version](https://tomasnfh.github.io/SOUND_LAB/) runs on GitHub Pages without the api. It's the same
 app built with `VITE_STATIC=1`, and recordings, impulse responses and
 presets added there stay in the visitor's browser (IndexedDB, see
 `web/src/browserStore.ts`). Exports are only downloaded.
 
-Day-to-day work happens on `main` with Docker as above. Pushing a version
-tag publishes it:
+- **Daily work:** on `main`, with `docker compose up` as above. Pushing to
+  `main` doesn't change the public site.
+- **Publishing a new version:** tag it and push the tag. Tags matching `v*`
+  are allowed to deploy by the `github-pages` environment's tag rule.
 
 ```bash
 git tag v0.2.0 && git push origin v0.2.0
