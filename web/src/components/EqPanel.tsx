@@ -32,13 +32,13 @@ export function EqPanel({ eq, onChange, onActiveBand }: Props) {
               className={eq.position === p ? 'on' : ''}
               onClick={() => onChange({ ...eq, position: p })}
             >
-              {p === 'pre' ? 'Before pedal' : 'After pedal'}
+              {p === 'pre' ? 'Before distortion' : 'After distortion'}
             </button>
           ))}
         </div>
       </div>
       <p className="muted small">
-        Before the pedal, the EQ changes what gets distorted. After it, the EQ only colours the result.
+        Before the distortion, the EQ changes what gets distorted. After it, the EQ only colours the result.
       </p>
 
       <div className={`eq-bands ${eq.on ? '' : 'disabled'}`}>

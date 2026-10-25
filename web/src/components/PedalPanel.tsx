@@ -43,7 +43,7 @@ export function PedalPanel({ pedal, onChange }: Props) {
   return (
     <section className="panel pedal-panel">
       <div className="panel-head">
-        <h2>Pedal</h2>
+        <h2>Distortion</h2>
         <label className="check">
           <input type="checkbox" checked={pedal.on} onChange={(e) => onChange({ ...pedal, on: e.target.checked })} />
           On

@@ -25,7 +25,7 @@ type Props = {
 };
 
 const BLOCKS: { id: BlockId; label: string }[] = [
-  { id: 'pedal', label: 'Pedal' },
+  { id: 'pedal', label: 'Distortion' },
   { id: 'eq', label: 'EQ' },
   { id: 'amp', label: 'Amp' },
   { id: 'delay', label: 'Delay' },
@@ -61,7 +61,7 @@ function describe(s: ToneSettings, block: BlockId): { on: boolean; detail: strin
       return {
         on: s.eq.on,
         detail: boosted ? `${boosted} band${boosted > 1 ? 's' : ''} moved` : 'flat',
-        tag: s.eq.position === 'pre' ? 'before pedal' : undefined,
+        tag: s.eq.position === 'pre' ? 'before distortion' : undefined,
       };
     }
     case 'amp':

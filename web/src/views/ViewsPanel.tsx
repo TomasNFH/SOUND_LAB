@@ -73,7 +73,7 @@ export function ViewsPanel({ engine, branches, editing, highlight, activeBand }:
         <>
           <div className="seg view-switch">
             <button className={transferOf === 'pedal' ? 'on' : ''} onClick={() => setTransferOf('pedal')}>
-              Pedal
+              Distortion
             </button>
             <button className={transferOf === 'amp' ? 'on' : ''} onClick={() => setTransferOf('amp')}>
               Amp preamp
