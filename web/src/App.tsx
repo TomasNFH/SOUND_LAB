@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Logo } from './components/Logo';
+import { DrumTabPulse, DrumTransport } from './drums/DrumTransport';
 import { DrumLab } from './sections/DrumLab';
 import { TheoryLab } from './sections/TheoryLab';
 import { ToneLab } from './ToneLab';
@@ -41,11 +42,14 @@ export function App() {
             <a key={s.id} href={`#/${s.id}`} className={section === s.id ? 'on' : ''} aria-current={section === s.id ? 'page' : undefined}>
               <span className="long">{s.label}</span>
               <span className="short">{s.short}</span>
+              {s.id === 'drums' && section !== 'drums' && <DrumTabPulse />}
             </a>
           ))}
         </nav>
-        {/* Actions for the open section only, so the header never crowds. */}
+        {/* Actions for the open section only, so the header never crowds,
+            plus a stop control while a beat plays in another section. */}
         <div className="header-actions">
+          {section !== 'drums' && <DrumTransport />}
           {section === 'tone' && (
             <button className="header-btn" onClick={() => setShowPresets((v) => !v)} aria-expanded={showPresets}>
               Presets and export
