@@ -275,3 +275,33 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .cv-mod.changed { border-color: #f0a848; }
 .cv-mod-title { color: var(--text); }
 .cv-k { display: inline-block; min-width: 44px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); }
+
+/* Floating mini view: shown while the full views panel is scrolled away.
+   A corner window on wide screens, a strip docked at the bottom on phones. */
+.mini-dock {
+  position: fixed; right: 16px; bottom: 16px; z-index: 50;
+  width: min(420px, calc(100vw - 32px));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  border-radius: 10px;
+  animation: mini-in 0.16s ease-out;
+}
+@keyframes mini-in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .mini-dock { animation: none; } }
+.views.mini { margin: 0; padding: 8px 10px 10px; border-color: #3a3e48; }
+.mini-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.mini-head .legend { margin-right: auto; font-size: 0.78rem; }
+.icon-btn { padding: 5px; line-height: 0; border-radius: 6px; }
+.views.mini .view-canvas, .views.mini .view-canvas.tall { height: 190px; }
+.views.mini .view-caption { margin: 0 0 4px; font-size: 0.75rem; }
+/* Keep the mini view to the chart: no notes, no circuit cards. */
+.views.mini p.muted.small:not(.view-caption), .views.mini .cv-card { display: none; }
+.views.mini .circuit-svg { max-height: 190px; width: auto; max-width: 100%; margin: 0 auto; }
+.views.mini .filters-pair .view-canvas { height: 105px; }
+.app.with-mini { padding-bottom: 280px; }
+@media (max-width: 640px) {
+  .mini-dock { left: 8px; right: 8px; bottom: 8px; width: auto; bottom: max(8px, env(safe-area-inset-bottom)); }
+  .views.mini .view-canvas, .views.mini .view-canvas.tall { height: 150px; }
+  .views.mini .circuit-svg { max-height: 150px; }
+  .views.mini .filters-pair .view-canvas { height: 80px; }
+  .app.with-mini { padding-bottom: 240px; }
+}

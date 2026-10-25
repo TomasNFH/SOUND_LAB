@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AudioEngine, type EngineState, type SourceKind } from './audio/AudioEngine';
 import { bandRange } from './audio/blocks/EqBlock';
 import {
@@ -20,7 +20,7 @@ import { FxPanel } from './components/FxPanel';
 import { fmt, Knob } from './components/Knob';
 import { PedalPanel } from './components/PedalPanel';
 import { PresetPanel } from './components/PresetPanel';
-import { ViewsPanel } from './views/ViewsPanel';
+import { DEFAULT_VIEW, ViewsPanel, type ViewOptions } from './views/ViewsPanel';
 
 // One engine for the page's lifetime; created outside React so re-renders
 // (and StrictMode double effects) never rebuild the audio graph.
@@ -74,6 +74,29 @@ export function App() {
   const [sineDb, setSineDb] = useState(-12);
   const [selection, setSelection] = useState<Selection>({ branch: 'b', block: 'pedal' });
   const [showPresets, setShowPresets] = useState(false);
+  const [view, setView] = useState<ViewOptions>(DEFAULT_VIEW);
+  const patchView = useCallback((p: Partial<ViewOptions>) => setView((v) => ({ ...v, ...p })), []);
+
+  // Mini view: when the full views panel scrolls out of sight, a floating
+  // copy keeps the chart visible while you change settings below. Closing
+  // it keeps it away until the full panel has been back on screen.
+  const viewsRef = useRef<HTMLDivElement>(null);
+  const [viewsVisible, setViewsVisible] = useState(true);
+  const [miniClosed, setMiniClosed] = useState(false);
+  useEffect(() => {
+    const el = viewsRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => {
+      // Once less than 60% of the panel is on screen the chart is cut off,
+      // so the mini view takes over.
+      const visible = entry.intersectionRatio >= 0.6;
+      setViewsVisible(visible);
+      if (visible) setMiniClosed(false);
+    }, { threshold: [0, 0.3, 0.6, 0.9, 1] });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  const showMini = !viewsVisible && !miniClosed;
 
   // Push UI values into the engine. Values only ever flow this way.
   useEffect(() => getEngine().applySettings(branches), [branches]);
@@ -176,7 +199,7 @@ export function App() {
       : null;
 
   return (
-    <main className="app">
+    <main className={`app ${showMini ? 'with-mini' : ''}`}>
       <header className="header">
         <Logo />
         <h1>Tone Lab</h1>
@@ -195,7 +218,17 @@ export function App() {
         />
       </div>
 
-      <ViewsPanel engine={getEngine()} branches={branches} editing={editing} highlight={highlight} activeBand={activeBand} />
+      <div ref={viewsRef}>
+        <ViewsPanel
+          engine={getEngine()}
+          branches={branches}
+          editing={editing}
+          highlight={highlight}
+          activeBand={activeBand}
+          view={view}
+          onView={patchView}
+        />
+      </div>
 
       <section className="panel control-bar">
         <div className="transport">
@@ -311,6 +344,23 @@ export function App() {
           </div>
         )}
       </div>
+      {showMini && (
+        <div className="mini-dock">
+          <ViewsPanel
+            engine={getEngine()}
+            branches={branches}
+            editing={editing}
+            highlight={highlight}
+            activeBand={activeBand}
+            view={view}
+            onView={patchView}
+            mini={{
+              onExpand: () => viewsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+              onClose: () => setMiniClosed(true),
+            }}
+          />
+        </div>
+      )}
     </main>
   );
 }
