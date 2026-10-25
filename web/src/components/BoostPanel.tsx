@@ -32,7 +32,7 @@ const PARTS: { key: PartKey; label: string; min: number; max: number; format: (v
   { key: 'r1', label: 'R1', min: 100e3, max: 10e6, format: ohms, role: 'input bias' },
   { key: 'c1', label: 'C1', min: 1e-9, max: 1e-6, format: farads, role: 'input cap' },
   { key: 'r2', label: 'R2', min: 1e3, max: 100e3, format: ohms, role: 'sets gain' },
-  { key: 'c2', label: 'C2', min: 0.1e-6, max: 100e-6, format: farads, role: 'bass gain' },
+  { key: 'c2', label: 'C2', min: 1e-9, max: 100e-6, format: farads, role: 'bass gain' },
   { key: 'c3', label: 'C3', min: 1e-9, max: 100e-6, format: farads, role: 'output cap' },
 ];
 

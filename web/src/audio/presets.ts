@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, STOCK_CHAMP, withDefaults, type ChampSettings, type ToneSettings } from './settings';
+import { DEFAULT_SETTINGS, STOCK_BOOST, STOCK_CHAMP, withDefaults, type ChampSettings, type ToneSettings } from './settings';
 
 type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
 
@@ -48,6 +48,20 @@ export const BUILT_IN_PRESETS: BuiltInPreset[] = [
   preset('EQ: 800 Hz +9 dB', 'Compare with "TS low drive": same mid lift, no clipping.', {
     pedal: { on: false },
     eq: { on: true, bands: withBand(2, { freq: 800, gain: 9, q: 1 }) },
+  }),
+  // The TS gain stage is the same non-inverting 4558 circuit as the clean
+  // boost: 4.7k + 47 nF to ground (instead of R2/C2) makes the 720 Hz
+  // hump, a 500k pot the drive. What's missing is the TS's soft diode
+  // clipping: this one clips harder, at the op-amp's supply rails.
+  preset('TS from the 4558 boost', 'The clean boost rebuilt as a TS gain stage (R2 4.7k, C2 47 nF, 500k pot), EQ after it as the tone control. Compare with the real TS model.', {
+    pedal: {
+      on: true,
+      type: 'boost',
+      // Gain 95% gives about the same distortion as the TS model at 60% drive;
+      // volume set to about the same loudness.
+      boost: { ...STOCK_BOOST, r2: 4.7e3, c2: 47e-9, gainPot: 500e3, gainPos: 0.95, volPos: 0.46 },
+    },
+    eq: { on: true, position: 'post', bands: withBand(5, { freq: 3000, gain: -6 }) },
   }),
   preset('TS low drive', 'Mostly a mid boost with a little grit.', {
     pedal: { on: true, type: 'ts', ts: { drive: 0.1, tone: 0.5, level: -6 } },
