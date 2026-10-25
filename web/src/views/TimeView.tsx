@@ -1,9 +1,9 @@
 import { tapeLoopCutoff } from '../audio/blocks/Delay';
 import type { AudioEngine } from '../audio/AudioEngine';
-import type { ToneSettings } from '../audio/settings';
+import type { BranchId, ToneSettings } from '../audio/settings';
 import { COLORS, useCanvasLoop } from './canvas';
 
-type Props = { engine: AudioEngine; settings: ToneSettings };
+type Props = { engine: AudioEngine; settings: ToneSettings; branch: BranchId };
 
 const WINDOW_S = 3;
 
@@ -11,7 +11,7 @@ const WINDOW_S = 3;
 // been through the loop filter once more, so its brightness (bar colour)
 // and its top end (label) fall with every pass.
 // Bottom: the reverb's impulse response, a fading waveform.
-export function TimeView({ engine, settings }: Props) {
+export function TimeView({ engine, settings, branch }: Props) {
   const canvasRef = useCanvasLoop((g, w, h) => {
     const half = h / 2;
     const xOf = (t: number) => 30 + (t / WINDOW_S) * (w - 40);
@@ -39,7 +39,8 @@ export function TimeView({ engine, settings }: Props) {
     const top = 34; // below the two caption lines
     const base = half - 10;
     g.fillStyle = COLORS.label;
-    g.fillText(d.on ? `Delay · ${d.mode}` : 'Delay (off)', 4, 12);
+    const tag = `Branch ${branch.toUpperCase()}`;
+    g.fillText(d.on ? `${tag} · delay · ${d.mode}` : `${tag} · delay (off)`, 4, 12);
     const tape = d.mode === 'tape';
     // The dry hit, then each repeat: level = mix * feedback^(k-1).
     const spike = (t: number, level: number, color: string) => {
@@ -69,7 +70,7 @@ export function TimeView({ engine, settings }: Props) {
 
     // Reverb impulse response, as an envelope (peak per pixel column).
     const r = settings.reverb;
-    const ir = engine.chain.reverb.impulseResponse;
+    const ir = engine.chains[branch].reverb.impulseResponse;
     g.fillStyle = COLORS.label;
     g.fillText(r.on ? 'Reverb impulse response' : 'Reverb (off)', 4, half + 14);
     if (ir) {

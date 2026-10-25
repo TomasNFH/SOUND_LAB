@@ -2,21 +2,32 @@ import { useCallback, useEffect, useState } from 'react';
 import type { AudioEngine } from '../audio/AudioEngine';
 import { BUILT_IN_PRESETS } from '../audio/presets';
 import { renderProcessed } from '../audio/render';
-import { withDefaults, type ToneSettings } from '../audio/settings';
+import { withDefaults, type BranchId, type Branches, type ToneSettings } from '../audio/settings';
 import { encodeWav } from '../audio/wav';
 import { deletePreset, listPresets, loadPreset, savePreset, uploadFile, type PresetInfo } from '../api';
 import { fmt } from './Knob';
 
 type Props = {
   engine: AudioEngine;
-  settings: ToneSettings;
-  onLoad: (settings: ToneSettings) => void;
+  branches: Branches;
+  editing: BranchId; // built-in presets load into this branch
+  listening: BranchId; // export renders this branch
+  onLoad: (branches: Branches) => void;
 };
 
 const BUILT_IN = 'builtin:';
 const SAVED = 'saved:';
 
-export function PresetPanel({ engine, settings, onLoad }: Props) {
+// Saved presets hold both branches. Older presets (one chain) and the
+// built-in ones load into the branch being edited.
+function fromSaved(data: unknown, current: Branches, editing: BranchId): Branches {
+  const d = data as Partial<Record<BranchId, unknown>> | null;
+  if (d && typeof d === 'object' && d.a && d.b) return { a: withDefaults(d.a), b: withDefaults(d.b) };
+  return { ...current, [editing]: withDefaults(data) };
+}
+
+export function PresetPanel({ engine, branches, editing, listening, onLoad }: Props) {
+  const loadInto = (s: ToneSettings) => onLoad({ ...branches, [editing]: s });
   const [saved, setSaved] = useState<PresetInfo[] | null>(null);
   const [selected, setSelected] = useState('');
   const [name, setName] = useState('');
@@ -46,11 +57,11 @@ export function PresetPanel({ engine, settings, onLoad }: Props) {
     try {
       if (value.startsWith(BUILT_IN)) {
         const p = BUILT_IN_PRESETS.find((b) => b.name === value.slice(BUILT_IN.length));
-        if (p) onLoad(structuredClone(p.settings));
+        if (p) loadInto(structuredClone(p.settings));
         setStatus(null);
       } else {
         const presetName = value.slice(SAVED.length);
-        onLoad(withDefaults(await loadPreset(presetName)));
+        onLoad(fromSaved(await loadPreset(presetName), branches, editing));
         setName(presetName);
         setStatus(`Loaded "${presetName}".`);
       }
@@ -63,7 +74,7 @@ export function PresetPanel({ engine, settings, onLoad }: Props) {
     const n = name.trim();
     if (!n) return;
     try {
-      await savePreset(n, settings);
+      await savePreset(n, branches);
       await refresh();
       setSelected(SAVED + n);
       setStatus(`Saved "${n}".`);
@@ -92,9 +103,9 @@ export function PresetPanel({ engine, settings, onLoad }: Props) {
     setStatus('Rendering…');
     try {
       const t0 = performance.now();
-      const result = await renderProcessed(clip, settings, { matchLoudness });
+      const result = await renderProcessed(clip, branches[listening], { matchLoudness });
       const blob = encodeWav(result.buffer);
-      const fileName = `tone-lab-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.wav`;
+      const fileName = `tone-lab-${listening}-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.wav`;
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -147,7 +158,10 @@ export function PresetPanel({ engine, settings, onLoad }: Props) {
         </select>
         {selected.startsWith(SAVED) && <button onClick={() => void remove()}>Delete</button>}
       </div>
-      {builtIn && <p className="muted small">{builtIn.about}</p>}
+      <p className="muted small">
+        {builtIn ? `${builtIn.about} ` : ''}Experiments load into branch {editing.toUpperCase()}; saved presets keep both
+        branches.
+      </p>
 
       <div className="row" style={{ marginTop: 10 }}>
         <input
@@ -166,7 +180,7 @@ export function PresetPanel({ engine, settings, onLoad }: Props) {
 
       <div className="row" style={{ marginTop: 14 }}>
         <button className="primary" onClick={() => void exportClip()} disabled={!engine.clipBuffer || exporting}>
-          Export processed WAV
+          Export branch {listening.toUpperCase()} as WAV
         </button>
         <label className="check">
           <input type="checkbox" checked={matchLoudness} onChange={(e) => setMatchLoudness(e.target.checked)} />

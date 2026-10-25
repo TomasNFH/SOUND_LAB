@@ -1,15 +1,17 @@
 // Web Audio graph for the tone lab. Lives outside React: the UI pushes
 // values in through setters and reads state back through getState().
 //
-//   source ─┬─────────────────────────────── dryGain ──┐
-//           │                                           ├─ master ─ destination
-//           └─ chain ──────── levelMatch ─── wetGain ──┘
+//   source ─┬─ chain A ──────────────── gainA ──┐
+//           │                                   ├─ master ─ destination
+//           └─ chain B ── levelMatch ── gainB ──┘
 //
-// Dry and processed run in parallel all the time, so A/B is a crossfade
-// between dryGain and wetGain rather than a reconnect (no clicks).
+// Two complete processing branches run in parallel all the time, so A/B
+// is a crossfade between gainA and gainB rather than a reconnect (no
+// clicks). Branch A starts dry (every block off), which makes the default
+// A/B the classic dry vs processed comparison.
 
 import { Chain } from './Chain';
-import type { ToneSettings } from './settings';
+import type { BranchId, Branches } from './settings';
 import { setIrDecoder } from './ir';
 import { makeLogSweep, makePinkNoise } from './signals';
 import { dbToGain, gainToDb } from './util';
@@ -60,28 +62,26 @@ export class AudioEngine {
   private loop = true;
 
   private readonly input: GainNode;
-  private readonly effectIn: GainNode;
-  private readonly effectOut: GainNode;
   private readonly levelMatch: GainNode;
-  private readonly dryGain: GainNode;
-  private readonly wetGain: GainNode;
+  private readonly gainA: GainNode;
+  private readonly gainB: GainNode;
   private readonly master: GainNode;
 
-  readonly chain: Chain;
-  private settings: ToneSettings | null = null;
+  readonly chains: Record<BranchId, Chain>;
+  private settings: Branches | null = null;
 
-  // Analysers used to measure loudness of each path for level matching.
-  // They also become the before/after taps for the phase 2 views.
-  readonly dryAnalyser: AnalyserNode;
-  readonly wetAnalyser: AnalyserNode;
-  private readonly dryData: Float32Array;
-  private readonly wetData: Float32Array;
-  private dryPower = 0;
-  private wetPower = 0;
+  // One analyser per branch output: the A and B curves in the views, and
+  // the loudness measurement for level matching.
+  readonly analyserA: AnalyserNode;
+  readonly analyserB: AnalyserNode;
+  private readonly dataA: Float32Array;
+  private readonly dataB: Float32Array;
+  private powerA = 0;
+  private powerB = 0;
   private levelMatchOn = true;
   private matchTimer: number | null = null;
 
-  private bypassed = false;
+  private listening: BranchId = 'b';
 
   constructor() {
     // 48 kHz matches the recording format in the plan, so clips aren't resampled.
@@ -94,39 +94,36 @@ export class AudioEngine {
     this.sineLevel.connect(this.input);
     this.liveTrim = c.createGain();
     this.liveTrim.connect(this.input);
-    this.effectIn = c.createGain();
-    this.effectOut = c.createGain();
     setIrDecoder(c);
-    this.chain = new Chain(c);
+    this.chains = { a: new Chain(c), b: new Chain(c) };
     this.levelMatch = c.createGain();
-    this.dryGain = c.createGain();
-    this.wetGain = c.createGain();
+    this.gainA = c.createGain();
+    this.gainB = c.createGain();
     this.master = c.createGain();
 
-    this.dryAnalyser = c.createAnalyser();
-    this.wetAnalyser = c.createAnalyser();
-    for (const a of [this.dryAnalyser, this.wetAnalyser]) {
+    this.analyserA = c.createAnalyser();
+    this.analyserB = c.createAnalyser();
+    for (const a of [this.analyserA, this.analyserB]) {
       a.fftSize = 8192;
       a.smoothingTimeConstant = 0.8;
     }
-    this.dryData = new Float32Array(this.dryAnalyser.fftSize);
-    this.wetData = new Float32Array(this.wetAnalyser.fftSize);
+    this.dataA = new Float32Array(this.analyserA.fftSize);
+    this.dataB = new Float32Array(this.analyserB.fftSize);
 
-    this.input.connect(this.dryGain).connect(this.master);
-    this.input.connect(this.dryAnalyser);
+    this.input.connect(this.chains.a.input);
+    this.chains.a.output.connect(this.analyserA);
+    this.chains.a.output.connect(this.gainA).connect(this.master);
 
-    this.input.connect(this.effectIn);
-    this.effectIn.connect(this.chain.input);
-    this.chain.output.connect(this.effectOut);
-    // Measure the effect before level matching, so the correction
-    // doesn't feed back into its own measurement.
-    this.effectOut.connect(this.wetAnalyser);
-    this.effectOut.connect(this.levelMatch).connect(this.wetGain).connect(this.master);
+    this.input.connect(this.chains.b.input);
+    // Measure B before level matching, so the correction doesn't feed
+    // back into its own measurement.
+    this.chains.b.output.connect(this.analyserB);
+    this.chains.b.output.connect(this.levelMatch).connect(this.gainB).connect(this.master);
 
     this.master.connect(c.destination);
 
-    this.dryGain.gain.value = 0;
-    this.wetGain.gain.value = 1;
+    this.gainA.gain.value = 0;
+    this.gainB.gain.value = 1;
     this.master.gain.value = dbToGain(-6);
 
     this.matchTimer = window.setInterval(() => this.updateLevelMatch(), 50);
@@ -256,8 +253,8 @@ export class AudioEngine {
 
   private resetTransport() {
     this.stop();
-    this.dryPower = 0;
-    this.wetPower = 0;
+    this.powerA = 0;
+    this.powerB = 0;
   }
 
   async play() {
@@ -323,16 +320,16 @@ export class AudioEngine {
     if (this.source instanceof AudioBufferSourceNode && this.kind === 'clip') this.source.loop = loop;
   }
 
-  // A/B switch: crossfade between the dry and processed paths.
-  setBypass(bypassed: boolean) {
-    this.bypassed = bypassed;
+  // A/B switch: crossfade between the two branches.
+  setListen(branch: BranchId) {
+    this.listening = branch;
     const t = this.ctx.currentTime;
-    this.dryGain.gain.setTargetAtTime(bypassed ? 1 : 0, t, CROSSFADE_TC);
-    this.wetGain.gain.setTargetAtTime(bypassed ? 0 : 1, t, CROSSFADE_TC);
+    this.gainA.gain.setTargetAtTime(branch === 'a' ? 1 : 0, t, CROSSFADE_TC);
+    this.gainB.gain.setTargetAtTime(branch === 'b' ? 1 : 0, t, CROSSFADE_TC);
   }
 
-  get isBypassed() {
-    return this.bypassed;
+  get listeningTo() {
+    return this.listening;
   }
 
   setLevelMatch(on: boolean) {
@@ -340,9 +337,10 @@ export class AudioEngine {
     if (!on) this.levelMatch.gain.setTargetAtTime(1, this.ctx.currentTime, PARAM_TC);
   }
 
-  applySettings(settings: ToneSettings) {
+  applySettings(settings: Branches) {
     this.settings = settings;
-    this.chain.apply(settings);
+    this.chains.a.apply(settings.a);
+    this.chains.b.apply(settings.b);
   }
 
   get currentSettings() {
@@ -353,7 +351,7 @@ export class AudioEngine {
     this.master.gain.setTargetAtTime(dbToGain(db), this.ctx.currentTime, PARAM_TC);
   }
 
-  // Gain level matching currently applies to the processed path. Views
+  // Gain level matching currently applies to branch B. Views
   // use it to draw "matched" curves; the analysers tap before it.
   getMatchGain() {
     return this.levelMatchOn ? this.levelMatch.gain.value : 1;
@@ -399,24 +397,24 @@ export class AudioEngine {
   }
 
   // Loudness matching: keep a slow running average of each path's power
-  // and set levelMatch so the processed path is as loud as the dry one.
+  // and set levelMatch so branch B is as loud as branch A.
   // Measured, not computed, so it keeps working once the effect is
   // nonlinear (distortion changes loudness in ways a formula can't predict).
   private updateLevelMatch() {
     if (!this.levelMatchOn || !(this.source || this.live)) return;
 
-    this.dryAnalyser.getFloatTimeDomainData(this.dryData);
-    this.wetAnalyser.getFloatTimeDomainData(this.wetData);
-    const dry = meanSquare(this.dryData);
-    const wet = meanSquare(this.wetData);
-    if (Math.sqrt(dry) < SILENCE_RMS || Math.sqrt(wet) < SILENCE_RMS) return;
+    this.analyserA.getFloatTimeDomainData(this.dataA);
+    this.analyserB.getFloatTimeDomainData(this.dataB);
+    const a = meanSquare(this.dataA);
+    const b = meanSquare(this.dataB);
+    if (Math.sqrt(a) < SILENCE_RMS || Math.sqrt(b) < SILENCE_RMS) return;
 
     // ~1.5 s averaging window at a 50 ms tick.
     const k = 0.035;
-    this.dryPower = this.dryPower === 0 ? dry : this.dryPower + k * (dry - this.dryPower);
-    this.wetPower = this.wetPower === 0 ? wet : this.wetPower + k * (wet - this.wetPower);
+    this.powerA = this.powerA === 0 ? a : this.powerA + k * (a - this.powerA);
+    this.powerB = this.powerB === 0 ? b : this.powerB + k * (b - this.powerB);
 
-    const db = 10 * Math.log10(this.dryPower / this.wetPower);
+    const db = 10 * Math.log10(this.powerA / this.powerB);
     const clamped = Math.max(-MATCH_LIMIT_DB, Math.min(MATCH_LIMIT_DB, db));
     this.levelMatch.gain.setTargetAtTime(dbToGain(clamped), this.ctx.currentTime, MATCH_TC);
   }

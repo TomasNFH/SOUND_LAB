@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AudioEngine, type EngineState, type SourceKind } from './audio/AudioEngine';
 import { bandRange } from './audio/blocks/EqBlock';
-import { DEFAULT_SETTINGS, type ToneSettings } from './audio/settings';
+import { defaultBranches, drySettings, isDry, type BranchId, type Branches, type ToneSettings } from './audio/settings';
 import { AmpPanel } from './components/AmpPanel';
-import { ChainStrip, type BlockId } from './components/ChainStrip';
+import { ChainMatrix, type BlockId, type Selection } from './components/ChainMatrix';
 import { ClipPanel } from './components/ClipPanel';
 import { EqPanel } from './components/EqPanel';
 import { LivePanel } from './components/LivePanel';
@@ -41,7 +41,10 @@ const formatTime = (s: number) => {
 };
 
 export function App() {
-  const [settings, setSettings] = useState<ToneSettings>(() => structuredClone(DEFAULT_SETTINGS));
+  const [branches, setBranches] = useState<Branches>(defaultBranches);
+  // The branch whose blocks are open below; panels edit this one.
+  const [editing, setEditing] = useState<BranchId>('b');
+  const [listening, setListening] = useState<BranchId>('b');
   const [engineState, setEngineState] = useState<EngineState>({
     playing: false,
     canPlay: false,
@@ -50,7 +53,6 @@ export function App() {
     duration: 0,
     levelMatchDb: 0,
   });
-  const [bypassed, setBypassed] = useState(false);
   const [loop, setLoop] = useState(true);
   const [levelMatch, setLevelMatch] = useState(true);
   const [masterDb, setMasterDb] = useState(-6);
@@ -58,12 +60,12 @@ export function App() {
   const [source, setSource] = useState<SourceKind>('clip');
   const [sineFreq, setSineFreq] = useState(220);
   const [sineDb, setSineDb] = useState(-12);
-  const [selected, setSelected] = useState<BlockId>('pedal');
+  const [selection, setSelection] = useState<Selection>({ branch: 'b', block: 'pedal' });
   const [showPresets, setShowPresets] = useState(false);
 
   // Push UI values into the engine. Values only ever flow this way.
-  useEffect(() => getEngine().applySettings(settings), [settings]);
-  useEffect(() => getEngine().setBypass(bypassed), [bypassed]);
+  useEffect(() => getEngine().applySettings(branches), [branches]);
+  useEffect(() => getEngine().setListen(listening), [listening]);
   useEffect(() => getEngine().setLoop(loop), [loop]);
   useEffect(() => getEngine().setLevelMatch(levelMatch), [levelMatch]);
   useEffect(() => getEngine().setMasterDb(masterDb), [masterDb]);
@@ -72,7 +74,7 @@ export function App() {
 
   // Dev only: drive the UI state from the browser console or tests.
   useEffect(() => {
-    if (import.meta.env.DEV) Object.assign(window, { ui: { setSettings, setSource, setSineFreq, setBypassed } });
+    if (import.meta.env.DEV) Object.assign(window, { ui: { setBranches, setSource, setSineFreq, setListening } });
   }, []);
 
   // Poll the engine for transport position and the level-match readout.
@@ -81,13 +83,25 @@ export function App() {
     return () => window.clearInterval(id);
   }, []);
 
+  const settings = branches[editing];
+
+  // Change part of the branch being edited.
   const patch = useCallback(
-    <K extends keyof ToneSettings>(key: K, value: ToneSettings[K]) => setSettings((s) => ({ ...s, [key]: value })),
-    [],
+    (p: Partial<ToneSettings>) => setBranches((b) => ({ ...b, [editing]: { ...b[editing], ...p } })),
+    [editing],
   );
 
-  const toggleBlock = useCallback((id: Exclude<BlockId, 'source'>) => {
-    setSettings((s) => ({ ...s, [id]: { ...s[id], on: !s[id].on } }));
+  const select = useCallback((s: Selection) => {
+    setSelection(s);
+    if (s !== 'source') setEditing(s.branch);
+  }, []);
+
+  const toggleBlock = useCallback((branch: BranchId, block: BlockId) => {
+    setBranches((b) => ({ ...b, [branch]: { ...b[branch], [block]: { ...b[branch][block], on: !b[branch][block].on } } }));
+  }, []);
+
+  const copyBranch = useCallback((from: BranchId, to: BranchId) => {
+    setBranches((b) => ({ ...b, [to]: structuredClone(b[from]) }));
   }, []);
 
   const togglePlay = useCallback(() => {
@@ -106,7 +120,7 @@ export function App() {
         ev.preventDefault();
         togglePlay();
       } else if (ev.code === 'KeyB') {
-        setBypassed((b) => !b);
+        setListening((l) => (l === 'a' ? 'b' : 'a'));
       }
     };
     window.addEventListener('keydown', onKey);
@@ -130,10 +144,16 @@ export function App() {
       </header>
 
       <div hidden={!showPresets}>
-        <PresetPanel engine={getEngine()} settings={settings} onLoad={setSettings} />
+        <PresetPanel
+          engine={getEngine()}
+          branches={branches}
+          editing={editing}
+          listening={listening}
+          onLoad={setBranches}
+        />
       </div>
 
-      <ViewsPanel engine={getEngine()} settings={settings} highlight={highlight} activeBand={activeBand} />
+      <ViewsPanel engine={getEngine()} branches={branches} editing={editing} highlight={highlight} activeBand={activeBand} />
 
       <section className="panel control-bar">
         <div className="transport">
@@ -164,15 +184,14 @@ export function App() {
         </div>
         <div className="monitor">
           <button
-            className={`ab-switch ${bypassed ? 'is-dry' : 'is-wet'}`}
-            onClick={() => setBypassed((b) => !b)}
-            aria-pressed={!bypassed}
+            className={`ab-switch ${listening === 'a' ? 'is-dry' : 'is-wet'}`}
+            onClick={() => setListening((l) => (l === 'a' ? 'b' : 'a'))}
             title="Press B to switch"
           >
-            <span className={bypassed ? 'on' : ''}>A · Dry</span>
-            <span className={bypassed ? '' : 'on'}>B · Processed</span>
+            <span className={listening === 'a' ? 'on' : ''}>A{isDry(branches.a) ? ' · Dry' : ''}</span>
+            <span className={listening === 'b' ? 'on' : ''}>B{isDry(branches.b) ? ' · Dry' : ''}</span>
           </button>
-          <label className="check" title={levelMatch ? `Processed corrected by ${fmt.db(levelMatchDb)}` : 'Off: louder will sound better'}>
+          <label className="check" title={levelMatch ? `B corrected by ${fmt.db(levelMatchDb)} to match A` : 'Off: louder will sound better'}>
             <input type="checkbox" checked={levelMatch} onChange={(e) => setLevelMatch(e.target.checked)} />
             Level match {levelMatch && <span className="muted inline">{fmt.db(levelMatchDb)}</span>}
           </label>
@@ -180,11 +199,21 @@ export function App() {
         </div>
       </section>
 
-      <ChainStrip settings={settings} source={source} selected={selected} onSelect={setSelected} onToggle={toggleBlock} />
+      <ChainMatrix
+        branches={branches}
+        source={source}
+        listening={listening}
+        selection={selection}
+        onSelect={select}
+        onToggle={toggleBlock}
+        onListen={setListening}
+        onCopy={copyBranch}
+        onResetA={() => setBranches((b) => ({ ...b, a: drySettings() }))}
+      />
 
-      {/* Every panel stays mounted (the clip picker keeps its state); only the selected one shows. */}
+      {/* The source panel stays mounted (the clip picker keeps its state); block panels show for the selected cell. */}
       <div className="block-detail">
-        <div hidden={selected !== 'source'}>
+        <div hidden={selection !== 'source'}>
       <section className="panel">
         <div className="panel-head">
           <h2>Source</h2>
@@ -218,21 +247,17 @@ export function App() {
         )}
       </section>
         </div>
-        <div hidden={selected !== 'eq'}>
-          <EqPanel eq={settings.eq} onChange={(eq) => patch('eq', eq)} onActiveBand={setActiveBand} />
-        </div>
-        <div hidden={selected !== 'pedal'}>
-          <PedalPanel pedal={settings.pedal} onChange={(pedal) => patch('pedal', pedal)} />
-        </div>
-        <div hidden={selected !== 'amp'}>
-          <AmpPanel amp={settings.amp} onChange={(amp) => patch('amp', amp)} />
-        </div>
-        <div hidden={selected !== 'delay'}>
-          <FxPanel only="delay" settings={settings} onChange={(p) => setSettings((s) => ({ ...s, ...p }))} />
-        </div>
-        <div hidden={selected !== 'reverb'}>
-          <FxPanel only="reverb" settings={settings} onChange={(p) => setSettings((s) => ({ ...s, ...p }))} />
-        </div>
+        {selection !== 'source' && (
+          <div className={`branch-detail branch-${editing}`}>
+            <p className="editing-tag">Branch {editing.toUpperCase()}</p>
+            {selection.block === 'eq' && <EqPanel eq={settings.eq} onChange={(eq) => patch({ eq })} onActiveBand={setActiveBand} />}
+            {selection.block === 'pedal' && <PedalPanel pedal={settings.pedal} onChange={(pedal) => patch({ pedal })} />}
+            {selection.block === 'amp' && <AmpPanel amp={settings.amp} onChange={(amp) => patch({ amp })} />}
+            {(selection.block === 'delay' || selection.block === 'reverb') && (
+              <FxPanel only={selection.block} settings={settings} onChange={patch} />
+            )}
+          </div>
+        )}
       </div>
     </main>
   );

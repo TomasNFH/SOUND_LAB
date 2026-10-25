@@ -8,31 +8,31 @@ type Props = {
   matchLevels: boolean;
 };
 
-// Dry (grey) and processed (colour) on the same vertical scale, both
-// starting at the same rising zero crossing of the dry signal so a few
-// cycles of a note stand still on screen.
+// Branch A (grey) and branch B (colour) on the same vertical scale, both
+// starting at the same rising zero crossing of A so a few cycles of a
+// note stand still on screen.
 export function WaveformView({ engine, windowMs, matchLevels }: Props) {
-  const buffers = useRef<{ dry: Float32Array; wet: Float32Array } | null>(null);
+  const buffers = useRef<{ sigA: Float32Array; sigB: Float32Array } | null>(null);
   const scale = useRef(0.1);
 
   const canvasRef = useCanvasLoop((g, w, h) => {
-    const size = engine.dryAnalyser.fftSize;
-    if (!buffers.current || buffers.current.dry.length !== size) {
-      buffers.current = { dry: new Float32Array(size), wet: new Float32Array(size) };
+    const size = engine.analyserA.fftSize;
+    if (!buffers.current || buffers.current.sigA.length !== size) {
+      buffers.current = { sigA: new Float32Array(size), sigB: new Float32Array(size) };
     }
-    const { dry, wet } = buffers.current;
-    engine.dryAnalyser.getFloatTimeDomainData(dry);
-    engine.wetAnalyser.getFloatTimeDomainData(wet);
-    const wetGain = matchLevels ? engine.getMatchGain() : 1;
+    const { sigA, sigB } = buffers.current;
+    engine.analyserA.getFloatTimeDomainData(sigA);
+    engine.analyserB.getFloatTimeDomainData(sigB);
+    const gainB = matchLevels ? engine.getMatchGain() : 1;
 
     const count = Math.min(size, Math.round((windowMs / 1000) * engine.ctx.sampleRate));
-    const start = findTrigger(dry, size - count);
+    const start = findTrigger(sigA, size - count);
 
     // Shared scale: follows the larger of the two peaks, decays slowly so
     // the picture doesn't pump.
     let peak = 1e-3;
     for (let i = start; i < start + count; i++) {
-      peak = Math.max(peak, Math.abs(dry[i]), Math.abs(wet[i] * wetGain));
+      peak = Math.max(peak, Math.abs(sigA[i]), Math.abs(sigB[i] * gainB));
     }
     scale.current = peak > scale.current ? peak : scale.current * 0.98 + peak * 0.02;
     const yScale = (h / 2 - 6) / (scale.current * 1.1);
@@ -70,8 +70,8 @@ export function WaveformView({ engine, windowMs, matchLevels }: Props) {
       }
       g.stroke();
     };
-    trace(dry, 1, COLORS.dry, 1.5);
-    trace(wet, wetGain, COLORS.wet, 2);
+    trace(sigA, 1, COLORS.dry, 1.5);
+    trace(sigB, gainB, COLORS.wet, 2);
 
     g.fillStyle = COLORS.label;
     g.fillText(`scale ±${(scale.current * 1.1).toFixed(3)}`, 4, 12);

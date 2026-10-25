@@ -7,15 +7,16 @@ type Props = { engine: AudioEngine };
 const HARMONICS = 10;
 const DB_FLOOR = -90;
 
-export type HarmonicLevels = { dry: number[]; wet: number[]; thd: number };
+export type HarmonicLevels = { sigA: number[]; sigB: number[]; thd: number };
 
 // Level of each harmonic (1× to 10× the test tone) relative to the
-// fundamental, read from the analysers. Before (grey) vs after (colour):
-// bars that only exist after are new frequencies made by the distortion.
-export function measureHarmonics(engine: AudioEngine, dry: Float32Array, wet: Float32Array): HarmonicLevels {
-  engine.dryAnalyser.getFloatFrequencyData(dry);
-  engine.wetAnalyser.getFloatFrequencyData(wet);
-  const binHz = engine.ctx.sampleRate / engine.dryAnalyser.fftSize;
+// fundamental, read from the analysers. Branch A (grey) vs branch B
+// (colour): with A dry, bars that only exist in B are new frequencies made
+// by the distortion.
+export function measureHarmonics(engine: AudioEngine, sigA: Float32Array, sigB: Float32Array): HarmonicLevels {
+  engine.analyserA.getFloatFrequencyData(sigA);
+  engine.analyserB.getFloatFrequencyData(sigB);
+  const binHz = engine.ctx.sampleRate / engine.analyserA.fftSize;
   const f0 = engine.sineFrequency;
   const nyquist = engine.ctx.sampleRate / 2;
 
@@ -35,20 +36,20 @@ export function measureHarmonics(engine: AudioEngine, dry: Float32Array, wet: Fl
     return out;
   };
 
-  const w = levels(wet);
+  const w = levels(sigB);
   let sum = 0;
   for (let k = 1; k < w.length; k++) sum += Math.pow(10, w[k] / 10);
-  return { dry: levels(dry), wet: w, thd: Math.sqrt(sum) * 100 };
+  return { sigA: levels(sigA), sigB: w, thd: Math.sqrt(sum) * 100 };
 }
 
 export function HarmonicsView({ engine }: Props) {
-  const bufs = useRef<{ dry: Float32Array; wet: Float32Array } | null>(null);
+  const bufs = useRef<{ sigA: Float32Array; sigB: Float32Array } | null>(null);
   const smooth = useRef<HarmonicLevels | null>(null);
 
   const canvasRef = useCanvasLoop((g, w, h) => {
-    const bins = engine.dryAnalyser.frequencyBinCount;
-    if (!bufs.current || bufs.current.dry.length !== bins) {
-      bufs.current = { dry: new Float32Array(bins), wet: new Float32Array(bins) };
+    const bins = engine.analyserA.frequencyBinCount;
+    if (!bufs.current || bufs.current.sigA.length !== bins) {
+      bufs.current = { sigA: new Float32Array(bins), sigB: new Float32Array(bins) };
     }
 
     if (engine.sourceKind !== 'sine' || !engine.getState().playing) {
@@ -61,17 +62,17 @@ export function HarmonicsView({ engine }: Props) {
       return;
     }
 
-    const m = measureHarmonics(engine, bufs.current.dry, bufs.current.wet);
+    const m = measureHarmonics(engine, bufs.current.sigA, bufs.current.sigB);
     // Light smoothing so bars are readable.
     if (smooth.current) {
       const s = smooth.current;
       for (let k = 0; k < HARMONICS; k++) {
-        s.dry[k] += 0.2 * (m.dry[k] - s.dry[k]);
-        s.wet[k] += 0.2 * (m.wet[k] - s.wet[k]);
+        s.sigA[k] += 0.2 * (m.sigA[k] - s.sigA[k]);
+        s.sigB[k] += 0.2 * (m.sigB[k] - s.sigB[k]);
       }
       s.thd += 0.2 * (m.thd - s.thd);
     } else smooth.current = m;
-    const { dry, wet, thd } = smooth.current;
+    const { sigA, sigB, thd } = smooth.current;
 
     const top = 18;
     const bottom = h - 22;
@@ -93,9 +94,9 @@ export function HarmonicsView({ engine }: Props) {
     for (let k = 0; k < HARMONICS; k++) {
       const x = 34 + k * slot + slot / 2;
       g.fillStyle = COLORS.dry;
-      g.fillRect(x - barW - 1, yOf(dry[k]), barW, bottom - yOf(dry[k]));
+      g.fillRect(x - barW - 1, yOf(sigA[k]), barW, bottom - yOf(sigA[k]));
       g.fillStyle = k === 0 ? COLORS.wet : k % 2 === 1 ? COLORS.diff : COLORS.wet;
-      g.fillRect(x + 1, yOf(wet[k]), barW, bottom - yOf(wet[k]));
+      g.fillRect(x + 1, yOf(sigB[k]), barW, bottom - yOf(sigB[k]));
       g.fillStyle = COLORS.label;
       g.textAlign = 'center';
       g.fillText(`${k + 1}×`, x, h - 8);
@@ -110,7 +111,7 @@ export function HarmonicsView({ engine }: Props) {
     <>
       <canvas ref={canvasRef} className="view-canvas tall" />
       <p className="muted small">
-        Grey is before, colour is after. Orange bars are even harmonics (2×, 4×…): the octave colour that
+        Grey is branch A, colour is branch B. Orange bars are even harmonics (2×, 4×…): the octave colour that
         asymmetric clipping adds. Symmetric clipping makes odd ones (3×, 5×…).
       </p>
     </>

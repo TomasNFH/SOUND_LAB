@@ -39,7 +39,8 @@ responses go in `irs/cabinets/` and `irs/reverbs/`.
 | Presets and WAV export | `web/src/components/PresetPanel.tsx`, `web/src/audio/render.ts` |
 | File and preset api | `api/src/server.js` |
 
-Keys: Space plays or pauses, B switches A (dry) and B (processed).
+Keys: Space plays or pauses, B switches between branch A and branch B. The
+source feeds two complete chains (A starts dry) and the views compare them.
 
 The models are simplified on purpose: they keep the behaviour that matters
 for learning (where the clipping happens, which frequencies get gain, what

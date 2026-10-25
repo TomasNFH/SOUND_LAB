@@ -8,7 +8,7 @@ type Props = {
   showDiff: boolean;
   // Frequency range to shade, e.g. the EQ band being edited.
   highlight?: { lo: number; hi: number } | null;
-  // Predicted after-minus-before curve, drawn dashed in the difference strip.
+  // Predicted B-minus-A curve, drawn dashed in the difference strip.
   expected?: ((freqs: Float32Array) => Float32Array | null) | null;
 };
 
@@ -17,20 +17,20 @@ const DB_MAX = -10;
 const DIFF_RANGE = 24; // ± dB shown in the difference strip
 const SILENCE_DB = -100;
 
-// Before/after spectrum on a log frequency axis, same dB scale for both,
-// with an optional "after minus before" strip underneath.
+// Branch A and branch B spectra on a log frequency axis, same dB scale for
+// both, with an optional "B minus A" strip underneath.
 export function SpectrumView({ engine, matchLevels, showDiff, highlight, expected }: Props) {
-  const raw = useRef<{ dry: Float32Array; wet: Float32Array } | null>(null);
+  const raw = useRef<{ sigA: Float32Array; sigB: Float32Array } | null>(null);
 
   const canvasRef = useCanvasLoop((g, w, h) => {
-    const bins = engine.dryAnalyser.frequencyBinCount;
-    if (!raw.current || raw.current.dry.length !== bins) {
-      raw.current = { dry: new Float32Array(bins), wet: new Float32Array(bins) };
+    const bins = engine.analyserA.frequencyBinCount;
+    if (!raw.current || raw.current.sigA.length !== bins) {
+      raw.current = { sigA: new Float32Array(bins), sigB: new Float32Array(bins) };
     }
-    const { dry, wet } = raw.current;
-    engine.dryAnalyser.getFloatFrequencyData(dry);
-    engine.wetAnalyser.getFloatFrequencyData(wet);
-    const wetOffset = matchLevels ? 20 * Math.log10(engine.getMatchGain()) : 0;
+    const { sigA, sigB } = raw.current;
+    engine.analyserA.getFloatFrequencyData(sigA);
+    engine.analyserB.getFloatFrequencyData(sigB);
+    const offsetB = matchLevels ? 20 * Math.log10(engine.getMatchGain()) : 0;
 
     const specH = showDiff ? Math.round(h * 0.7) : h;
     const diffTop = specH + 8;
@@ -51,10 +51,10 @@ export function SpectrumView({ engine, matchLevels, showDiff, highlight, expecte
     g.restore();
 
     const columns = Math.max(2, Math.floor(w));
-    const binHz = engine.ctx.sampleRate / engine.dryAnalyser.fftSize;
-    const dryCurve = toColumns(dry, columns, w, binHz);
-    const wetCurve = toColumns(wet, columns, w, binHz);
-    for (let i = 0; i < columns; i++) wetCurve[i] += wetOffset;
+    const binHz = engine.ctx.sampleRate / engine.analyserA.fftSize;
+    const curveA = toColumns(sigA, columns, w, binHz);
+    const curveB = toColumns(sigB, columns, w, binHz);
+    for (let i = 0; i < columns; i++) curveB[i] += offsetB;
 
     const plot = (curve: Float32Array, color: string, lineWidth: number) => {
       g.strokeStyle = color;
@@ -67,12 +67,12 @@ export function SpectrumView({ engine, matchLevels, showDiff, highlight, expecte
       }
       g.stroke();
     };
-    plot(dryCurve, COLORS.dry, 1.5);
-    plot(wetCurve, COLORS.wet, 2);
+    plot(curveA, COLORS.dry, 1.5);
+    plot(curveB, COLORS.wet, 2);
 
     if (!showDiff || diffH < 20) return;
 
-    // Difference strip: positive = processed is louder at that frequency.
+    // Difference strip: positive = branch B is louder at that frequency.
     const mid = diffTop + diffH / 2;
     g.strokeStyle = COLORS.gridStrong;
     g.lineWidth = 1;
@@ -82,7 +82,7 @@ export function SpectrumView({ engine, matchLevels, showDiff, highlight, expecte
     g.stroke();
     g.fillStyle = COLORS.label;
     g.font = '10px system-ui, sans-serif';
-    g.fillText(`after − before, ±${DIFF_RANGE} dB`, 4, diffTop + 10);
+    g.fillText(`B − A, ±${DIFF_RANGE} dB`, 4, diffTop + 10);
 
     const predicted = expected?.(logFrequencies(columns));
     if (predicted) {
@@ -93,7 +93,7 @@ export function SpectrumView({ engine, matchLevels, showDiff, highlight, expecte
       g.setLineDash([5, 4]);
       g.beginPath();
       for (let i = 0; i < columns; i++) {
-        const d = Math.max(-DIFF_RANGE, Math.min(DIFF_RANGE, predicted[i] + wetOffset));
+        const d = Math.max(-DIFF_RANGE, Math.min(DIFF_RANGE, predicted[i] + offsetB));
         const y = mid - (d / DIFF_RANGE) * (diffH / 2);
         if (i === 0) g.moveTo(i, y);
         else g.lineTo(i, y);
@@ -107,11 +107,11 @@ export function SpectrumView({ engine, matchLevels, showDiff, highlight, expecte
     g.beginPath();
     let pen = false;
     for (let i = 0; i < columns; i++) {
-      if (dryCurve[i] < SILENCE_DB && wetCurve[i] < SILENCE_DB) {
+      if (curveA[i] < SILENCE_DB && curveB[i] < SILENCE_DB) {
         pen = false;
         continue;
       }
-      const d = Math.max(-DIFF_RANGE, Math.min(DIFF_RANGE, wetCurve[i] - dryCurve[i]));
+      const d = Math.max(-DIFF_RANGE, Math.min(DIFF_RANGE, curveB[i] - curveA[i]));
       const y = mid - (d / DIFF_RANGE) * (diffH / 2);
       if (!pen) g.moveTo(i, y);
       else g.lineTo(i, y);

@@ -143,36 +143,72 @@ optgroup { color: var(--muted); }
 .transport .seek { flex: 1 0 100%; margin-top: 2px; }
 .monitor { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
 
-/* Signal chain: blocks joined by arrows, in the order the sound flows. */
-.chain { display: flex; flex-wrap: wrap; justify-content: center; align-items: stretch; row-gap: 10px; margin: 4px 0 12px; }
-.chain-link { display: flex; align-items: center; color: var(--accent); padding: 0 2px; }
-.chain-link.dim { color: var(--muted); opacity: 0.5; }
-.chain-block {
-  display: flex; align-items: flex-start; min-width: 108px; max-width: 160px;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-  transition: border-color 0.1s, opacity 0.1s;
+/* Signal chain: the source splits into branch A and branch B (a grid of
+   blocks), which meet at the output switch. */
+.matrix-wrap { margin: 4px 0 12px; }
+.matrix { display: flex; align-items: stretch; gap: 4px; }
+.mx-link { display: flex; align-items: center; justify-content: center; color: var(--accent); flex: none; }
+.mx-end {
+  flex: none; width: 104px; display: flex; flex-direction: column; justify-content: center; gap: 6px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px;
 }
-.chain-block.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-.chain-block.off .chain-main { opacity: 0.45; }
-.chain-block.static { border-style: dashed; }
+button.mx-end { font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.mx-end.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.mx-output { border-style: dashed; }
+.mx-listen button { flex: 1; font-weight: 600; }
+.mx-listen { display: flex; }
+
+.mx-grid {
+  flex: 1; min-width: 0; display: grid; gap: 6px;
+  grid-template-columns: 22px repeat(5, minmax(0, 1fr));
+  grid-template-rows: auto auto auto;
+}
+.mx-grid > * { grid-row: var(--r); grid-column: var(--c); }
+.mx-head { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; text-align: center; align-self: end; }
+.mx-branch { font-weight: 700; color: var(--muted); display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+.mx-branch.live { color: #102010; background: var(--accent); }
+.mx-cell-label { display: none; }
+
+.mx-cell {
+  display: flex; align-items: flex-start; min-width: 0;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  transition: border-color 0.1s;
+}
+.mx-cell.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.mx-cell.off { border-style: dashed; }
+.mx-cell.off .chain-main { opacity: 0.45; }
+.mx-tag { font-size: 0.68rem; color: #f0a848; }
+
 .chain-main {
   all: unset; box-sizing: border-box; cursor: pointer; flex: 1; min-width: 0;
-  display: flex; flex-direction: column; gap: 2px; padding: 8px 4px 8px 10px;
+  display: flex; flex-direction: column; gap: 2px; padding: 8px 2px 8px 10px;
 }
-.chain-block.static .chain-main { cursor: default; }
 .chain-main:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
 .chain-label { font-weight: 600; font-size: 0.9rem; }
-.chain-detail { font-size: 0.75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chain-detail { font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chain-power {
   border: 0; background: transparent; padding: 6px; margin: 2px; border-radius: 6px;
-  color: var(--muted); line-height: 0;
+  color: var(--muted); line-height: 0; flex: none;
 }
 .chain-power.is-on { color: var(--accent); }
 .chain-power:hover { background: #2a2d35; }
-@media (max-width: 640px) {
-  .chain { flex-direction: column; align-items: stretch; flex-wrap: nowrap; row-gap: 0; }
-  .chain-block { max-width: none; align-items: center; }
-  .chain-main { flex-direction: row; align-items: baseline; gap: 10px; padding: 7px 4px 7px 12px; }
-  .chain-link { justify-content: center; padding: 2px 0; }
-  .chain-link svg { transform: rotate(90deg); }
+
+.mx-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+.mx-actions button { font-size: 0.82rem; padding: 5px 12px; }
+
+.editing-tag {
+  display: inline-block; margin: 0 0 8px; padding: 2px 10px; border-radius: 999px;
+  font-size: 0.78rem; font-weight: 600; background: #2a2d35; color: var(--text);
+}
+
+/* Phones: source on top, the grid turned so A and B are columns and each
+   block a row, output at the bottom. */
+@media (max-width: 720px) {
+  .matrix { flex-direction: column; }
+  .mx-end { width: auto; flex-direction: row; align-items: center; justify-content: space-between; }
+  .mx-link svg { transform: rotate(90deg); }
+  .mx-grid { grid-template-columns: 64px repeat(2, minmax(0, 1fr)); grid-template-rows: auto; }
+  .mx-grid > * { grid-row: var(--c); grid-column: var(--r); }
+  .mx-head { text-align: left; align-self: center; }
+  .mx-listen button { min-width: 56px; }
 }

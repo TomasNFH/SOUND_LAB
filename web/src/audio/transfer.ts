@@ -3,7 +3,7 @@ import { bdTransfer } from './blocks/BluesDriver';
 import { ds2Transfer } from './blocks/Ds2';
 import { klonTransfer } from './blocks/Klon';
 import { tsTransfer } from './blocks/TubeScreamer';
-import type { AmpSettings, PedalSettings } from './settings';
+import type { AmpSettings, PedalSettings, ToneSettings } from './settings';
 import { dbToGain } from './util';
 
 export type Transfer = { fn: (x: number) => number; note: string };
@@ -38,6 +38,13 @@ export function pedalTransfer(p: PedalSettings): Transfer {
       };
   }
 }
+
+const BYPASSED: Transfer = { fn: (x) => x, note: 'Off: a straight line, the signal passes unchanged.' };
+
+// What a branch's pedal or amp stage does, counting a bypassed block as a
+// straight line, so branches can be drawn on top of each other.
+export const branchPedalTransfer = (s: ToneSettings) => (s.pedal.on ? pedalTransfer(s.pedal) : BYPASSED);
+export const branchAmpTransfer = (s: ToneSettings) => (s.amp.on ? ampTransfer(s.amp) : BYPASSED);
 
 export function ampTransfer(a: AmpSettings): Transfer {
   return {

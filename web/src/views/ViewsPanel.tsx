@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { AudioEngine } from '../audio/AudioEngine';
 import { expectedResponseDb } from '../audio/response';
-import type { ToneSettings } from '../audio/settings';
-import { ampTransfer, pedalTransfer } from '../audio/transfer';
+import { isDry, type BranchId, type Branches } from '../audio/settings';
+import { branchAmpTransfer, branchPedalTransfer } from '../audio/transfer';
 import { HarmonicsView } from './HarmonicsView';
 import { ResponseView } from './ResponseView';
 import { TimeView } from './TimeView';
@@ -12,7 +12,8 @@ import { WaveformView } from './WaveformView';
 
 type Props = {
   engine: AudioEngine;
-  settings: ToneSettings;
+  branches: Branches;
+  editing: BranchId; // the branch whose blocks are open below; single-branch views show it
   highlight?: { lo: number; hi: number } | null;
   activeBand: number | null;
 };
@@ -27,7 +28,8 @@ const TABS = [
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
-export function ViewsPanel({ engine, settings, highlight, activeBand }: Props) {
+export function ViewsPanel({ engine, branches, editing, highlight, activeBand }: Props) {
+  const settings = branches[editing];
   const [tab, setTab] = useState<TabId>('spectrum');
   const [matchLevels, setMatchLevels] = useState(false);
   const [showDiff, setShowDiff] = useState(true);
@@ -56,10 +58,16 @@ export function ViewsPanel({ engine, settings, highlight, activeBand }: Props) {
           matchLevels={matchLevels}
           showDiff={showDiff}
           highlight={highlight}
-          expected={(freqs) => expectedResponseDb(engine.ctx, settings, freqs)}
+          // Predictable only while A is dry: then B − A is B's own response.
+          expected={(freqs) => (isDry(branches.a) ? expectedResponseDb(engine.ctx, branches.b, freqs) : null)}
         />
       )}
-      {tab === 'response' && <ResponseView ctx={engine.ctx} settings={settings} activeBand={activeBand} />}
+      {tab === 'response' && (
+        <>
+          <p className="muted small view-caption">Branch {editing.toUpperCase()}</p>
+          <ResponseView ctx={engine.ctx} settings={settings} activeBand={activeBand} />
+        </>
+      )}
       {tab === 'harmonics' && <HarmonicsView engine={engine} />}
       {tab === 'transfer' && (
         <>
@@ -72,18 +80,19 @@ export function ViewsPanel({ engine, settings, highlight, activeBand }: Props) {
             </button>
           </div>
           <TransferView
-            transfer={transferOf === 'pedal' ? pedalTransfer(settings.pedal) : ampTransfer(settings.amp)}
+            a={transferOf === 'pedal' ? branchPedalTransfer(branches.a) : branchAmpTransfer(branches.a)}
+            b={transferOf === 'pedal' ? branchPedalTransfer(branches.b) : branchAmpTransfer(branches.b)}
             inputRange={transferOf === 'pedal' ? 0.5 : 1}
           />
         </>
       )}
-      {tab === 'time' && <TimeView engine={engine} settings={settings} />}
+      {tab === 'time' && <TimeView engine={engine} settings={settings} branch={editing} />}
       {tab === 'waveform' && <WaveformView engine={engine} windowMs={windowMs} matchLevels={matchLevels} />}
 
       {(tab === 'spectrum' || tab === 'waveform') && (
         <div className="row view-options">
           <span className="legend">
-            <i className="swatch dry" /> Before <i className="swatch wet" /> After
+            <i className="swatch dry" /> A <i className="swatch wet" /> B
             {tab === 'spectrum' && showDiff && (
               <>
                 <i className="swatch diff" /> Measured <i className="swatch alt" /> Expected

@@ -121,3 +121,27 @@ function deepMerge(base: unknown, over: unknown): unknown {
   }
   return typeof over === typeof base ? over : base;
 }
+
+// Two complete chains fed by the same source; the output switch picks
+// which one you hear and the views compare them.
+export type BranchId = 'a' | 'b';
+export type Branches = Record<BranchId, ToneSettings>;
+
+// Every block off: the source passes through untouched.
+export function drySettings(): ToneSettings {
+  const s = structuredClone(DEFAULT_SETTINGS);
+  s.eq.on = false;
+  s.pedal.on = false;
+  s.amp.on = false;
+  s.delay.on = false;
+  s.reverb.on = false;
+  return s;
+}
+
+export const isDry = (s: ToneSettings) => !s.eq.on && !s.pedal.on && !s.amp.on && !s.delay.on && !s.reverb.on;
+
+// Branch A starts dry and B with the default chain, so the default A/B is
+// dry vs processed.
+export function defaultBranches(): Branches {
+  return { a: drySettings(), b: structuredClone(DEFAULT_SETTINGS) };
+}
