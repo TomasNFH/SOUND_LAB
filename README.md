@@ -35,7 +35,7 @@ responses go in `irs/cabinets/` and `irs/reverbs/`.
 | Audio engine: sources, A/B crossfade, level matching | `web/src/audio/AudioEngine.ts` |
 | Signal chain, built from settings (same code for live and export) | `web/src/audio/Chain.ts`, `settings.ts` |
 | EQ, pedals, amp, delay, reverb | `web/src/audio/blocks/` |
-| 6V6 combo circuit model (from its service schematic) and its mods | `web/src/audio/champ/` |
+| 6V6 combo circuit model (from its service schematic) and its mods | `web/src/audio/combo/` |
 | Views: spectrum, waveform, filters, harmonics, transfer, delay & reverb | `web/src/views/` |
 | Presets and WAV export | `web/src/components/PresetPanel.tsx`, `web/src/audio/render.ts` |
 | File and preset api | `api/src/server.js` |

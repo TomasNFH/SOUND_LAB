@@ -7,7 +7,7 @@
 //                                          ↑                       │
 //                                          └──── R7 / R23 ─────────┘ feedback
 
-import type { ChampSettings } from '../settings';
+import type { ComboSettings } from '../settings';
 import { triode } from './curves';
 
 // ---------------------------------------------------------------------------
@@ -183,7 +183,7 @@ type Tube = { name: string; mu: number; rp: number; headroom: number };
 // 1.5k cathode, about 1 to 2 mA). 12AX7 is stock; the swaps are the usual
 // "less gain, more headroom" choices. The 12AT7's datasheet rp (15k) is
 // for 10 mA; at this current it is nearer 30k.
-export const PREAMP_TUBES: Record<ChampSettings['tube'], Tube> = {
+export const PREAMP_TUBES: Record<ComboSettings['tube'], Tube> = {
   '12AX7': { name: '12AX7', mu: 100, rp: 62500, headroom: 1 },
   '5751': { name: '5751', mu: 70, rp: 58000, headroom: 1.2 },
   '12AT7': { name: '12AT7', mu: 55, rp: 30000, headroom: 1.5 },
@@ -196,21 +196,21 @@ const R4 = 220e3; // 6V6 grid leak
 const C2 = 0.022e-6; // coupling cap into the 6V6
 const VOLUME_POT = 1e6; // R13, 1 MΩ audio taper
 
-const CATHODE_CAPS: Record<ChampSettings['v2aCap'], number> = { '22u': 22e-6, '1u': 1e-6, '470n': 0.47e-6 };
-const FEEDBACK_R: Record<ChampSettings['feedback'], number> = { stock: 2200, less: 4700, off: Infinity };
+const CATHODE_CAPS: Record<ComboSettings['v2aCap'], number> = { '22u': 22e-6, '1u': 1e-6, '470n': 0.47e-6 };
+const FEEDBACK_R: Record<ComboSettings['feedback'], number> = { stock: 2200, less: 4700, off: Infinity };
 
 // The service manual's test-point levels for 25 mV at the High input, volume full up.
-export const FENDER_TEST_POINTS = { tp2: 1.18, tp3: 0.18, tp4: 0.18, tp5: 7.0, tp9: 175, tp13: 3.35 };
+export const MANUAL_TEST_POINTS = { tp2: 1.18, tp3: 0.18, tp4: 0.18, tp5: 7.0, tp9: 175, tp13: 3.35 };
 // Output transformer voltage ratio from TP9 (plate) and TP13 (speaker).
-const OT_RATIO = FENDER_TEST_POINTS.tp13 / FENDER_TEST_POINTS.tp9;
+const OT_RATIO = MANUAL_TEST_POINTS.tp13 / MANUAL_TEST_POINTS.tp9;
 // 6V6 stage gain, grid to plate, from TP5 and TP9.
-const POWER_GAIN = FENDER_TEST_POINTS.tp9 / FENDER_TEST_POINTS.tp5;
+const POWER_GAIN = MANUAL_TEST_POINTS.tp9 / MANUAL_TEST_POINTS.tp5;
 
 // Audio-taper pot: 10% of the resistance at half rotation.
 export const audioTaper = (pos: number) => (Math.pow(81, Math.min(1, Math.max(0, pos))) - 1) / 80;
 
 // Interstage network: V2-A plate → tone stack → volume pot → V2-B grid.
-export function interstage(s: ChampSettings, volume: number): Network {
+export function interstage(s: ComboSettings, volume: number): Network {
   const tube = PREAMP_TUBES[s.tube];
   const sourceR = (RA * tube.rp) / (RA + tube.rp); // plate output resistance
   const r = Math.max(1e-4, audioTaper(volume));
@@ -272,7 +272,7 @@ function cathodeShelf(mu: number, ra: number, rp: number, rBypassed: number, rFi
   return { aLf, aHf, tz: cap * rBypassed, tp: cap * rEff };
 }
 
-export function stageGains(s: ChampSettings) {
+export function stageGains(s: ComboSettings) {
   const tube = PREAMP_TUBES[s.tube];
   const a = cathodeShelf(tube.mu, RA, tube.rp, RK, 0, CATHODE_CAPS[s.v2aCap]);
   const raB = (RA * R4) / (RA + R4); // V2-B plate load includes the 6V6 grid leak
@@ -307,11 +307,11 @@ function otAt(w: number) {
   const lp = div(c(1), c(1, w / (2 * Math.PI * OT_LP)));
   return mul(hp, lp);
 }
-const inputScale = (s: ChampSettings) => (s.input === 'high' ? 0.97 : 0.49);
+const inputScale = (s: ComboSettings) => (s.input === 'high' ? 0.97 : 0.49);
 
 // Level from V2-A's plate (as a source) to V2-B's grid, in dB: what the
 // tone stack and volume pot do on their own.
-export function interstageResponseDb(s: ChampSettings, volume: number, freqs: Float32Array) {
+export function interstageResponseDb(s: ComboSettings, volume: number, freqs: Float32Array) {
   const net = interstage(s, volume);
   const out = new Float32Array(freqs.length);
   freqs.forEach((f, i) => (out[i] = 20 * Math.log10(Math.max(1e-9, abs(nodeGain(net, 'V', 2 * Math.PI * f))))));
@@ -322,7 +322,7 @@ export type TestPoint = { id: string; label: string; model: number; fender: numb
 
 // The service manual's check: 25 mV at 1 kHz into High, volume full up.
 // Small-signal, so the linear parts of the model are enough.
-export function testPoints(s: ChampSettings): TestPoint[] {
+export function testPoints(s: ComboSettings): TestPoint[] {
   const w = 2 * Math.PI * 1000;
   const g = stageGains(s);
   const net = interstage({ ...s, input: 'high' }, 1);
@@ -340,7 +340,7 @@ export function testPoints(s: ChampSettings): TestPoint[] {
   const tp5 = mul(a2, vgk);
   const tp9 = mul(toPlate6, vgk);
   const tp13 = mul(forward, vgk);
-  const F = FENDER_TEST_POINTS;
+  const F = MANUAL_TEST_POINTS;
   return [
     { id: 'TP2', label: 'V2-A plate', model: abs(vP), fender: F.tp2 },
     { id: 'TP3', label: 'Tone stack out', model: abs(vW), fender: F.tp3 },
@@ -352,7 +352,7 @@ export function testPoints(s: ChampSettings): TestPoint[] {
 }
 
 // V2-B on its own, grid volts in → plate swing out, for the transfer view.
-export function v2bTransfer(s: ChampSettings) {
+export function v2bTransfer(s: ComboSettings) {
   const g = stageGains(s);
   const bias = 1.7 * g.tube.headroom;
   return (x: number) => -g.b.aHf * triode(x, bias, bias * 1.15);
@@ -382,7 +382,7 @@ const shelfFilter = (sh: { aLf: number; tz: number; tp: number }, sign: number, 
 // Speaker volts → digital full scale. 5 W into 4 Ω is about 6.3 V peak.
 const SPEAKER_FULL_SCALE = 8;
 
-export function workletParams(s: ChampSettings, volume: number, fsOversampled: number): WorkletParams {
+export function workletParams(s: ComboSettings, volume: number, fsOversampled: number): WorkletParams {
   const fs = fsOversampled;
   const g = stageGains(s);
   const pt = powerTube(s.bias);

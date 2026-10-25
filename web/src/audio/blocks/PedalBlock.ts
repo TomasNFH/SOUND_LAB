@@ -1,12 +1,12 @@
 import type { PedalSettings, PedalType } from '../settings';
 import { setParam, type Block } from '../util';
-import { BluesDriver } from './BluesDriver';
+import { AmpLikeDrive } from './AmpLikeDrive';
 import { BoostEqPedal } from './BoostEqPedal';
 import { BoostPedal } from './BoostPedal';
-import { Ds2 } from './Ds2';
-import { Klon } from './Klon';
-import { Ts4558Pedal } from './Ts4558Pedal';
-import { TubeScreamer } from './TubeScreamer';
+import { HardDistortion } from './HardDistortion';
+import { CleanBlendDrive } from './CleanBlendDrive';
+import { Drive4558Pedal } from './Drive4558Pedal';
+import { MidHumpDrive } from './MidHumpDrive';
 
 type Model = Block & { apply(s: PedalSettings): void };
 
@@ -21,7 +21,7 @@ export class PedalBlock implements Block {
   private current: PedalType | null = null;
   private readonly boost: BoostPedal;
   private readonly boostEq: BoostEqPedal;
-  private readonly ts4558: Ts4558Pedal;
+  private readonly ts4558: Drive4558Pedal;
 
   constructor(private readonly ctx: BaseAudioContext) {
     this.input = ctx.createGain();
@@ -36,17 +36,17 @@ export class PedalBlock implements Block {
       boostEq.apply(s.boostEq);
       return s.boostCircuit === 'eq';
     });
-    const classic = new TubeScreamer(ctx);
-    const ts4558 = new Ts4558Pedal(ctx);
+    const classic = new MidHumpDrive(ctx);
+    const ts4558 = new Drive4558Pedal(ctx);
     this.ts4558 = ts4558;
     const ts = this.twoModes(classic, ts4558, (s) => {
       classic.apply(s.ts);
       ts4558.apply(s.ts.c4558);
       return s.ts.mode === '4558';
     });
-    const bd = new BluesDriver(ctx);
-    const ds2 = new Ds2(ctx);
-    const klon = new Klon(ctx);
+    const bd = new AmpLikeDrive(ctx);
+    const ds2 = new HardDistortion(ctx);
+    const klon = new CleanBlendDrive(ctx);
     this.models = {
       boost,
       ts,

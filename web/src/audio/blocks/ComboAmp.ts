@@ -1,5 +1,5 @@
-import workletUrl from '../champ/champ.worklet.ts?worker&url';
-import { workletParams } from '../champ/circuit';
+import workletUrl from '../combo/combo.worklet.ts?worker&url';
+import { workletParams } from '../combo/circuit';
 import type { AmpSettings } from '../settings';
 import type { Block } from '../util';
 import { loadWorklet } from '../worklets';
@@ -9,7 +9,7 @@ const OVERSAMPLE = 4;
 // 6V6 combo preamp and power amp (everything before the speaker),
 // running in an AudioWorklet. Silent until the module has loaded, which
 // takes a moment at startup; ready() resolves once it is in place.
-export class ChampAmp implements Block {
+export class ComboAmp implements Block {
   readonly input: GainNode;
   readonly output: GainNode;
   private node: AudioWorkletNode | null = null;
@@ -21,7 +21,7 @@ export class ChampAmp implements Block {
     this.input = ctx.createGain();
     this.output = ctx.createGain();
     this.loading = loadWorklet(ctx, workletUrl).then(() => {
-      this.node = new AudioWorkletNode(ctx, 'champ600', {
+      this.node = new AudioWorkletNode(ctx, 'combo6v6', {
         numberOfInputs: 1,
         numberOfOutputs: 1,
         outputChannelCount: [1],

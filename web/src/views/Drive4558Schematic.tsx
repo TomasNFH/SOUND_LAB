@@ -1,17 +1,17 @@
-import { tsValues } from '../audio/ts4558/ts4558';
-import { STOCK_TS4558, type Ts4558Settings } from '../audio/settings';
+import { drive4558Values } from '../audio/drive4558/drive4558';
+import { STOCK_DRIVE4558, type Drive4558Settings } from '../audio/settings';
 import { Cap, Diode, Dot, farads, Ground, Label, Npn, ohms, OpAmp, Resistor, Wire } from './schematicParts';
 
-type Props = { ts: Ts4558Settings };
+type Props = { ts: Drive4558Settings };
 
 // The complete 4558 mid-hump overdrive, drawn from the current settings:
 // values update live and parts that differ from stock are highlighted.
 // Bypass switching and the power filtering are left out.
 
-export function TsSchematic({ ts: t }: Props) {
-  const s = STOCK_TS4558;
-  const v = tsValues(t);
-  const hot = (k: keyof Ts4558Settings) => t[k] !== s[k];
+export function Drive4558Schematic({ ts: t }: Props) {
+  const s = STOCK_DRIVE4558;
+  const v = drive4558Values(t);
+  const hot = (k: keyof Drive4558Settings) => t[k] !== s[k];
 
   const Y = 174; // signal line, the op-amps' + inputs
   const OA_H = 80;

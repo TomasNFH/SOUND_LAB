@@ -5,7 +5,7 @@ import {
   defaultBranches,
   drySettings,
   isDry,
-  STOCK_CHAMP,
+  STOCK_COMBO,
   type BranchId,
   type Branches,
   type ToneSettings,
@@ -146,7 +146,7 @@ export function App() {
       const other: BranchId = editing === 'a' ? 'b' : 'a';
       const copy = structuredClone(b[editing]);
       const speakerMod = copy.amp.cab === 'smooth6' || copy.amp.cab === 'cab10';
-      copy.amp = { ...copy.amp, on: true, model: 'champ600', champ: structuredClone(STOCK_CHAMP), cab: speakerMod ? 'champ6' : copy.amp.cab };
+      copy.amp = { ...copy.amp, on: true, model: 'champ600', champ: structuredClone(STOCK_COMBO), cab: speakerMod ? 'champ6' : copy.amp.cab };
       return { ...b, [other]: copy };
     });
   }, [editing]);

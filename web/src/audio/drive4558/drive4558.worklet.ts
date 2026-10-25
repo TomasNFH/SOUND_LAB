@@ -3,7 +3,7 @@
 // thread.
 
 import { antiAlias, Iir } from '../dsp';
-import { diodeClip, railClip, type Ts4558WorkletParams } from './ts4558';
+import { diodeClip, railClip, type Drive4558WorkletParams } from './drive4558';
 
 declare const sampleRate: number;
 declare function registerProcessor(name: string, ctor: unknown): void;
@@ -13,8 +13,8 @@ declare class AudioWorkletProcessor {
 
 const OS = 4;
 
-class Ts4558 extends AudioWorkletProcessor {
-  private p: Ts4558WorkletParams | null = null;
+class Drive4558 extends AudioWorkletProcessor {
+  private p: Drive4558WorkletParams | null = null;
   private readonly up = antiAlias(sampleRate * OS, 20000);
   private readonly down = antiAlias(sampleRate * OS, 20000);
   private readonly input = new Iir();
@@ -23,7 +23,7 @@ class Ts4558 extends AudioWorkletProcessor {
 
   constructor() {
     super();
-    this.port.onmessage = (e: MessageEvent<Ts4558WorkletParams>) => {
+    this.port.onmessage = (e: MessageEvent<Drive4558WorkletParams>) => {
       this.input.set(e.data.input);
       this.feedback.set(e.data.feedback);
       this.post.set(e.data.post);
@@ -61,4 +61,4 @@ class Ts4558 extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor('ts4558', Ts4558);
+registerProcessor('drive4558', Drive4558);

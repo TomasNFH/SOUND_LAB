@@ -1,11 +1,11 @@
-import { DIODES, tsResponseDb, tsValues, type DiodeType } from '../audio/ts4558/ts4558';
-import { STOCK_TS4558, type Ts4558Settings } from '../audio/settings';
+import { DIODES, drive4558ResponseDb, drive4558Values, type DiodeType } from '../audio/drive4558/drive4558';
+import { STOCK_DRIVE4558, type Drive4558Settings } from '../audio/settings';
 import { CompareResponseView } from '../views/CompareResponseView';
-import { TsSchematic } from '../views/TsSchematic';
+import { Drive4558Schematic } from '../views/Drive4558Schematic';
 import { fmt, Knob } from './Knob';
 import { farads, hz, ohms, potLabel, snap } from './parts';
 
-type Props = { ts: Ts4558Settings; onChange: (t: Ts4558Settings) => void };
+type Props = { ts: Drive4558Settings; onChange: (t: Drive4558Settings) => void };
 
 type PartKey = 'rIn' | 'cIn' | 'cCouple' | 'rBias' | 'rFixed' | 'cFb' | 'rGnd' | 'cGnd' | 'r7' | 'c6' | 'rTone' | 'r8' | 'c7' | 'rToneFb' | 'cOut' | 'rOut';
 type Part = { key: PartKey; label: string; min: number; max: number; role: string };
@@ -53,13 +53,13 @@ const SECTIONS: { name: string; parts: Part[] }[] = [
 const isCap = (k: PartKey) => k.startsWith('c');
 const POT_FIELDS = ['drive', 'tone', 'level'] as const;
 
-export function Ts4558Panel({ ts, onChange }: Props) {
-  const set = (patch: Partial<Ts4558Settings>) => onChange({ ...ts, ...patch });
-  const v = tsValues(ts);
-  const stockAtKnobs = { ...STOCK_TS4558, drive: ts.drive, tone: ts.tone, level: ts.level };
-  const stock = tsValues(stockAtKnobs);
-  const changedCount = (Object.keys(STOCK_TS4558) as (keyof Ts4558Settings)[]).filter(
-    (k) => !(POT_FIELDS as readonly string[]).includes(k) && ts[k] !== STOCK_TS4558[k],
+export function Drive4558Panel({ ts, onChange }: Props) {
+  const set = (patch: Partial<Drive4558Settings>) => onChange({ ...ts, ...patch });
+  const v = drive4558Values(ts);
+  const stockAtKnobs = { ...STOCK_DRIVE4558, drive: ts.drive, tone: ts.tone, level: ts.level };
+  const stock = drive4558Values(stockAtKnobs);
+  const changedCount = (Object.keys(STOCK_DRIVE4558) as (keyof Drive4558Settings)[]).filter(
+    (k) => !(POT_FIELDS as readonly string[]).includes(k) && ts[k] !== STOCK_DRIVE4558[k],
   ).length;
 
   const corners = [
@@ -79,9 +79,9 @@ export function Ts4558Panel({ ts, onChange }: Props) {
   return (
     <div className="boost">
       <div className="knobs">
-        <Knob label="Drive" value={ts.drive} min={0} max={1} step={0.01} defaultValue={STOCK_TS4558.drive} format={fmt.pct} onChange={(drive) => set({ drive })} />
-        <Knob label="Tone" value={ts.tone} min={0} max={1} step={0.01} defaultValue={STOCK_TS4558.tone} format={fmt.pct} onChange={(tone) => set({ tone })} />
-        <Knob label="Level" value={ts.level} min={0} max={1} step={0.01} defaultValue={STOCK_TS4558.level} format={fmt.pct} onChange={(level) => set({ level })} />
+        <Knob label="Drive" value={ts.drive} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.drive} format={fmt.pct} onChange={(drive) => set({ drive })} />
+        <Knob label="Tone" value={ts.tone} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.tone} format={fmt.pct} onChange={(tone) => set({ tone })} />
+        <Knob label="Level" value={ts.level} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.level} format={fmt.pct} onChange={(level) => set({ level })} />
       </div>
       <p className="muted small">
         Feedback {ohms(v.rDrive)} → IC1a gain ×{v.gain.toFixed(1)} ({db(v.gain).toFixed(1)} dB) above{' '}
@@ -95,7 +95,7 @@ export function Ts4558Panel({ ts, onChange }: Props) {
       <div className="mods-head">
         <h3>Parts</h3>
         <span className="muted inline">{changedCount ? `${changedCount} changed from stock` : 'All stock'}</span>
-        <button onClick={() => onChange({ ...STOCK_TS4558, drive: ts.drive, tone: ts.tone, level: ts.level })} disabled={!changedCount}>
+        <button onClick={() => onChange({ ...STOCK_DRIVE4558, drive: ts.drive, tone: ts.tone, level: ts.level })} disabled={!changedCount}>
           Reset parts
         </button>
       </div>
@@ -104,7 +104,7 @@ export function Ts4558Panel({ ts, onChange }: Props) {
           <p className="muted small part-section">{sec.name}</p>
           <div className="boost-parts">
             {sec.parts.map((p) => {
-              const changed = ts[p.key] !== STOCK_TS4558[p.key];
+              const changed = ts[p.key] !== STOCK_DRIVE4558[p.key];
               return (
                 <div key={p.key} className={`boost-part ${changed ? 'changed' : ''}`}>
                   <Knob
@@ -114,9 +114,9 @@ export function Ts4558Panel({ ts, onChange }: Props) {
                     min={p.min}
                     max={p.max}
                     scale="log"
-                    defaultValue={STOCK_TS4558[p.key]}
+                    defaultValue={STOCK_DRIVE4558[p.key]}
                     format={isCap(p.key) ? farads : ohms}
-                    onChange={(x) => set({ [p.key]: snap(x, STOCK_TS4558[p.key]) } as Partial<Ts4558Settings>)}
+                    onChange={(x) => set({ [p.key]: snap(x, STOCK_DRIVE4558[p.key]) } as Partial<Drive4558Settings>)}
                   />
                 </div>
               );
@@ -179,8 +179,8 @@ export function Ts4558Panel({ ts, onChange }: Props) {
 
       <p className="muted small view-caption">Frequency response before clipping: your values (green) vs stock (dashed), same knobs</p>
       <CompareResponseView
-        current={(f) => tsResponseDb(ts, f)}
-        stock={(f) => tsResponseDb(stockAtKnobs, f)}
+        current={(f) => drive4558ResponseDb(ts, f)}
+        stock={(f) => drive4558ResponseDb(stockAtKnobs, f)}
         marks={[
           [v.corners.gainRise, 'gain ×1'],
           [v.corners.hump, 'hump'],
@@ -225,7 +225,7 @@ export function Ts4558Panel({ ts, onChange }: Props) {
         <span className="muted inline">Classic op-amp overdrive with a JRC4558 · changed parts in orange</span>
       </div>
       <div className="schematic-wrap">
-        <TsSchematic ts={ts} />
+        <Drive4558Schematic ts={ts} />
       </div>
       <p className="muted small">
         Values from the commonly published schematic of this classic circuit. The two transistor buffers (Q1, Q2) are drawn but modelled

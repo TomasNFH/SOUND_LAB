@@ -11,7 +11,7 @@
 // model is linear; here the output also clips about 1.5 V short of each
 // supply rail, as a real 4558 does.
 
-import { bilinear, cascade, type Filter } from '../champ/circuit';
+import { bilinear, cascade, type Filter } from '../combo/circuit';
 import type { BoostSettings } from '../settings';
 
 const S0 = 2 * Math.PI * 1000;

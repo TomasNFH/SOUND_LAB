@@ -25,7 +25,7 @@ export type BoostSettings = {
   supply: 9 | 18;
 };
 
-export type TsSettings = {
+export type MidHumpSettings = {
   drive: number; // 0..1, pot rotation
   tone: number; // 0..1
   level: number; // dB
@@ -34,12 +34,12 @@ export type TsSettings = {
   bassPath: boolean; // the clean "+1" path that keeps the bass undistorted
   highCut: boolean; // the 51 pF cap across the drive pot
   mode: 'classic' | '4558'; // classic: the simplified model above · 4558: the circuit, part by part
-  c4558: Ts4558Settings;
+  c4558: Drive4558Settings;
 };
 
 // Mid-hump overdrive built from its circuit (classic op-amp design, JRC4558): pot
 // positions and every part, in ohms, farads and volts.
-export type Ts4558Settings = {
+export type Drive4558Settings = {
   drive: number; // drive pot rotation, 0..1 (A500k)
   tone: number; // 0 dark .. 1 bright
   level: number; // level pot rotation, 0..1 (A100k)
@@ -67,7 +67,7 @@ export type Ts4558Settings = {
 };
 
 // Stock values (the commonly published schematic).
-export const STOCK_TS4558: Ts4558Settings = {
+export const STOCK_DRIVE4558: Drive4558Settings = {
   drive: 0.5,
   tone: 0.5,
   level: 0.5,
@@ -94,9 +94,9 @@ export const STOCK_TS4558: Ts4558Settings = {
   supply: 9,
 };
 
-export type BdSettings = { gain: number; tone: number; level: number };
-export type Ds2Settings = { dist: number; tone: number; level: number; turbo: boolean };
-export type KlonSettings = { gain: number; treble: number; output: number };
+export type AmpLikeSettings = { gain: number; tone: number; level: number };
+export type HardDistortionSettings = { dist: number; tone: number; level: number; turbo: boolean };
+export type CleanBlendSettings = { gain: number; treble: number; output: number };
 
 // The values in clean_boost_4558.cir.
 export const STOCK_BOOST: BoostSettings = {
@@ -225,15 +225,15 @@ export type PedalSettings = {
   boost: BoostSettings;
   boostCircuit: 'simple' | 'eq'; // which clean boost netlist
   boostEq: BoostEqSettings;
-  ts: TsSettings;
-  bd: BdSettings;
-  ds2: Ds2Settings;
-  klon: KlonSettings;
+  ts: MidHumpSettings;
+  bd: AmpLikeSettings;
+  ds2: HardDistortionSettings;
+  klon: CleanBlendSettings;
 };
 
 // Small single-ended 6V6 combo built from its schematic. Every field is a part of
 // the real circuit; the defaults are the stock amp.
-export type ChampSettings = {
+export type ComboSettings = {
   input: 'high' | 'low';
   // stock: fixed resistors · knobs: pots instead · liftR19: R19 lifted
   // (no ground return) · bypass: switched around, 1950s-style
@@ -252,7 +252,7 @@ export type ChampSettings = {
 
 export type AmpModel = 'champ600' | 'generic';
 
-export const STOCK_CHAMP: ChampSettings = {
+export const STOCK_COMBO: ComboSettings = {
   input: 'high',
   toneStack: 'stock',
   treble: 75 / 255,
@@ -270,7 +270,7 @@ export const STOCK_CHAMP: ChampSettings = {
 export type AmpSettings = {
   on: boolean;
   model: AmpModel;
-  champ: ChampSettings;
+  champ: ComboSettings;
   volume: number; // 0..1: clean at the bottom, breaks up near the top
   bass: number;
   middle: number;
@@ -325,7 +325,7 @@ export const DEFAULT_SETTINGS: ToneSettings = {
     boost: STOCK_BOOST,
     boostCircuit: 'simple',
     boostEq: STOCK_BOOST_EQ,
-    ts: { drive: 0.3, tone: 0.5, level: -9, clip: 'sym', hump: 720, bassPath: true, highCut: true, mode: 'classic', c4558: STOCK_TS4558 },
+    ts: { drive: 0.3, tone: 0.5, level: -9, clip: 'sym', hump: 720, bassPath: true, highCut: true, mode: 'classic', c4558: STOCK_DRIVE4558 },
     bd: { gain: 0.5, tone: 0.5, level: -9 },
     ds2: { dist: 0.5, tone: 0.5, level: -7, turbo: false },
     klon: { gain: 0.35, treble: 0.5, output: 3 },
@@ -333,7 +333,7 @@ export const DEFAULT_SETTINGS: ToneSettings = {
   amp: {
     on: true,
     model: 'champ600',
-    champ: STOCK_CHAMP,
+    champ: STOCK_COMBO,
     volume: 0.4,
     bass: 0.5,
     middle: 0.5,

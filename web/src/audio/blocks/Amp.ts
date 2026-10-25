@@ -1,7 +1,7 @@
 import { isBuiltInCab, levelIr, loadIr, synthCabinetIR } from '../ir';
 import type { AmpSettings } from '../settings';
 import { dbToGain, lerp, setParam, ShaperStage, Slot, type Block } from '../util';
-import { ChampAmp } from './ChampAmp';
+import { ComboAmp } from './ComboAmp';
 import { asymSoftClip, tubeClip } from './clippers';
 
 // The amp block holds two models that share the cabinet:
@@ -47,8 +47,8 @@ export class Amp implements Block {
   private readonly makeup: GainNode;
   private readonly cab: ConvolverNode;
   private readonly cabSlot: Slot;
-  private readonly champ: ChampAmp;
-  private readonly champSel: GainNode;
+  private readonly champ: ComboAmp;
+  private readonly comboSel: GainNode;
   private readonly genericSel: GainNode;
   private model: AmpSettings['model'] | null = null;
   private cabName: string | null = null;
@@ -89,11 +89,11 @@ export class Amp implements Block {
     this.genericSel.gain.value = 0;
     power.output.connect(dc).connect(this.sag).connect(this.makeup).connect(this.genericSel).connect(this.cabSlot.input);
 
-    this.champ = new ChampAmp(ctx);
-    this.champSel = ctx.createGain();
-    this.champSel.gain.value = 0;
+    this.champ = new ComboAmp(ctx);
+    this.comboSel = ctx.createGain();
+    this.comboSel.gain.value = 0;
     this.input.connect(this.champ.input);
-    this.champ.output.connect(this.champSel).connect(this.cabSlot.input);
+    this.champ.output.connect(this.comboSel).connect(this.cabSlot.input);
     this.cabSlot.output.connect(this.output);
   }
 
@@ -102,7 +102,7 @@ export class Amp implements Block {
     this.champ.apply(s);
     if (s.model !== this.model) {
       this.model = s.model;
-      setParam(this.champSel.gain, s.model === 'champ600' ? 1 : 0, c);
+      setParam(this.comboSel.gain, s.model === 'champ600' ? 1 : 0, c);
       setParam(this.genericSel.gain, s.model === 'generic' ? 1 : 0, c);
     }
     const { pre, power } = ampStages(s.volume);

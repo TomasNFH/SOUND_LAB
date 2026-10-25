@@ -1,4 +1,4 @@
-import type { TsSettings } from '../settings';
+import type { MidHumpSettings } from '../settings';
 import { dbToGain, latencyMatchedPath, lerp, setParam, ShaperStage, type Block } from '../util';
 
 // Mid-hump overdrive clipping stage, split into its parts:
@@ -13,7 +13,7 @@ import { dbToGain, latencyMatchedPath, lerp, setParam, ShaperStage, type Block }
 // above the hump, so only those get gain and clip; the bass stays clean.
 
 const R_HUMP = 4700;
-const HUMP_CAPS: Record<TsSettings['hump'], number> = {
+const HUMP_CAPS: Record<MidHumpSettings['hump'], number> = {
   340: 0.1e-6,
   720: 0.047e-6,
   1500: 0.022e-6,
@@ -25,22 +25,22 @@ const C_HIGH_CUT = 51e-12;
 // DI clip peaking at -12 dBFS swings about ±0.25 V, like a real guitar.
 const V_DIODE = 0.6;
 
-export const humpFrequency = (hump: TsSettings['hump']) => 1 / (2 * Math.PI * R_HUMP * HUMP_CAPS[hump]);
+export const humpFrequency = (hump: MidHumpSettings['hump']) => 1 / (2 * Math.PI * R_HUMP * HUMP_CAPS[hump]);
 
 // The drive pot is audio taper: most of its resistance comes in the last
 // part of the rotation.
 const driveResistance = (drive: number) => (R_DRIVE * (Math.pow(10, 2 * drive) - 1)) / 99;
 
 // Gain of the op-amp stage above the hump frequency.
-export const tsGain = (drive: number) => 1 + (R_FIXED + driveResistance(drive)) / R_HUMP;
+export const midHumpGain = (drive: number) => 1 + (R_FIXED + driveResistance(drive)) / R_HUMP;
 
-export const tsHighCut = (drive: number) => 1 / (2 * Math.PI * (R_FIXED + driveResistance(drive)) * C_HIGH_CUT);
+export const midHumpHighCut = (drive: number) => 1 / (2 * Math.PI * (R_FIXED + driveResistance(drive)) * C_HIGH_CUT);
 
 // Diode clipping. Symmetric: a matched pair, so both half-waves clip the
 // same and only odd harmonics appear. Asymmetric: the negative side needs
 // more voltage to clip (like 2 diodes against 1), the wave gets lopsided
 // and even harmonics (the octave) appear.
-export function clipCurve(type: TsSettings['clip']) {
+export function clipCurve(type: MidHumpSettings['clip']) {
   if (type === 'sym') return (x: number) => V_DIODE * Math.tanh(x / V_DIODE);
   const vNeg = V_DIODE * 1.8;
   return (x: number) => (x >= 0 ? V_DIODE * Math.tanh(x / V_DIODE) : vNeg * Math.tanh(x / vNeg));
@@ -48,8 +48,8 @@ export function clipCurve(type: TsSettings['clip']) {
 
 // Static transfer for a signal in the mid band (above the hump): what the
 // clipping stage does to the waveform, before tone and level.
-export function tsTransfer(s: TsSettings) {
-  const g = tsGain(s.drive) - 1;
+export function midHumpTransfer(s: MidHumpSettings) {
+  const g = midHumpGain(s.drive) - 1;
   const clip = clipCurve(s.clip);
   return (x: number) => (s.bassPath ? x : 0) + clip(g * x);
 }
@@ -61,14 +61,14 @@ function firstOrderHighpass(ctx: BaseAudioContext, fc: number) {
   return ctx.createIIRFilter([norm, -norm], [1, (k - 1) * norm]);
 }
 
-export class TubeScreamer implements Block {
+export class MidHumpDrive implements Block {
   readonly input: GainNode;
   readonly output: GainNode;
   private hump: IIRFilterNode;
-  private humpSetting: TsSettings['hump'] = 720;
+  private humpSetting: MidHumpSettings['hump'] = 720;
   private readonly driveGain: GainNode;
   private readonly clipper: ShaperStage;
-  private clipSetting: TsSettings['clip'] = 'sym';
+  private clipSetting: MidHumpSettings['clip'] = 'sym';
   private readonly dcBlock: BiquadFilterNode;
   private readonly highCut: BiquadFilterNode;
   private readonly clean: GainNode;
@@ -103,7 +103,7 @@ export class TubeScreamer implements Block {
     this.sum.connect(this.dcBlock).connect(this.tone).connect(this.output);
   }
 
-  apply(s: TsSettings) {
+  apply(s: MidHumpSettings) {
     const c = this.ctx;
     if (s.hump !== this.humpSetting) {
       this.humpSetting = s.hump;
@@ -117,8 +117,8 @@ export class TubeScreamer implements Block {
       this.clipSetting = s.clip;
       this.clipper.setCurve(clipCurve(s.clip));
     }
-    setParam(this.driveGain.gain, tsGain(s.drive) - 1, c);
-    setParam(this.highCut.frequency, s.highCut ? Math.min(tsHighCut(s.drive), c.sampleRate * 0.45) : c.sampleRate * 0.45, c);
+    setParam(this.driveGain.gain, midHumpGain(s.drive) - 1, c);
+    setParam(this.highCut.frequency, s.highCut ? Math.min(midHumpHighCut(s.drive), c.sampleRate * 0.45) : c.sampleRate * 0.45, c);
     setParam(this.clean.gain, s.bassPath ? 1 : 0, c);
     // Tone: dark at 0, bright at 1, roughly the range of the real control.
     setParam(this.tone.gain, lerp(-15, 6, s.tone), c);

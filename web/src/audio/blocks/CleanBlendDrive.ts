@@ -1,4 +1,4 @@
-import type { KlonSettings } from '../settings';
+import type { CleanBlendSettings } from '../settings';
 import { dbToGain, latencyMatchedPath, lerp, setParam, ShaperStage, type Block } from '../util';
 import { softClip } from './clippers';
 
@@ -16,18 +16,18 @@ const CLIP = softClip(0.3);
 
 // At low gain the dirty path is a small addition to a clean boost; by
 // the top of the knob it dominates.
-export const klonMix = (gain: number) => ({
+export const cleanBlendMix = (gain: number) => ({
   drive: Math.pow(10, lerp(0.3, 1.9, gain)),
   clean: lerp(1.2, 0.3, gain),
   dirty: lerp(0.05, 1, Math.pow(gain, 1.5)),
 });
 
-export const klonTransfer = (s: KlonSettings) => {
-  const m = klonMix(s.gain);
+export const cleanBlendTransfer = (s: CleanBlendSettings) => {
+  const m = cleanBlendMix(s.gain);
   return (x: number) => m.clean * x + m.dirty * CLIP(m.drive * x);
 };
 
-export class Klon implements Block {
+export class CleanBlendDrive implements Block {
   readonly input: GainNode;
   readonly output: GainNode;
   private readonly drive: GainNode;
@@ -59,8 +59,8 @@ export class Klon implements Block {
     sum.connect(this.treble).connect(this.output);
   }
 
-  apply(s: KlonSettings) {
-    const m = klonMix(s.gain);
+  apply(s: CleanBlendSettings) {
+    const m = cleanBlendMix(s.gain);
     setParam(this.drive.gain, m.drive, this.ctx);
     setParam(this.clean.gain, m.clean, this.ctx);
     setParam(this.dirty.gain, m.dirty, this.ctx);

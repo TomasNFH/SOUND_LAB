@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'react';
 import type { SourceKind } from '../audio/AudioEngine';
 import { BUILT_IN_REVERBS, isBuiltInReverb } from '../audio/blocks/Reverb';
-import { changedMods } from '../audio/champ/mods';
-import { STOCK_CHAMP, type BranchId, type Branches, type PedalType, type ToneSettings } from '../audio/settings';
+import { changedMods } from '../audio/combo/mods';
+import { STOCK_COMBO, type BranchId, type Branches, type PedalType, type ToneSettings } from '../audio/settings';
 import { fmt } from './Knob';
 
 export type BlockId = 'pedal' | 'eq' | 'amp' | 'delay' | 'reverb';
@@ -70,7 +70,7 @@ function describe(s: ToneSettings, block: BlockId): { on: boolean; detail: strin
     }
     case 'amp': {
       if (s.amp.model !== 'champ600') return { on: s.amp.on, detail: `generic · ${fmt.pct(s.amp.volume)}` };
-      const mods = changedMods(s.amp.champ, STOCK_CHAMP).length + (s.amp.cab !== 'champ6' ? 1 : 0);
+      const mods = changedMods(s.amp.champ, STOCK_COMBO).length + (s.amp.cab !== 'champ6' ? 1 : 0);
       return {
         on: s.amp.on,
         detail: `6V6 · ${fmt.pct(s.amp.volume)}`,

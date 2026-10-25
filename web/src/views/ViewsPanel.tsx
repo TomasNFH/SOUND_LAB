@@ -2,7 +2,7 @@ import type { AudioEngine } from '../audio/AudioEngine';
 import { expectedResponseDb } from '../audio/response';
 import { isDry, type BranchId, type Branches } from '../audio/settings';
 import { branchAmpTransfer, branchPedalTransfer } from '../audio/transfer';
-import { ChampStackView } from './ChampStackView';
+import { ToneStackView } from './ToneStackView';
 import { CircuitView } from './CircuitView';
 import { HarmonicsView } from './HarmonicsView';
 import { ResponseView } from './ResponseView';
@@ -112,7 +112,7 @@ export function ViewsPanel({ engine, branches, editing, highlight, activeBand, v
         <div className="filters-pair">
           <p className="muted small view-caption">Branch {editing.toUpperCase()}</p>
           <ResponseView ctx={engine.ctx} settings={settings} activeBand={activeBand} />
-          <ChampStackView branches={branches} />
+          <ToneStackView branches={branches} />
         </div>
       )}
       {tab === 'circuit' &&

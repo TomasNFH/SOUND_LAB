@@ -1,12 +1,12 @@
 import { ampPreampTransfer } from './blocks/Amp';
 import { boostTransfer } from './boost/boost4558';
 import { boostEqTransfer } from './boost/boostEq';
-import { v2bTransfer } from './champ/circuit';
-import { bdTransfer } from './blocks/BluesDriver';
-import { ds2Transfer } from './blocks/Ds2';
-import { klonTransfer } from './blocks/Klon';
-import { tsTransfer } from './blocks/TubeScreamer';
-import { tsTransfer4558 } from './ts4558/ts4558';
+import { v2bTransfer } from './combo/circuit';
+import { ampLikeTransfer } from './blocks/AmpLikeDrive';
+import { hardDistortionTransfer } from './blocks/HardDistortion';
+import { cleanBlendTransfer } from './blocks/CleanBlendDrive';
+import { midHumpTransfer } from './blocks/MidHumpDrive';
+import { drive4558Transfer } from './drive4558/drive4558';
 import type { AmpSettings, PedalSettings, ToneSettings } from './settings';
 
 export type Transfer = { fn: (x: number) => number; note: string };
@@ -28,26 +28,26 @@ export function pedalTransfer(p: PedalSettings): Transfer {
     case 'ts':
       if (p.ts.mode === '4558')
         return {
-          fn: tsTransfer4558(p.ts.c4558),
+          fn: drive4558Transfer(p.ts.c4558),
           note: 'IC1a output for mid frequencies: the input plus the feedback voltage, which the diodes cap. Before tone and level.',
         };
       return {
-        fn: tsTransfer(p.ts),
+        fn: midHumpTransfer(p.ts),
         note: 'Clipping stage for mid frequencies (above the hump), before tone and level.',
       };
     case 'bd':
       return {
-        fn: bdTransfer(p.bd),
+        fn: ampLikeTransfer(p.bd),
         note: 'Two gentle stages in series: the bend builds up gradually as gain rises.',
       };
     case 'ds2':
       return {
-        fn: ds2Transfer(p.ds2),
+        fn: hardDistortionTransfer(p.ds2),
         note: 'Hard clipping: straight, then flat. Close to a square wave at high distortion.',
       };
     case 'klon':
       return {
-        fn: klonTransfer(p.klon),
+        fn: cleanBlendTransfer(p.klon),
         note: 'Clipped signal plus clean signal: the clean part keeps the line rising, so dynamics survive.',
       };
   }

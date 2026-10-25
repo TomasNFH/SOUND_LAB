@@ -15,7 +15,7 @@ declare class AudioWorkletProcessor {
 
 const OS = 4;
 
-class Champ600 extends AudioWorkletProcessor {
+class Combo6V6 extends AudioWorkletProcessor {
   private p: WorkletParams | null = null;
   private readonly up = antiAlias(sampleRate * OS, 20000);
   private readonly down = antiAlias(sampleRate * OS, 20000);
@@ -88,4 +88,4 @@ class Champ600 extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor('champ600', Champ600);
+registerProcessor('combo6v6', Combo6V6);

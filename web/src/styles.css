@@ -229,7 +229,7 @@ button.mx-end { font: inherit; color: inherit; text-align: left; cursor: pointer
 }
 
 /* 6V6 combo panel */
-.champ h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.combo h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .mods-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 8px; }
 .mods-head h3 { margin-right: 4px; }
 .mods-head button { font-size: 0.8rem; padding: 4px 10px; }
@@ -245,7 +245,7 @@ button.mx-end { font: inherit; color: inherit; text-align: left; cursor: pointer
 .mod-knobs { flex-basis: 100%; }
 .mod-knobs .knobs { margin-top: 6px; }
 button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration: underline; }
-.champ-readout { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 12px; font-size: 0.8rem; color: var(--muted); }
+.combo-readout { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 12px; font-size: 0.8rem; color: var(--muted); }
 .testpoints { margin-top: 12px; font-size: 0.85rem; }
 .testpoints summary { cursor: pointer; color: var(--text); }
 .testpoints table { width: 100%; border-collapse: collapse; margin-top: 6px; font-variant-numeric: tabular-nums; }

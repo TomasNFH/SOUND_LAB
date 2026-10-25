@@ -1,4 +1,4 @@
-import type { Ds2Settings } from '../settings';
+import type { HardDistortionSettings } from '../settings';
 import { dbToGain, lerp, setParam, ShaperStage, type Block } from '../util';
 import { hardClip } from './clippers';
 
@@ -13,14 +13,14 @@ import { hardClip } from './clippers';
 
 const CLIP = hardClip(0.5);
 
-export const ds2Gain = (dist: number, turbo: boolean) => Math.pow(10, lerp(1.2, 2.6, dist)) * (turbo ? 1.6 : 1);
+export const hardDistortionGain = (dist: number, turbo: boolean) => Math.pow(10, lerp(1.2, 2.6, dist)) * (turbo ? 1.6 : 1);
 
-export const ds2Transfer = (s: Ds2Settings) => {
-  const g = ds2Gain(s.dist, s.turbo);
+export const hardDistortionTransfer = (s: HardDistortionSettings) => {
+  const g = hardDistortionGain(s.dist, s.turbo);
   return (x: number) => CLIP(g * x);
 };
 
-export class Ds2 implements Block {
+export class HardDistortion implements Block {
   readonly input: GainNode;
   readonly output: GainNode;
   private readonly turboEq: BiquadFilterNode;
@@ -63,10 +63,10 @@ export class Ds2 implements Block {
     fizz.connect(this.output);
   }
 
-  apply(s: Ds2Settings) {
+  apply(s: HardDistortionSettings) {
     const c = this.ctx;
     setParam(this.turboEq.gain, s.turbo ? 10 : 0, c);
-    setParam(this.drive.gain, ds2Gain(s.dist, s.turbo), c);
+    setParam(this.drive.gain, hardDistortionGain(s.dist, s.turbo), c);
     // Equal-power blend: 0 = lowpass only (dark), 1 = highpass only.
     setParam(this.lowGain.gain, Math.cos((s.tone * Math.PI) / 2), c);
     setParam(this.highGain.gain, Math.sin((s.tone * Math.PI) / 2) * 1.4, c);

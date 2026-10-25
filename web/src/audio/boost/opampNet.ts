@@ -7,7 +7,7 @@
 // sections for the worklet: a 6th-order filter at 4x oversampling in one
 // direct form would be numerically fragile, a cascade of biquads is not.
 
-import { bilinear, type Filter } from '../champ/circuit';
+import { bilinear, type Filter } from '../combo/circuit';
 
 export type El =
   | { kind: 'R' | 'C'; a: string; b: string; value: number }

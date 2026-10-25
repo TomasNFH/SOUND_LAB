@@ -1,7 +1,7 @@
 // Signal-processing pieces shared by the audio worklets. They run inside
 // AudioWorkletGlobalScope, so nothing here may touch the DOM.
 
-import type { Filter } from './champ/circuit';
+import type { Filter } from './combo/circuit';
 
 // Transposed direct form II, any order. Keeps its state when the
 // coefficients change (the volume knob recomputes the tone stack).

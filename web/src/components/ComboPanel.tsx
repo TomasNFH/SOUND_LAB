@@ -1,6 +1,6 @@
-import { flatKnobs, interstageResponseDb, powerTube, stageGains, stockKnobs, testPoints } from '../audio/champ/circuit';
-import { MODS } from '../audio/champ/mods';
-import { STOCK_CHAMP, type AmpSettings, type ChampSettings } from '../audio/settings';
+import { flatKnobs, interstageResponseDb, powerTube, stageGains, stockKnobs, testPoints } from '../audio/combo/circuit';
+import { MODS } from '../audio/combo/mods';
+import { STOCK_COMBO, type AmpSettings, type ComboSettings } from '../audio/settings';
 import { fmt, Knob } from './Knob';
 
 type Props = {
@@ -15,19 +15,19 @@ const db = (x: number) => 20 * Math.log10(x);
 
 // Controls for the 6V6 combo circuit model: the real amp's one knob,
 // and every mod as a switch, stock first.
-export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props) {
-  const champ = amp.champ;
-  const set = (patch: Partial<ChampSettings>) => onChange({ ...amp, champ: { ...champ, ...patch } });
-  const g = stageGains(champ);
-  const pt = powerTube(champ.bias);
-  const changed = MODS.filter((m) => champ[m.key] !== STOCK_CHAMP[m.key]).length;
-  const stockPos = stockKnobs(champ.midPot);
+export function ComboPanel({ amp, onChange, otherBranch, onStockToOther }: Props) {
+  const combo = amp.champ;
+  const set = (patch: Partial<ComboSettings>) => onChange({ ...amp, champ: { ...combo, ...patch } });
+  const g = stageGains(combo);
+  const pt = powerTube(combo.bias);
+  const changed = MODS.filter((m) => combo[m.key] !== STOCK_COMBO[m.key]).length;
+  const stockPos = stockKnobs(combo.midPot);
   // Level through the stack at 1 kHz, volume full up: shows the loss
   // shrinking as the middle pot gets bigger.
-  const stackDb = interstageResponseDb(champ, 1, new Float32Array([1000]))[0];
+  const stackDb = interstageResponseDb(combo, 1, new Float32Array([1000]))[0];
 
   return (
-    <div className="champ">
+    <div className="combo">
       <div className="knobs">
         <Knob label="Volume" value={amp.volume} {...unit} defaultValue={0.4} onChange={(volume) => onChange({ ...amp, volume })} />
       </div>
@@ -39,7 +39,7 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
       <div className="mods-head">
         <h3>Mods</h3>
         <span className="muted inline">{changed ? `${changed} changed from stock` : 'All stock'}</span>
-        <button onClick={() => onChange({ ...amp, champ: structuredClone(STOCK_CHAMP) })} disabled={!changed}>
+        <button onClick={() => onChange({ ...amp, champ: structuredClone(STOCK_COMBO) })} disabled={!changed}>
           Reset to stock
         </button>
         <button onClick={onStockToOther} title={`Branch ${otherBranch} gets this amp with every mod undone`}>
@@ -49,7 +49,7 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
 
       <div className="mods">
         {MODS.map((m) => {
-          const isChanged = champ[m.key] !== STOCK_CHAMP[m.key];
+          const isChanged = combo[m.key] !== STOCK_COMBO[m.key];
           return (
             <div key={m.key} className={`mod ${isChanged ? 'changed' : ''}`}>
               <div className="mod-label">
@@ -60,8 +60,8 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
                 {m.options.map((o) => (
                   <button
                     key={String(o.value)}
-                    className={champ[m.key] === o.value ? 'on' : ''}
-                    onClick={() => set({ [m.key]: o.value } as Partial<ChampSettings>)}
+                    className={combo[m.key] === o.value ? 'on' : ''}
+                    onClick={() => set({ [m.key]: o.value } as Partial<ComboSettings>)}
                   >
                     {o.label}
                   </button>
@@ -69,18 +69,18 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
               </div>
               {isChanged && <p className="muted small mod-note">{m.listen}</p>}
               {isChanged && m.estimate && <p className="muted small mod-note">{m.estimate}</p>}
-              {m.key === 'toneStack' && champ.toneStack === 'knobs' && (
+              {m.key === 'toneStack' && combo.toneStack === 'knobs' && (
                 <div className="mod-knobs">
                   <div className="knobs">
-                    <Knob size="small" label="Treble" value={champ.treble} {...unit} defaultValue={stockPos.treble} onChange={(treble) => set({ treble })} />
-                    <Knob size="small" label="Bass" value={champ.bass} {...unit} defaultValue={stockPos.bass} onChange={(bass) => set({ bass })} />
-                    <Knob size="small" label="Middle" value={champ.middle} {...unit} defaultValue={stockPos.middle} onChange={(middle) => set({ middle })} />
+                    <Knob size="small" label="Treble" value={combo.treble} {...unit} defaultValue={stockPos.treble} onChange={(treble) => set({ treble })} />
+                    <Knob size="small" label="Bass" value={combo.bass} {...unit} defaultValue={stockPos.bass} onChange={(bass) => set({ bass })} />
+                    <Knob size="small" label="Middle" value={combo.middle} {...unit} defaultValue={stockPos.middle} onChange={(middle) => set({ middle })} />
                   </div>
                   <div className="switch-row mid-pot">
                     <span className="switch-label">Middle pot</span>
                     <div className="seg">
                       {([25, 50, 100, 250] as const).map((k) => (
-                        <button key={k} className={champ.midPot === k ? 'on' : ''} onClick={() => set({ midPot: k })}>
+                        <button key={k} className={combo.midPot === k ? 'on' : ''} onClick={() => set({ midPot: k })}>
                           {k}k
                         </button>
                       ))}
@@ -88,15 +88,15 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
                     <span className="muted inline">{stackDb.toFixed(1)} dB at 1 kHz</span>
                   </div>
                   <p className="muted small">
-                    Treble and bass are 250k; the middle pot is {champ.midPot}k
-                    {champ.midPot === 25 ? ' (the usual value)' : ', bigger than the usual 25k: the stack loses less level, so the amp is louder and breaks up sooner'}
+                    Treble and bass are 250k; the middle pot is {combo.midPot}k
+                    {combo.midPot === 25 ? ' (the usual value)' : ', bigger than the usual 25k: the stack loses less level, so the amp is louder and breaks up sooner'}
                     . At {fmt.pct(stockPos.treble)} / {fmt.pct(stockPos.bass)} / {fmt.pct(stockPos.middle)} the knobs match the stock
                     resistors exactly. Treble 0, bass low and middle full up is the flattest this kind of stack gets.{' '}
                     <button className="link" onClick={() => set({ ...stockPos })}>
                       Set to stock
                     </button>{' '}
                     ·{' '}
-                    <button className="link" onClick={() => set({ ...flatKnobs(champ.midPot) })}>
+                    <button className="link" onClick={() => set({ ...flatKnobs(combo.midPot) })}>
                       Flat
                     </button>
                   </p>
@@ -107,7 +107,7 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
         })}
       </div>
 
-      <div className="champ-readout">
+      <div className="combo-readout">
         <span>
           V2-A gain ×{g.a.aHf.toFixed(0)} ({g.a.tz ? `×${g.a.aLf.toFixed(0)} in the deep bass` : 'flat'})
         </span>
@@ -135,7 +135,7 @@ export function ChampPanel({ amp, onChange, otherBranch, onStockToOther }: Props
             </tr>
           </thead>
           <tbody>
-            {testPoints(champ).map((p) => (
+            {testPoints(combo).map((p) => (
               <tr key={p.id}>
                 <td>{p.id}</td>
                 <td>{p.label}</td>

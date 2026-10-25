@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { audioTaper, interstageResponseDb, powerTube, stageGains } from '../audio/champ/circuit';
-import { MODS, SPEAKER_MOD, STAGE_NAMES, type StageId } from '../audio/champ/mods';
+import { audioTaper, interstageResponseDb, powerTube, stageGains } from '../audio/combo/circuit';
+import { MODS, SPEAKER_MOD, STAGE_NAMES, type StageId } from '../audio/combo/mods';
 import { BUILT_IN_CABS, isBuiltInCab } from '../audio/ir';
-import { STOCK_CHAMP, type AmpSettings, type ChampSettings } from '../audio/settings';
+import { STOCK_COMBO, type AmpSettings, type ComboSettings } from '../audio/settings';
 
 type Props = { amp: AmpSettings; branch: string };
 
@@ -18,7 +18,7 @@ const STAGE_INFO: Record<StageId, string> = {
   speaker: 'T2 turns the 6V6’s high voltage into what a 4 Ω speaker needs; the stock speaker is a 6" in a small open-back box.',
 };
 
-const optionLabel = (key: keyof ChampSettings, value: unknown) =>
+const optionLabel = (key: keyof ComboSettings, value: unknown) =>
   MODS.find((m) => m.key === key)?.options.find((o) => o.value === value)?.label ?? String(value);
 
 type Box = { id: StageId; title: string; lines: string[]; tube?: boolean };
@@ -53,8 +53,8 @@ export function CircuitView({ amp, branch }: Props) {
   const stackDb = interstageResponseDb({ ...c }, 1, new Float32Array([1000]))[0];
   const volDb = 20 * Math.log10(Math.max(1e-4, audioTaper(amp.volume)));
   const stageChanged = (id: StageId) =>
-    MODS.some((m) => m.stage === id && c[m.key] !== STOCK_CHAMP[m.key]) ||
-    (id === 'stack' && c.toneStack === 'knobs' && c.midPot !== STOCK_CHAMP.midPot) ||
+    MODS.some((m) => m.stage === id && c[m.key] !== STOCK_COMBO[m.key]) ||
+    (id === 'stack' && c.toneStack === 'knobs' && c.midPot !== STOCK_COMBO.midPot) ||
     (id === 'speaker' && amp.cab !== 'champ6');
   const cabName = isBuiltInCab(amp.cab) ? BUILT_IN_CABS[amp.cab] : amp.cab === 'off' ? 'No speaker' : amp.cab;
 
@@ -157,12 +157,12 @@ export function CircuitView({ amp, branch }: Props) {
         <h3>{STAGE_NAMES[stage]}</h3>
         <p>{STAGE_INFO[stage]}</p>
         {mods.map((m) => {
-          const changed = c[m.key] !== STOCK_CHAMP[m.key];
+          const changed = c[m.key] !== STOCK_COMBO[m.key];
           return (
             <div key={m.key} className={`cv-mod ${changed ? 'changed' : ''}`}>
               <p className="cv-mod-title">
                 {m.label} ({m.part}): <strong>{optionLabel(m.key, c[m.key])}</strong>
-                {changed && <span className="muted"> · stock: {optionLabel(m.key, STOCK_CHAMP[m.key])}</span>}
+                {changed && <span className="muted"> · stock: {optionLabel(m.key, STOCK_COMBO[m.key])}</span>}
               </p>
               <p>{m.what}</p>
               <p>

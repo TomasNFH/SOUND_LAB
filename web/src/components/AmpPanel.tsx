@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { SPEAKER_MOD } from '../audio/champ/mods';
+import { SPEAKER_MOD } from '../audio/combo/mods';
 import { BUILT_IN_CABS } from '../audio/ir';
 import type { AmpSettings } from '../audio/settings';
 import { listFiles, uploadFile, type AudioFile } from '../api';
-import { ChampPanel } from './ChampPanel';
+import { ComboPanel } from './ComboPanel';
 import { fmt, Knob } from './Knob';
 
 type Props = {
@@ -69,7 +69,7 @@ export function AmpPanel({ amp, onChange, otherBranch, onStockToOther }: Props) 
 
       <div className={amp.on ? '' : 'disabled'}>
         {amp.model === 'champ600' ? (
-          <ChampPanel amp={amp} onChange={onChange} otherBranch={otherBranch} onStockToOther={onStockToOther} />
+          <ComboPanel amp={amp} onChange={onChange} otherBranch={otherBranch} onStockToOther={onStockToOther} />
         ) : (
           <div className="knobs">
             <Knob label="Volume" value={amp.volume} {...unit} defaultValue={0.3} onChange={(volume) => set({ volume })} />

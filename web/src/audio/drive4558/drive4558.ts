@@ -16,8 +16,8 @@
 // Every value is a setting. The op-amps are ideal apart from their gain-
 // bandwidth and their output swing (1.5 V short of each supply rail).
 
-import { bilinear, cascade, type Filter } from '../champ/circuit';
-import type { Ts4558Settings } from '../settings';
+import { bilinear, cascade, type Filter } from '../combo/circuit';
+import type { Drive4558Settings } from '../settings';
 
 const S0 = 2 * Math.PI * 1000;
 const GBW = 3e6; // 4558 gain-bandwidth, Hz
@@ -46,7 +46,7 @@ export function diodeClip(x: number, d: DiodeType) {
 }
 export const railClip = (x: number, v: number) => knee(x, v, 5);
 
-export function tsValues(s: Ts4558Settings) {
+export function drive4558Values(s: Drive4558Settings) {
   const rDrive = s.rFixed + Math.max(1, taper(s.drive) * s.drivePot);
   const t = Math.min(0.999, Math.max(0.001, s.tone));
   const ra = t * s.tonePot; // wiper to the + input side (treble cut end)
@@ -84,8 +84,8 @@ const padd = (p: number[], q: number[]) => Array.from({ length: Math.max(p.lengt
 const pscale = (p: number[], k: number) => p.map((v) => v * k);
 
 // Linear sections as polynomials in σ = s / s0 (ascending powers).
-function sections(s: Ts4558Settings) {
-  const v = tsValues(s);
+function sections(s: Drive4558Settings) {
+  const v = drive4558Values(s);
   const hp = (tau: number): Poly => ({ num: [0, tau * S0], den: [1, tau * S0] });
   // Voltage across the feedback per volt at the + input: Zf / Zg with
   // Zf = R_d ∥ C_fb and Zg = R_gnd + 1/(s C_gnd).
@@ -142,7 +142,7 @@ const cmul = (a: { re: number; im: number }, b: { re: number; im: number }) => (
 
 // Small-signal response of the whole pedal in dB (no clipping): input
 // high-passes × (1 + feedback) × tone stage × output.
-export function tsResponseDb(s: Ts4558Settings, freqs: Float32Array) {
+export function drive4558ResponseDb(s: Drive4558Settings, freqs: Float32Array) {
   const sec = sections(s);
   const out = new Float32Array(freqs.length);
   freqs.forEach((f, i) => {
@@ -157,12 +157,12 @@ export function tsResponseDb(s: Ts4558Settings, freqs: Float32Array) {
 }
 
 // Input volts → clipping-stage output, mid band, for the transfer view.
-export function tsTransfer4558(s: Ts4558Settings) {
-  const v = tsValues(s);
+export function drive4558Transfer(s: Drive4558Settings) {
+  const v = drive4558Values(s);
   return (x: number) => railClip(x + diodeClip((v.gain - 1) * x, s.diodes), v.headroom);
 }
 
-export type Ts4558WorkletParams = {
+export type Drive4558WorkletParams = {
   input: Filter; // C_in / R_in and the coupling cap, before IC1a
   feedback: Filter; // voltage across the feedback per volt at the + input
   diodes: DiodeType;
@@ -170,7 +170,7 @@ export type Ts4558WorkletParams = {
   post: Filter; // R7/C6, tone stage, output cap and level
 };
 
-export function ts4558WorkletParams(s: Ts4558Settings, fsOversampled: number): Ts4558WorkletParams {
+export function drive4558WorkletParams(s: Drive4558Settings, fsOversampled: number): Drive4558WorkletParams {
   const sec = sections(s);
   const d = (p: Poly) => bilinear(p.num, p.den, fsOversampled, S0);
   return {

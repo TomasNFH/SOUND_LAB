@@ -10,7 +10,7 @@
 // about 1.5 V short of the supply rails, as a real 4558 does. All stages
 // sit at VREF (4.5 V) and are DC-coupled, so VREF is ground for the signal.
 
-import type { Filter } from '../champ/circuit';
+import type { Filter } from '../combo/circuit';
 import type { BoostEqSettings } from '../settings';
 import { gainAt, sections, transferPolys, type El } from './opampNet';
 

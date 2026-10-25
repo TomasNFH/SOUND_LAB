@@ -1,4 +1,4 @@
-import type { ChampSettings } from '../settings';
+import type { ComboSettings } from '../settings';
 
 export type StageId = 'input' | 'v2a' | 'stack' | 'volume' | 'v2b' | 'feedback' | 'power' | 'speaker';
 
@@ -7,12 +7,12 @@ type Option<V> = { value: V; label: string };
 // One way to change the amp: which part it touches, the choices (stock
 // first), and the card text: what changes physically, what to listen
 // for, and where to see it in the app.
-export type Mod<K extends keyof ChampSettings = keyof ChampSettings> = {
+export type Mod<K extends keyof ComboSettings = keyof ComboSettings> = {
   key: K;
   stage: StageId;
   label: string;
   part: string;
-  options: Option<ChampSettings[K]>[];
+  options: Option<ComboSettings[K]>[];
   what: string;
   listen: string;
   look: string;
@@ -21,7 +21,7 @@ export type Mod<K extends keyof ChampSettings = keyof ChampSettings> = {
   estimate?: string;
 };
 
-const mod = <K extends keyof ChampSettings>(m: Mod<K>) => m as unknown as Mod;
+const mod = <K extends keyof ComboSettings>(m: Mod<K>) => m as unknown as Mod;
 
 export const MODS: Mod[] = [
   mod({
@@ -156,6 +156,6 @@ export const SPEAKER_MOD = {
 };
 
 // Which settings differ from stock.
-export function changedMods(s: ChampSettings, stock: ChampSettings) {
+export function changedMods(s: ComboSettings, stock: ComboSettings) {
   return MODS.filter((m) => s[m.key] !== stock[m.key]);
 }

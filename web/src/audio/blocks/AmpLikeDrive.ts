@@ -1,4 +1,4 @@
-import type { BdSettings } from '../settings';
+import type { AmpLikeSettings } from '../settings';
 import { dbToGain, lerp, setParam, ShaperStage, type Block } from '../util';
 import { asymSoftClip, softClip } from './clippers';
 
@@ -15,17 +15,17 @@ const stage2 = softClip(0.6);
 
 // Both stages gain up together; the second only starts to work hard in
 // the upper half of the knob, which is what makes the breakup gradual.
-export const bdGains = (gain: number) => ({
+export const ampLikeGains = (gain: number) => ({
   a: lerp(1, 7, gain),
   b: lerp(1, 5, gain * gain),
 });
 
-export const bdTransfer = (s: BdSettings) => {
-  const { a, b } = bdGains(s.gain);
+export const ampLikeTransfer = (s: AmpLikeSettings) => {
+  const { a, b } = ampLikeGains(s.gain);
   return (x: number) => stage2(b * stage1(a * x));
 };
 
-export class BluesDriver implements Block {
+export class AmpLikeDrive implements Block {
   readonly input: GainNode;
   readonly output: GainNode;
   private readonly gainA: GainNode;
@@ -59,8 +59,8 @@ export class BluesDriver implements Block {
     clip2.output.connect(dc).connect(this.tone).connect(this.output);
   }
 
-  apply(s: BdSettings) {
-    const { a, b } = bdGains(s.gain);
+  apply(s: AmpLikeSettings) {
+    const { a, b } = ampLikeGains(s.gain);
     setParam(this.gainA.gain, a, this.ctx);
     setParam(this.gainB.gain, b, this.ctx);
     setParam(this.tone.gain, lerp(-12, 8, s.tone), this.ctx);
