@@ -212,3 +212,18 @@ button.mx-end { font: inherit; color: inherit; text-align: left; cursor: pointer
   .mx-head { text-align: left; align-self: center; }
   .mx-listen button { min-width: 56px; }
 }
+
+/* Auto A/B in the output box: toggle, interval, and a bar that fills up
+   until the next switch. */
+.mx-output { width: 132px; }
+.mx-auto { display: flex; gap: 4px; align-items: center; }
+.mx-auto-toggle { flex: 1; padding: 4px 8px; font-size: 0.82rem; }
+.mx-auto-toggle.on { background: var(--accent); color: #102010; border-color: transparent; font-weight: 600; }
+.mx-auto .compact { padding: 4px 4px; font-size: 0.8rem; }
+.mx-auto-track { height: 3px; border-radius: 2px; background: #2a2d35; overflow: hidden; }
+.mx-auto-progress { display: block; height: 100%; width: 0; background: var(--accent); animation: mx-fill linear forwards; }
+@keyframes mx-fill { to { width: 100%; } }
+@media (max-width: 720px) {
+  .mx-output { width: auto; flex-wrap: wrap; }
+  .mx-auto-track { flex-basis: 100%; }
+}

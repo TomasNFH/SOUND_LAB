@@ -15,6 +15,11 @@ type Props = {
   onSelect: (s: Selection) => void;
   onToggle: (branch: BranchId, block: BlockId) => void;
   onListen: (branch: BranchId) => void;
+  // Auto A/B: `cycle` changes on every switch (restarting the countdown);
+  // `running` is false while paused or stopped.
+  auto: { on: boolean; seconds: number; cycle: number; running: boolean };
+  onAuto: (on: boolean) => void;
+  onAutoSeconds: (seconds: number) => void;
   onCopy: (from: BranchId, to: BranchId) => void;
   onResetA: () => void;
 };
@@ -27,6 +32,7 @@ const BLOCKS: { id: BlockId; label: string }[] = [
   { id: 'reverb', label: 'Reverb' },
 ];
 const BRANCHES: BranchId[] = ['a', 'b'];
+const AUTO_INTERVALS = [2, 5, 10];
 
 const PEDAL_NAMES: Record<PedalType, string> = {
   boost: 'Clean boost',
@@ -89,6 +95,7 @@ const Arrow = () => (
 // output switch. Tap a cell to open that branch's block below.
 export function ChainMatrix(props: Props) {
   const { branches, source, listening, selection, onSelect, onToggle, onListen, onCopy, onResetA } = props;
+  const { auto, onAuto, onAutoSeconds } = props;
   const isSelected = (branch: BranchId, block: BlockId) =>
     selection !== 'source' && selection.branch === branch && selection.block === block;
 
@@ -171,6 +178,35 @@ export function ChainMatrix(props: Props) {
               </button>
             ))}
           </div>
+          <div className="mx-auto">
+            <button
+              className={`mx-auto-toggle ${auto.on ? 'on' : ''}`}
+              onClick={() => onAuto(!auto.on)}
+              aria-pressed={auto.on}
+              title="Switch between A and B automatically while playing"
+            >
+              Auto
+            </button>
+            <select
+              className="compact"
+              value={auto.seconds}
+              onChange={(e) => onAutoSeconds(Number(e.target.value))}
+              aria-label="Auto switch interval"
+            >
+              {AUTO_INTERVALS.map((sec) => (
+                <option key={sec} value={sec}>
+                  {sec} s
+                </option>
+              ))}
+            </select>
+          </div>
+          {auto.on && (
+            <div className="mx-auto-track" aria-hidden="true">
+              {auto.running && (
+                <span key={auto.cycle} className="mx-auto-progress" style={{ animationDuration: `${auto.seconds}s` }} />
+              )}
+            </div>
+          )}
         </div>
       </div>
 

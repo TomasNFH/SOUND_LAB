@@ -45,6 +45,10 @@ export function App() {
   // The branch whose blocks are open below; panels edit this one.
   const [editing, setEditing] = useState<BranchId>('b');
   const [listening, setListening] = useState<BranchId>('b');
+  // Auto A/B: flip the branch you hear every few seconds while playing.
+  const [auto, setAuto] = useState(false);
+  const [autoSeconds, setAutoSeconds] = useState(5);
+  const [autoCycle, setAutoCycle] = useState(0);
   const [engineState, setEngineState] = useState<EngineState>({
     playing: false,
     canPlay: false,
@@ -104,6 +108,12 @@ export function App() {
     setBranches((b) => ({ ...b, [to]: structuredClone(b[from]) }));
   }, []);
 
+  // Picking a branch by hand takes over from auto switching.
+  const listenTo = useCallback((branch: BranchId | 'other') => {
+    setAuto(false);
+    setListening((l) => (branch === 'other' ? (l === 'a' ? 'b' : 'a') : branch));
+  }, []);
+
   const togglePlay = useCallback(() => {
     const e = getEngine();
     if (!e.canPlay) return;
@@ -120,14 +130,26 @@ export function App() {
         ev.preventDefault();
         togglePlay();
       } else if (ev.code === 'KeyB') {
-        setListening((l) => (l === 'a' ? 'b' : 'a'));
+        listenTo('other');
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [togglePlay]);
+  }, [togglePlay, listenTo]);
 
   const { playing, canPlay, position, duration, levelMatchDb } = engineState;
+
+  useEffect(() => {
+    if (!auto || !playing) return;
+    // A new cycle restarts the countdown bar in sync with this timer.
+    setAutoCycle((c) => c + 1);
+    const id = window.setInterval(() => {
+      setListening((l) => (l === 'a' ? 'b' : 'a'));
+      setAutoCycle((c) => c + 1);
+    }, autoSeconds * 1000);
+    return () => window.clearInterval(id);
+  }, [auto, autoSeconds, playing]);
+
   const highlight =
     activeBand !== null && settings.eq.on && settings.eq.bands[activeBand]?.on
       ? bandRange(settings.eq.bands[activeBand])
@@ -185,7 +207,7 @@ export function App() {
         <div className="monitor">
           <button
             className={`ab-switch ${listening === 'a' ? 'is-dry' : 'is-wet'}`}
-            onClick={() => setListening((l) => (l === 'a' ? 'b' : 'a'))}
+            onClick={() => listenTo('other')}
             title="Press B to switch"
           >
             <span className={listening === 'a' ? 'on' : ''}>A{isDry(branches.a) ? ' · Dry' : ''}</span>
@@ -206,7 +228,10 @@ export function App() {
         selection={selection}
         onSelect={select}
         onToggle={toggleBlock}
-        onListen={setListening}
+        onListen={listenTo}
+        auto={{ on: auto, seconds: autoSeconds, cycle: autoCycle, running: auto && playing }}
+        onAuto={setAuto}
+        onAutoSeconds={setAutoSeconds}
         onCopy={copyBranch}
         onResetA={() => setBranches((b) => ({ ...b, a: drySettings() }))}
       />
