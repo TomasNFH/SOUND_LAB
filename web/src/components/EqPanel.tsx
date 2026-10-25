@@ -5,6 +5,8 @@ type Props = {
   eq: EqSettings;
   onChange: (eq: EqSettings) => void;
   onActiveBand: (index: number | null) => void;
+  // Off where there is no distortion to be before or after (Live's bass).
+  showPosition?: boolean;
 };
 
 const BAND_NAMES: Record<EqBand['type'], string> = {
@@ -13,7 +15,7 @@ const BAND_NAMES: Record<EqBand['type'], string> = {
   highshelf: 'High shelf',
 };
 
-export function EqPanel({ eq, onChange, onActiveBand }: Props) {
+export function EqPanel({ eq, onChange, onActiveBand, showPosition = true }: Props) {
   const setBand = (i: number, patch: Partial<EqBand>) =>
     onChange({ ...eq, bands: eq.bands.map((b, j) => (j === i ? { ...b, ...patch } : b)) });
 
@@ -25,21 +27,25 @@ export function EqPanel({ eq, onChange, onActiveBand }: Props) {
           <input type="checkbox" checked={eq.on} onChange={(e) => onChange({ ...eq, on: e.target.checked })} />
           On
         </label>
-        <div className="seg" role="group" aria-label="EQ position">
-          {(['pre', 'post'] as const).map((p) => (
-            <button
-              key={p}
-              className={eq.position === p ? 'on' : ''}
-              onClick={() => onChange({ ...eq, position: p })}
-            >
-              {p === 'pre' ? 'Before distortion' : 'After distortion'}
-            </button>
-          ))}
-        </div>
+        {showPosition && (
+          <div className="seg" role="group" aria-label="EQ position">
+            {(['pre', 'post'] as const).map((p) => (
+              <button
+                key={p}
+                className={eq.position === p ? 'on' : ''}
+                onClick={() => onChange({ ...eq, position: p })}
+              >
+                {p === 'pre' ? 'Before distortion' : 'After distortion'}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      <p className="muted small">
-        Before the distortion, the EQ changes what gets distorted. After it, the EQ only colours the result.
-      </p>
+      {showPosition && (
+        <p className="muted small">
+          Before the distortion, the EQ changes what gets distorted. After it, the EQ only colours the result.
+        </p>
+      )}
 
       <div className={`eq-bands ${eq.on ? '' : 'disabled'}`}>
         {eq.bands.map((band, i) => (

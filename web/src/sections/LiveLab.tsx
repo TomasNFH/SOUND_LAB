@@ -3,6 +3,7 @@ import { getEngine } from '../audio/toneEngine';
 import type { ToneSettings } from '../audio/settings';
 import { fmt, Knob } from '../components/Knob';
 import { canPickOutput, live, type InputChannel, type LatencyMode, type LiveTone } from '../live/LiveEngine';
+import { BassPanel } from '../live/BassPanel';
 import { useLive } from '../live/useLive';
 
 const CHANNELS: { id: InputChannel; label: string }[] = [
@@ -196,16 +197,18 @@ export function LiveLab({ active }: { active: boolean }) {
       <section className="panel">
         <h2>Sound</h2>
         <div className="seg live-tone" role="group" aria-label="Sound">
-          {(['dry', 'a', 'b'] as LiveTone[]).map((t) => (
+          {(['dry', 'a', 'b', 'bass'] as LiveTone[]).map((t) => (
             <button key={t} className={state.tone === t ? 'on' : ''} onClick={() => live.setTone(t)}>
-              {t === 'dry' ? 'Dry' : `Tone Lab ${t.toUpperCase()}`}
+              {t === 'dry' ? 'Dry' : t === 'bass' ? 'Bass' : `Tone Lab ${t.toUpperCase()}`}
             </button>
           ))}
         </div>
         <p className="muted small">
           {state.tone === 'dry'
             ? 'The guitar as it comes in: no processing at all, the lowest latency and CPU use.'
-            : `Branch ${state.tone.toUpperCase()} of Tone Lab: ${chainSummary(settings?.[state.tone])}. Only those blocks run, each adding well under a millisecond. Change it in Tone Lab; it updates here when you come back.`}
+            : state.tone === 'bass'
+              ? 'Your guitar as a bass: one octave down, through a bass amp, cabinet and EQ. No added delay.'
+              : `Branch ${state.tone.toUpperCase()} of Tone Lab: ${chainSummary(settings?.[state.tone])}. Only those blocks run, each adding well under a millisecond. Change it in Tone Lab; it updates here when you come back.`}
         </p>
         {state.tone !== 'dry' && (
           <p className="muted small">
@@ -213,6 +216,8 @@ export function LiveLab({ active }: { active: boolean }) {
           </p>
         )}
       </section>
+
+      {state.tone === 'bass' && <BassPanel bass={state.bass} channel={state.channel} />}
 
       <section className="panel">
         <h2>Latency</h2>

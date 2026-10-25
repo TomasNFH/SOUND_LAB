@@ -531,3 +531,11 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
   .header .live-mini { display: none; }
   .section-tabs .live-dot.tab-pulse { display: inline-block; }
 }
+
+/* Live's bass chain: Tone Lab's chain cells in one row. */
+.bass-blocks { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.bass-blocks .mx-cell { min-height: 58px; }
+.block-off .knobs, .block-off .eq-bands { opacity: 0.55; }
+@media (max-width: 720px) {
+  .bass-blocks { grid-template-columns: minmax(0, 1fr); }
+}

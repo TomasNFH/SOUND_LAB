@@ -1,11 +1,13 @@
 import { inputClosed, inputOpening, unlockPlayback } from '../audio/iosAudio';
 import { getEngine } from '../audio/toneEngine';
 import type { BranchId } from '../audio/settings';
+import { BassRig, bassStructure, DEFAULT_BASS, type BassSettings } from './BassRig';
 import { LiveChain, liveStructure } from './LiveChain';
 
 export type InputChannel = 'left' | 'right' | 'both';
-// dry: the guitar as it comes in; a / b: through that Tone Lab branch.
-export type LiveTone = 'dry' | BranchId;
+// dry: the guitar as it comes in; a / b: through that Tone Lab branch;
+// bass: an octave down through a bass rig.
+export type LiveTone = 'dry' | BranchId | 'bass';
 // How small an audio buffer to ask for. Smaller is faster but crackles
 // sooner on a busy computer.
 export type LatencyMode = 'lowest' | 'low' | 'safe';
@@ -22,6 +24,7 @@ export interface LiveState {
   latencyMode: LatencyMode;
   inputDb: number;
   outputDb: number;
+  bass: BassSettings;
 }
 
 export interface Latency {
@@ -56,6 +59,7 @@ interface Graph {
   meter: AnalyserNode;
   chain: LiveChain | null;
   branch: BranchId | null;
+  bass: BassRig | null;
 }
 
 // Guitar in, sound out, nothing else: its own audio context with the
@@ -75,6 +79,7 @@ class LiveEngine {
     latencyMode: 'lowest',
     inputDb: 0,
     outputDb: -6,
+    bass: DEFAULT_BASS,
     ...LiveEngine.restore(),
   };
   private listeners = new Set<() => void>();
@@ -97,9 +102,9 @@ class LiveEngine {
   private set(p: Partial<LiveState>) {
     this.state = { ...this.state, ...p };
     this.listeners.forEach((fn) => fn());
-    const { deviceId, outputId, channel, tone, latencyMode, inputDb, outputDb } = this.state;
+    const { deviceId, outputId, channel, tone, latencyMode, inputDb, outputDb, bass } = this.state;
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ deviceId, outputId, channel, tone, latencyMode, inputDb, outputDb }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ deviceId, outputId, channel, tone, latencyMode, inputDb, outputDb, bass }));
     } catch {
       // Storage off (private window): settings just won't be remembered.
     }
@@ -107,7 +112,10 @@ class LiveEngine {
 
   private static restore(): Partial<LiveState> {
     try {
-      return JSON.parse(localStorage.getItem(STORE_KEY) ?? '{}');
+      const saved: Partial<LiveState> = JSON.parse(localStorage.getItem(STORE_KEY) ?? '{}');
+      // Settings added in later versions take their defaults.
+      if (saved.bass) saved.bass = { ...DEFAULT_BASS, ...saved.bass };
+      return saved;
     } catch {
       return {};
     }
@@ -213,7 +221,13 @@ class LiveEngine {
       const { tone } = this.state;
       const settings = getEngine().currentSettings;
       let chain: LiveChain | null = null;
-      if (tone !== 'dry' && settings) {
+      let bass: BassRig | null = null;
+      if (tone === 'bass') {
+        bass = new BassRig(ctx, this.state.bass);
+        await bass.ready();
+        inputGain.connect(bass.input);
+        bass.output.connect(outputGain);
+      } else if (tone !== 'dry' && settings) {
         chain = new LiveChain(ctx, settings[tone]);
         await chain.ready();
         inputGain.connect(chain.input);
@@ -221,7 +235,8 @@ class LiveEngine {
       } else {
         inputGain.connect(outputGain);
       }
-      const graph: Graph = { ctx, source, inputGain, outputGain, meter, chain, branch: tone === 'dry' ? null : tone };
+      const branch = tone === 'a' || tone === 'b' ? tone : null;
+      const graph: Graph = { ctx, source, inputGain, outputGain, meter, chain, branch, bass };
       this.connectInput(graph);
       await ctx.resume();
       if (generation !== this.generation) {
@@ -275,6 +290,16 @@ class LiveEngine {
     if (this.state.running) void this.rebuild().catch((e: Error) => this.set({ error: e.message }));
   }
 
+  // Bass knobs change the running rig in place; turning a block on or off
+  // builds the rig again without or with it.
+  setBass(patch: Partial<BassSettings>) {
+    this.set({ bass: { ...this.state.bass, ...patch } });
+    const rig = this.graph?.bass;
+    if (!rig) return;
+    if (bassStructure(this.state.bass) === rig.key) rig.apply(this.state.bass);
+    else void this.rebuild().catch((e: Error) => this.set({ error: e.message }));
+  }
+
   setInputDb(inputDb: number) {
     this.set({ inputDb });
     const g = this.graph;
@@ -315,7 +340,9 @@ class LiveEngine {
   // What is running now, for checking that nothing unheard is.
   describe() {
     const g = this.graph;
-    return g ? { contextState: g.ctx.state, sound: g.branch ?? 'dry', blocks: g.chain?.key ?? null } : null;
+    return g
+      ? { contextState: g.ctx.state, sound: g.bass ? 'bass' : (g.branch ?? 'dry'), blocks: g.chain?.key ?? null }
+      : null;
   }
 
   // Peak of the input over the last few milliseconds, in dBFS.
