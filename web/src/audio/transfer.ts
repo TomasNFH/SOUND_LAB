@@ -1,4 +1,5 @@
 import { ampPreampTransfer } from './blocks/Amp';
+import { v2bTransfer } from './champ/circuit';
 import { bdTransfer } from './blocks/BluesDriver';
 import { ds2Transfer } from './blocks/Ds2';
 import { klonTransfer } from './blocks/Klon';
@@ -47,6 +48,12 @@ export const branchPedalTransfer = (s: ToneSettings) => (s.pedal.on ? pedalTrans
 export const branchAmpTransfer = (s: ToneSettings) => (s.amp.on ? ampTransfer(s.amp) : BYPASSED);
 
 export function ampTransfer(a: AmpSettings): Transfer {
+  if (a.model === 'champ600') {
+    return {
+      fn: v2bTransfer(a.champ),
+      note: 'Champion V2-B, grid to plate (inverted, as a tube does). Grid conduction flattens one side early; cutoff rounds the other.',
+    };
+  }
   return {
     fn: ampPreampTransfer(a),
     note: 'Amp preamp stage at this volume. Lopsided like a tube: low volume stays near the straight part.',

@@ -3,6 +3,8 @@ import type { AudioEngine } from '../audio/AudioEngine';
 import { expectedResponseDb } from '../audio/response';
 import { isDry, type BranchId, type Branches } from '../audio/settings';
 import { branchAmpTransfer, branchPedalTransfer } from '../audio/transfer';
+import { ChampStackView } from './ChampStackView';
+import { CircuitView } from './CircuitView';
 import { HarmonicsView } from './HarmonicsView';
 import { ResponseView } from './ResponseView';
 import { TimeView } from './TimeView';
@@ -25,6 +27,7 @@ const TABS = [
   { id: 'harmonics', label: 'Harmonics' },
   { id: 'transfer', label: 'Transfer' },
   { id: 'time', label: 'Delay & reverb' },
+  { id: 'circuit', label: 'Circuit' },
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
@@ -66,8 +69,17 @@ export function ViewsPanel({ engine, branches, editing, highlight, activeBand }:
         <>
           <p className="muted small view-caption">Branch {editing.toUpperCase()}</p>
           <ResponseView ctx={engine.ctx} settings={settings} activeBand={activeBand} />
+          <ChampStackView branches={branches} />
         </>
       )}
+      {tab === 'circuit' &&
+        (settings.amp.model === 'champ600' ? (
+          <CircuitView amp={settings.amp} branch={editing.toUpperCase()} />
+        ) : (
+          <p className="muted small view-caption">
+            Branch {editing.toUpperCase()} uses the generic amp. Pick Champion 600 in its Amp block to see the circuit.
+          </p>
+        ))}
       {tab === 'harmonics' && <HarmonicsView engine={engine} />}
       {tab === 'transfer' && (
         <>
@@ -82,7 +94,7 @@ export function ViewsPanel({ engine, branches, editing, highlight, activeBand }:
           <TransferView
             a={transferOf === 'pedal' ? branchPedalTransfer(branches.a) : branchAmpTransfer(branches.a)}
             b={transferOf === 'pedal' ? branchPedalTransfer(branches.b) : branchAmpTransfer(branches.b)}
-            inputRange={transferOf === 'pedal' ? 0.5 : 1}
+            inputRange={transferOf === 'pedal' ? 0.5 : settings.amp.model === 'champ600' ? 3 : 1}
           />
         </>
       )}

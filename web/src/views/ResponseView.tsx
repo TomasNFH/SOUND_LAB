@@ -36,7 +36,8 @@ export function ResponseView({ ctx, settings, activeBand }: Props) {
       if (!band.on) return;
       plot(eqResponseDb(ctx, eq, freqs, i), i === activeBand ? COLORS.diff : 'rgba(111,168,255,0.45)', i === activeBand ? 2 : 1);
     });
-    if (settings.amp.on) {
+    const genericStack = settings.amp.on && settings.amp.model === 'generic';
+    if (genericStack) {
       g.setLineDash([6, 4]);
       plot(filterResponseDb(ctx, toneStackSpecs(settings.amp), freqs), COLORS.diff, 2);
       g.setLineDash([]);
@@ -46,7 +47,7 @@ export function ResponseView({ ctx, settings, activeBand }: Props) {
     g.font = '10px system-ui, sans-serif';
     g.fillStyle = eq.on ? COLORS.wet : COLORS.label;
     g.fillText(eq.on ? 'EQ total' : 'EQ total (EQ is off)', w - 130, 12);
-    if (settings.amp.on) {
+    if (genericStack) {
       g.fillStyle = COLORS.diff;
       g.fillText('Amp tone stack (dashed)', w - 130, 26);
     }

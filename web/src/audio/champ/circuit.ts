@@ -8,6 +8,7 @@
 //                                          └──── R7 / R23 ─────────┘ feedback
 
 import type { ChampSettings } from '../settings';
+import { triode } from './curves';
 
 // ---------------------------------------------------------------------------
 // Complex numbers and a small nodal-analysis solver
@@ -340,6 +341,13 @@ export function testPoints(s: ChampSettings): TestPoint[] {
     { id: 'TP9', label: '6V6 plate', model: abs(tp9), fender: F.tp9 },
     { id: 'TP13', label: 'Speaker', model: abs(tp13), fender: F.tp13 },
   ];
+}
+
+// V2-B on its own, grid volts in → plate swing out, for the transfer view.
+export function v2bTransfer(s: ChampSettings) {
+  const g = stageGains(s);
+  const bias = 1.7 * g.tube.headroom;
+  return (x: number) => -g.b.aHf * triode(x, bias, bias * 1.15);
 }
 
 // ---------------------------------------------------------------------------

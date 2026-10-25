@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react';
 import type { SourceKind } from '../audio/AudioEngine';
 import { BUILT_IN_REVERBS, isBuiltInReverb } from '../audio/blocks/Reverb';
-import type { BranchId, Branches, PedalType, ToneSettings } from '../audio/settings';
+import { changedMods } from '../audio/champ/mods';
+import { STOCK_CHAMP, type BranchId, type Branches, type PedalType, type ToneSettings } from '../audio/settings';
 import { fmt } from './Knob';
 
 export type BlockId = 'pedal' | 'eq' | 'amp' | 'delay' | 'reverb';
@@ -64,8 +65,15 @@ function describe(s: ToneSettings, block: BlockId): { on: boolean; detail: strin
         tag: s.eq.position === 'pre' ? 'before distortion' : undefined,
       };
     }
-    case 'amp':
-      return { on: s.amp.on, detail: `volume ${fmt.pct(s.amp.volume)}` };
+    case 'amp': {
+      if (s.amp.model !== 'champ600') return { on: s.amp.on, detail: `generic · ${fmt.pct(s.amp.volume)}` };
+      const mods = changedMods(s.amp.champ, STOCK_CHAMP).length + (s.amp.cab !== 'champ6' ? 1 : 0);
+      return {
+        on: s.amp.on,
+        detail: `Champ · ${fmt.pct(s.amp.volume)}`,
+        tag: mods ? `${mods} mod${mods > 1 ? 's' : ''}` : undefined,
+      };
+    }
     case 'delay':
       return {
         on: s.delay.on,

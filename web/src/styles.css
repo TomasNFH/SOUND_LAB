@@ -227,3 +227,51 @@ button.mx-end { font: inherit; color: inherit; text-align: left; cursor: pointer
   .mx-output { width: auto; flex-wrap: wrap; }
   .mx-auto-track { flex-basis: 100%; }
 }
+
+/* Champion 600 panel */
+.champ h3 { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.mods-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 16px 0 8px; }
+.mods-head h3 { margin-right: 4px; }
+.mods-head button { font-size: 0.8rem; padding: 4px 10px; }
+.mods-head .muted.inline { margin-right: auto; }
+.mods { display: flex; flex-direction: column; gap: 6px; }
+.mod { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.mod.changed { border-color: #f0a848; }
+.mod-label { display: flex; flex-direction: column; min-width: 170px; flex: 1; font-size: 0.88rem; }
+.mod-part { font-size: 0.74rem; color: var(--muted); }
+.mod .seg button { font-size: 0.78rem; padding: 4px 8px; }
+.mod.changed .seg button.on { background: #f0a848; color: #241505; }
+.mod-note { flex-basis: 100%; margin: 0; }
+.mod-knobs { flex-basis: 100%; }
+.mod-knobs .knobs { margin-top: 6px; }
+button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration: underline; }
+.champ-readout { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 12px; font-size: 0.8rem; color: var(--muted); }
+.testpoints { margin-top: 12px; font-size: 0.85rem; }
+.testpoints summary { cursor: pointer; color: var(--text); }
+.testpoints table { width: 100%; border-collapse: collapse; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.testpoints th, .testpoints td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--border); }
+.testpoints th { color: var(--muted); font-weight: 500; font-size: 0.78rem; }
+
+/* Circuit view */
+.circuit-svg { display: block; width: 100%; height: auto; }
+.cv-wire { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.cv-box { cursor: pointer; }
+.cv-box rect { fill: #111216; stroke: var(--border); stroke-width: 1; transition: stroke 0.1s; }
+.cv-box.tube rect { fill: #142019; }
+.cv-box.changed rect { stroke: #f0a848; stroke-width: 1.5; }
+.cv-box.selected rect { stroke: var(--accent); stroke-width: 2; }
+.cv-title { fill: var(--text); font-size: 14px; font-weight: 600; }
+.cv-line { fill: var(--muted); font-size: 12px; }
+.cv-box.changed .cv-line { fill: #f0a848; }
+.cv-feedback { cursor: pointer; }
+.cv-feedback path { stroke: #f0a848; stroke-width: 1.3; stroke-dasharray: 5 4; fill: none; }
+.cv-feedback text { fill: var(--muted); font-size: 12px; }
+.cv-feedback.off path { stroke: var(--border); }
+.cv-feedback.selected text { fill: var(--accent); }
+.cv-card { border-top: 1px solid var(--border); margin-top: 8px; padding-top: 10px; font-size: 0.88rem; }
+.cv-card h3 { margin: 0 0 6px; font-size: 1rem; }
+.cv-card p { margin: 4px 0; }
+.cv-mod { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
+.cv-mod.changed { border-color: #f0a848; }
+.cv-mod-title { color: var(--text); }
+.cv-k { display: inline-block; min-width: 44px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); }

@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AudioEngine, type EngineState, type SourceKind } from './audio/AudioEngine';
 import { bandRange } from './audio/blocks/EqBlock';
-import { defaultBranches, drySettings, isDry, type BranchId, type Branches, type ToneSettings } from './audio/settings';
+import {
+  defaultBranches,
+  drySettings,
+  isDry,
+  STOCK_CHAMP,
+  type BranchId,
+  type Branches,
+  type ToneSettings,
+} from './audio/settings';
 import { AmpPanel } from './components/AmpPanel';
 import { ChainMatrix, type BlockId, type Selection } from './components/ChainMatrix';
 import { ClipPanel } from './components/ClipPanel';
@@ -107,6 +115,18 @@ export function App() {
   const copyBranch = useCallback((from: BranchId, to: BranchId) => {
     setBranches((b) => ({ ...b, [to]: structuredClone(b[from]) }));
   }, []);
+
+  // The other branch gets this whole chain with a stock Champion 600, so
+  // the amp mods are the only difference between A and B.
+  const stockToOther = useCallback(() => {
+    setBranches((b) => {
+      const other: BranchId = editing === 'a' ? 'b' : 'a';
+      const copy = structuredClone(b[editing]);
+      const speakerMod = copy.amp.cab === 'smooth6' || copy.amp.cab === 'cab10';
+      copy.amp = { ...copy.amp, on: true, model: 'champ600', champ: structuredClone(STOCK_CHAMP), cab: speakerMod ? 'champ6' : copy.amp.cab };
+      return { ...b, [other]: copy };
+    });
+  }, [editing]);
 
   // Picking a branch by hand takes over from auto switching.
   const listenTo = useCallback((branch: BranchId | 'other') => {
@@ -277,7 +297,14 @@ export function App() {
             <p className="editing-tag">Branch {editing.toUpperCase()}</p>
             {selection.block === 'eq' && <EqPanel eq={settings.eq} onChange={(eq) => patch({ eq })} onActiveBand={setActiveBand} />}
             {selection.block === 'pedal' && <PedalPanel pedal={settings.pedal} onChange={(pedal) => patch({ pedal })} />}
-            {selection.block === 'amp' && <AmpPanel amp={settings.amp} onChange={(amp) => patch({ amp })} />}
+            {selection.block === 'amp' && (
+              <AmpPanel
+                amp={settings.amp}
+                onChange={(amp) => patch({ amp })}
+                otherBranch={editing === 'a' ? 'B' : 'A'}
+                onStockToOther={stockToOther}
+              />
+            )}
             {(selection.block === 'delay' || selection.block === 'reverb') && (
               <FxPanel only={selection.block} settings={settings} onChange={patch} />
             )}

@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, withDefaults, type ToneSettings } from './settings';
+import { DEFAULT_SETTINGS, STOCK_CHAMP, withDefaults, type ChampSettings, type ToneSettings } from './settings';
 
 type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] };
 
@@ -14,8 +14,29 @@ const preset = (name: string, about: string, s: DeepPartial<ToneSettings>): Buil
   settings: withDefaults(s),
 });
 
+// A stock Champion 600 with no pedal, plus one change: load the stock one
+// into one branch and a mod into the other to hear exactly that mod.
+const champ = (name: string, about: string, patch: Partial<ChampSettings>, extra: DeepPartial<ToneSettings> = {}) =>
+  preset(name, about, {
+    ...extra,
+    pedal: { on: false },
+    eq: { on: false },
+    amp: { on: true, model: 'champ600', volume: 0.6, cab: 'champ6', ...extra.amp, champ: { ...STOCK_CHAMP, ...patch } },
+  });
+
 // Starting points for the learning experiments in the plan.
 export const BUILT_IN_PRESETS: BuiltInPreset[] = [
+  champ('Champion 600 stock', 'The amp as it ships, at 60% volume. Load a mod into the other branch to compare.', {}),
+  champ('Champion: tone knobs', 'Pots instead of the fixed resistors, set to stock positions: turn them.', { toneStack: 'knobs' }),
+  champ('Champion: R19 lifted', 'The stack loses its ground return: much more gain, a darker sound.', { toneStack: 'liftR19' }),
+  champ('Champion: no tone stack (5F1-style)', 'The stack switched out, like a 1950s tweed Champ: loud and raw.', { toneStack: 'bypass' }),
+  champ('Champion: brighter (C1 doubled)', 'A second 250 pF across C1: more treble through the stack.', { c1: 500 }),
+  champ('Champion: tighter bass (C3 1 µF)', 'Less low-end gain in the first stage: clearer when it breaks up.', { v2aCap: '1u' }),
+  champ('Champion: tamed (C10 removed)', 'Less gain in the second stage: more headroom, less distortion.', { v2bCap: 'none' }),
+  champ('Champion: no feedback', 'R7 removed: louder, looser, more 2nd harmonic.', { feedback: 'off' }),
+  champ('Champion: cooler bias (680 Ω)', 'The 6V6 runs about 11 W instead of 14 W.', { bias: 680 }),
+  champ('Champion: 12AT7 preamp tube', 'Less preamp gain: the breakup comes later on the knob.', { tube: '12AT7' }),
+  champ('Champion: upgraded 6" speaker', 'Same amp, a fuller and smoother 6".', {}, { amp: { cab: 'smooth6' } }),
   preset('Clean (everything flat)', 'Pedal off, EQ flat: the reference.', { pedal: { on: false } }),
   preset('EQ: 800 Hz +9 dB', 'Compare with "TS low drive": same mid lift, no clipping.', {
     pedal: { on: false },

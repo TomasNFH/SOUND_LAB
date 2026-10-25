@@ -4,6 +4,7 @@
 // (circuit.ts) and posted here; this file only runs the signal.
 
 import type { Filter, WorkletParams } from './circuit';
+import { knee, power6v6, triode } from './curves';
 
 declare const sampleRate: number;
 declare function registerProcessor(name: string, ctor: unknown): void;
@@ -51,28 +52,6 @@ function antiAlias(fs: number, fc: number): Iir[] {
     f.set({ b: [(1 - cos) / 2 / a0, (1 - cos) / a0, (1 - cos) / 2 / a0], a: [1, (-2 * cos) / a0, (1 - alpha) / a0] });
     return f;
   });
-}
-
-// Straight until near the limit v, then flattening; `p` sets how sudden
-// the knee is (higher = harder).
-const knee = (x: number, v: number, p: number) => x / Math.pow(1 + Math.pow(Math.abs(x / v), p), 1 / p);
-
-// Preamp triode, input-referred: grid conduction above +vpos is fairly
-// abrupt, cutoff below -vneg is gradual, and the triode's curved transfer
-// adds a little 2nd harmonic even at low level. Any DC this adds is
-// removed by the coupling capacitors downstream.
-function triode(x: number, vpos: number, vneg: number) {
-  const u = x >= 0 ? knee(x, vpos, 3) : vneg * Math.tanh(x / vneg);
-  return u + (0.15 * u * u) / (vpos + vneg);
-}
-
-// Single-ended 6V6, grid-referred: one tube handles both halves of the
-// wave on a curved (roughly square-law) characteristic, so its distortion
-// is mostly 2nd harmonic, growing with level until the grid conducts at
-// +vpos or the tube cuts off at -vneg.
-function power6v6(x: number, vpos: number, vneg: number) {
-  const u = x >= 0 ? knee(x, vpos, 4) : knee(x, vneg, 4);
-  return u + (0.11 * u * u) / ((vpos + vneg) / 2);
 }
 
 class Champ600 extends AudioWorkletProcessor {
