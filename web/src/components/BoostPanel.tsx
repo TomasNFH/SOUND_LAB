@@ -1,6 +1,7 @@
 import { boostValues } from '../audio/boost/boost4558';
 import { STOCK_BOOST, type BoostSettings } from '../audio/settings';
 import { BoostResponseView } from '../views/BoostResponseView';
+import { BoostSchematic } from '../views/BoostSchematic';
 import { fmt, Knob } from './Knob';
 
 type Props = { boost: BoostSettings; onChange: (b: BoostSettings) => void };
@@ -157,6 +158,14 @@ export function BoostPanel({ boost, onChange }: Props) {
         Corners below 20 Hz don't change the sound you hear; try a smaller C1 or C3 (or R1) to bring one into the
         audio band and cut bass. The output corner moves with the volume knob because C3 feeds the pot.
       </p>
+
+      <div className="mods-head">
+        <h3>Schematic</h3>
+        <span className="muted inline">clean_boost_4558.cir · changed parts in orange</span>
+      </div>
+      <div className="schematic-wrap">
+        <BoostSchematic boost={boost} />
+      </div>
     </div>
   );
 }

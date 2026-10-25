@@ -318,3 +318,15 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .corner-table th, .corner-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--border); }
 .corner-table th { color: var(--muted); font-weight: 500; font-size: 0.75rem; }
 .corner-table tr.moved td:nth-child(2) { color: #f0a848; font-weight: 600; }
+
+/* Clean boost schematic */
+.schematic-wrap { background: #111216; border: 1px solid var(--border); border-radius: 8px; padding: 8px; overflow-x: auto; }
+.schematic { display: block; width: 100%; min-width: 560px; height: auto; }
+.sch-wire, .sch-part { fill: none; stroke: var(--muted); stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
+.sch-part { stroke: var(--text); }
+.sch-part.hot, .sch-part.hot path { stroke: #f0a848; }
+.sch-dot { fill: var(--text); }
+.sch-label { fill: var(--muted); font-size: 11px; }
+.sch-label.hot { fill: #f0a848; font-weight: 600; }
+.sch-pin { fill: var(--muted); font-size: 10px; }
+.sch-plus { fill: var(--muted); font-size: 10px; stroke: none; }
