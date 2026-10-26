@@ -11,9 +11,9 @@ type Section = 'tone' | 'theory' | 'drums' | 'live';
 
 const SECTIONS: { id: Section; label: string; short: string }[] = [
   { id: 'tone', label: 'Tone Lab', short: 'Tone' },
-  { id: 'theory', label: 'Theory Lab', short: 'Theory' },
-  { id: 'drums', label: 'Drum Lab', short: 'Drums' },
   { id: 'live', label: 'Live', short: 'Live' },
+  { id: 'drums', label: 'Drum Lab', short: 'Drums' },
+  { id: 'theory', label: 'Theory Lab', short: 'Theory' },
 ];
 
 // The section lives in the URL hash (#/tone, #/theory, #/drums) so links and
