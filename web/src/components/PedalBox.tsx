@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type PedalPaint = 'teal' | 'cream' | 'skyblue' | 'orange' | 'navy' | 'eqorange' | 'mint' | 'rust' | 'amp';
+export type PedalPaint = 'teal' | 'cream' | 'skyblue' | 'orange' | 'navy' | 'eqorange' | 'mint' | 'rust' | 'amp' | 'tuner';
 export type PedalShape = 'upright' | 'small' | 'slim' | 'wide' | 'amp';
 export type PedalLettering = 'display' | 'script' | 'block' | 'tall' | 'serif';
 
@@ -15,6 +15,8 @@ type Props = {
   grille?: boolean;
   on: boolean;
   onToggle: () => void;
+  // What the footswitch does, for screen readers; "<name> on" by default.
+  switchLabel?: string;
   // The knobs across the top of the box.
   children: ReactNode;
 };
@@ -24,15 +26,15 @@ type Props = {
 // footswitch that turns the effect on and off. Input and output jacks
 // stick out of the sides. The amp shape is a head instead: a faceplate
 // with the knobs and a jewel lamp power switch over a grille cloth.
-export function PedalBox({ name, subtitle, paint, shape = 'upright', lettering = 'display', grille, on, onToggle, children }: Props) {
+export function PedalBox({ name, subtitle, paint, shape = 'upright', lettering = 'display', grille, on, onToggle, switchLabel, children }: Props) {
   const label = `${name}${subtitle ? ` ${subtitle}` : ''}`;
   const toggle = (
     <button
       className={shape === 'amp' ? 'amp-power' : 'pedal-switch'}
       onClick={onToggle}
       aria-pressed={on}
-      aria-label={`${label} on`}
-      title={on ? 'On: click to bypass' : 'Bypassed: click to turn on'}
+      aria-label={switchLabel ?? `${label} on`}
+      title={switchLabel ?? (on ? 'On: click to bypass' : 'Bypassed: click to turn on')}
     />
   );
 

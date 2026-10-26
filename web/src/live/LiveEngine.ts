@@ -3,6 +3,7 @@ import { getEngine } from '../audio/toneEngine';
 import type { BranchId } from '../audio/settings';
 import { BassRig, bassStructure, DEFAULT_BASS, type BassSettings } from './BassRig';
 import { LiveChain, liveStructure } from './LiveChain';
+import { detectPitch, type Pitch } from './pitch';
 
 export type InputChannel = 'left' | 'right' | 'both';
 // dry: the guitar as it comes in; a / b: through that Tone Lab branch;
@@ -25,6 +26,11 @@ export interface LiveState {
   inputDb: number;
   outputDb: number;
   bass: BassSettings;
+  // The tuner's reference pitch, Hz.
+  a4: number;
+  // The tuner's footswitch: silence the output while tuning. Not saved, so
+  // a reload never starts muted.
+  tunerMute: boolean;
 }
 
 export interface Latency {
@@ -57,6 +63,8 @@ interface Graph {
   inputGain: GainNode;
   outputGain: GainNode;
   meter: AnalyserNode;
+  // The dry input for the tuner, before any effect.
+  tuner: AnalyserNode;
   chain: LiveChain | null;
   branch: BranchId | null;
   bass: BassRig | null;
@@ -80,7 +88,9 @@ class LiveEngine {
     inputDb: 0,
     outputDb: -6,
     bass: DEFAULT_BASS,
+    a4: 440,
     ...LiveEngine.restore(),
+    tunerMute: false,
   };
   private listeners = new Set<() => void>();
   private stream: MediaStream | null = null;
@@ -89,6 +99,7 @@ class LiveEngine {
   // closes itself instead of taking over.
   private generation = 0;
   private meterData = new Float32Array(256);
+  private tunerData = new Float32Array(4096);
   // Whether this engine holds the record-capable audio session.
   private holdsInput = false;
 
@@ -102,9 +113,9 @@ class LiveEngine {
   private set(p: Partial<LiveState>) {
     this.state = { ...this.state, ...p };
     this.listeners.forEach((fn) => fn());
-    const { deviceId, outputId, channel, tone, latencyMode, inputDb, outputDb, bass } = this.state;
+    const { deviceId, outputId, channel, tone, latencyMode, inputDb, outputDb, bass, a4 } = this.state;
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ deviceId, outputId, channel, tone, latencyMode, inputDb, outputDb, bass }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ deviceId, outputId, channel, tone, latencyMode, inputDb, outputDb, bass, a4 }));
     } catch {
       // Storage off (private window): settings just won't be remembered.
     }
@@ -213,9 +224,12 @@ class LiveEngine {
       const outputGain = ctx.createGain();
       const meter = ctx.createAnalyser();
       meter.fftSize = 256;
+      const tuner = ctx.createAnalyser();
+      tuner.fftSize = this.tunerData.length;
       inputGain.gain.value = dbToGain(this.state.inputDb);
       outputGain.gain.value = 0; // faded in once swapped in
       inputGain.connect(meter);
+      inputGain.connect(tuner);
       outputGain.connect(ctx.destination);
 
       const { tone } = this.state;
@@ -236,7 +250,7 @@ class LiveEngine {
         inputGain.connect(outputGain);
       }
       const branch = tone === 'a' || tone === 'b' ? tone : null;
-      const graph: Graph = { ctx, source, inputGain, outputGain, meter, chain, branch, bass };
+      const graph: Graph = { ctx, source, inputGain, outputGain, meter, tuner, chain, branch, bass };
       this.connectInput(graph);
       await ctx.resume();
       if (generation !== this.generation) {
@@ -245,7 +259,7 @@ class LiveEngine {
       }
       const old = this.graph;
       this.graph = graph;
-      outputGain.gain.setTargetAtTime(dbToGain(this.state.outputDb), ctx.currentTime, 0.005);
+      outputGain.gain.setTargetAtTime(this.outputLevel(), ctx.currentTime, 0.005);
       if (old) {
         old.outputGain.gain.setTargetAtTime(0, old.ctx.currentTime, 0.005);
         window.setTimeout(() => void old.ctx.close().catch(() => {}), 60);
@@ -309,7 +323,30 @@ class LiveEngine {
   setOutputDb(outputDb: number) {
     this.set({ outputDb });
     const g = this.graph;
-    g?.outputGain.gain.setTargetAtTime(dbToGain(outputDb), g.ctx.currentTime, 0.01);
+    g?.outputGain.gain.setTargetAtTime(this.outputLevel(), g.ctx.currentTime, 0.01);
+  }
+
+  setA4(a4: number) {
+    this.set({ a4: Math.round(Math.min(450, Math.max(430, a4))) });
+  }
+
+  setTunerMute(tunerMute: boolean) {
+    this.set({ tunerMute });
+    const g = this.graph;
+    g?.outputGain.gain.setTargetAtTime(this.outputLevel(), g.ctx.currentTime, 0.01);
+  }
+
+  private outputLevel() {
+    return this.state.tunerMute ? 0 : dbToGain(this.state.outputDb);
+  }
+
+  // The pitch of the dry input right now, or null when there is no clear
+  // note (silence, noise, a chord).
+  tunerPitch(): Pitch | null {
+    const g = this.graph;
+    if (!g) return null;
+    g.tuner.getFloatTimeDomainData(this.tunerData);
+    return detectPitch(this.tunerData, g.ctx.sampleRate);
   }
 
   // Take one channel of a stereo interface (each input is its own channel),

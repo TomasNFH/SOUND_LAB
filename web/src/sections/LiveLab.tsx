@@ -5,6 +5,7 @@ import { fmt, Knob } from '../components/Knob';
 import { canPickOutput, live, type InputChannel, type LatencyMode, type LiveTone } from '../live/LiveEngine';
 import { SectionHero } from '../components/SectionHero';
 import { BassPanel } from '../live/BassPanel';
+import { TunerPanel } from '../live/TunerPanel';
 import { useLive } from '../live/useLive';
 
 const CHANNELS: { id: InputChannel; label: string }[] = [
@@ -144,6 +145,8 @@ export function LiveLab({ active }: { active: boolean }) {
         )}
         {error && <p className="muted small error">{error}</p>}
       </section>
+
+      <TunerPanel active={active} />
 
       <section className="panel">
         <h2>Input and output</h2>
