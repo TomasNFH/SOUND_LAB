@@ -20,6 +20,7 @@ import { FxPanel } from './components/FxPanel';
 import { fmt, Knob } from './components/Knob';
 import { PedalPanel } from './components/PedalPanel';
 import { PresetPanel } from './components/PresetPanel';
+import { SectionHero } from './components/SectionHero';
 import { DEFAULT_VIEW, ViewsPanel, type ViewOptions } from './views/ViewsPanel';
 
 const SOURCES: { id: SourceKind; label: string }[] = [
@@ -190,6 +191,7 @@ export function ToneLab({ active, showPresets }: { active: boolean; showPresets:
 
   return (
     <div className={showMini ? 'with-mini' : ''} hidden={!active}>
+      <SectionHero title="Tone Lab" tagline="Shape a tone circuit by circuit, and hear A against B" />
 
       <div hidden={!showPresets}>
         <PresetPanel

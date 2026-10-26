@@ -3,6 +3,7 @@ import { getEngine } from '../audio/toneEngine';
 import type { ToneSettings } from '../audio/settings';
 import { fmt, Knob } from '../components/Knob';
 import { canPickOutput, live, type InputChannel, type LatencyMode, type LiveTone } from '../live/LiveEngine';
+import { SectionHero } from '../components/SectionHero';
 import { BassPanel } from '../live/BassPanel';
 import { useLive } from '../live/useLive';
 
@@ -107,6 +108,7 @@ export function LiveLab({ active }: { active: boolean }) {
 
   return (
     <div className="live-lab">
+      <SectionHero title="Live" tagline="Play your guitar through the rig, in real time" />
       <section className="panel">
         <div className="panel-head">
           <h2>Live</h2>

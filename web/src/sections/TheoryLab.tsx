@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SectionHero } from '../components/SectionHero';
 import { CircleOfFifths } from '../theory/CircleOfFifths';
 import { Fretboard, type FretLabel, type FretShow } from '../theory/Fretboard';
 import {
@@ -57,6 +58,7 @@ export function TheoryLab() {
 
   return (
     <div className="theory-lab">
+      <SectionHero title="Theory Lab" tagline="Keys, scales and chords, on the circle and the neck" />
       <section className="panel">
         <div className="panel-head">
           <h2>Key and scale</h2>

@@ -60,6 +60,13 @@ body { margin: 0; background: var(--bg); }
 .dot.turq::after { background: var(--turquoise); }
 .dot.terra::after { background: var(--terracotta); }
 
+/* Section hero: serif tagline over a big dotted lowercase title. */
+.section-hero { text-align: center; margin: 8px 0 24px; }
+.section-tagline { margin: 0 0 4px; font-size: clamp(1.15rem, 3vw, 1.6rem); color: var(--ink); }
+.section-title { margin: 0; font-size: clamp(3rem, 11vw, 6rem); color: var(--ink); user-select: none; }
+.section-title-accent { color: var(--accent); }
+.section-title-accent .dot.terra::after { background: var(--espresso); }
+
 /* Page frame: a cream card on a terracotta mat. */
 body { background: var(--terracotta); padding: 32px 24px; }
 .app {
@@ -465,7 +472,7 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .site-footer a:hover { color: var(--turquoise); }
 
 /* Theory Lab */
-.theory-lab .panel h3 { margin: 16px 0 0; font-size: 1rem; }
+.theory-lab .panel h3 { margin: 16px 0 0; font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
 .theory-lab .panel h3:first-child { margin-top: 0; }
 .theory-select { flex: none; min-width: 180px; }
 .root-picker { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; margin-top: 12px; }
@@ -491,7 +498,7 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .cof-cell text.numeral { font-size: 8.5px; font-weight: 700; fill: var(--accent); }
 .cof-cell.selected text { fill: var(--on-accent); }
 .cof-hub { fill: var(--bg); }
-.cof-key { fill: var(--text); font-size: 24px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.cof-key { fill: var(--text); font-family: var(--font-display); font-size: 26px; font-weight: 800; text-anchor: middle; dominant-baseline: central; }
 .cof-sub { fill: var(--muted); font-size: 11px; text-anchor: middle; dominant-baseline: central; }
 
 .scale-notes, .chord-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -538,7 +545,7 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .bpm { display: flex; align-items: center; gap: 6px; }
 .bpm button { min-width: 36px; }
 .bpm-value { min-width: 92px; text-align: center; color: var(--muted); font-size: 0.85rem; }
-.bpm-value strong { color: var(--text); font-size: 1.5rem; font-variant-numeric: tabular-nums; margin-right: 2px; }
+.bpm-value strong { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; color: var(--text); font-size: 2rem; font-variant-numeric: tabular-nums; margin-right: 2px; }
 .drum-transport .knob { margin-left: auto; }
 .bpm-slider { width: 100%; margin-top: 12px; accent-color: var(--accent); }
 
@@ -547,14 +554,14 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .step-voice { font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; }
 .step-count { text-align: center; font-size: 0.68rem; color: var(--faint); padding-bottom: 2px; }
 .step-count.beat { color: var(--muted); font-weight: 700; }
-.step-count.now { color: var(--accent); }
+.step-count.now { color: var(--turquoise); font-weight: 700; }
 .step { height: 34px; border-radius: 5px; background: var(--chip); display: flex; align-items: center; justify-content: center; transition: background 0.06s; }
 .step.beat { background: var(--chip-mid); }
-.step.now { background: var(--chip-on); }
-.step i { width: 55%; max-width: 18px; aspect-ratio: 1; border-radius: 50%; background: var(--text); opacity: 0.75; }
+.step.now { background: var(--accent-2-mid); }
+.step i { width: 55%; max-width: 18px; aspect-ratio: 1; border-radius: 50%; background: var(--espresso); opacity: 0.9; }
 .step i.accent { background: var(--accent); opacity: 1; }
 .step i.ghost { opacity: 0.3; width: 35%; }
-.step.now i { box-shadow: 0 0 0 3px var(--accent-ring); }
+.step.now i { box-shadow: 0 0 0 3px var(--cream-light); }
 @media (max-width: 640px) {
   .step-grid { grid-template-columns: 44px repeat(var(--steps), minmax(0, 1fr)); gap: 2px; }
   .step { height: 28px; }
@@ -600,18 +607,18 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 /* Live */
 .live-lab .panel h2 { margin: 0 0 8px; }
 .live-lab .panel-head h2 { margin: 0; }
-.live-status { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 3px 8px; border-radius: 5px; border: 1px solid var(--border); }
-.live-status.on { color: var(--on-accent); background: var(--danger); border-color: transparent; }
+.live-status { font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 3px 10px; border-radius: 999px; border: 1.5px solid var(--espresso); }
+.live-status.on { color: var(--on-accent); background: var(--danger); }
 .live-start { display: flex; align-items: center; gap: 16px; margin-top: 14px; flex-wrap: wrap; }
 .live-btn { min-width: 110px; padding: 12px 20px; font-size: 1.05rem; }
 .live-btn.stop { background: var(--danger); color: var(--on-accent); }
 .live-meter { flex: 1; min-width: 180px; }
-.live-meter-bar { position: relative; height: 14px; border-radius: 4px; background: var(--chip); overflow: hidden; }
+.live-meter-bar { position: relative; height: 16px; border-radius: 999px; background: var(--chip); border: 1.5px solid var(--espresso); overflow: hidden; }
 .live-meter-fill {
   /* The colours belong to the scale: the whole bar is painted and the
      level reveals it from the left. */
-  position: absolute; inset: 0; border-radius: 4px;
-  background: linear-gradient(90deg, var(--accent) 0 70%, var(--warn) 85%, var(--danger) 98%);
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, var(--turquoise) 0 70%, var(--warn) 85%, var(--terracotta) 98%);
 }
 .live-meter-hold { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--text); transform: translateX(-1px); }
 /* -18 dBFS: a healthy level to aim for. */
@@ -625,7 +632,7 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .live-row select { max-width: 420px; }
 .live-tone button { padding: 7px 14px; font-size: 0.88rem; }
 .live-latency { margin: 12px 0 0; }
-.live-latency strong { font-size: 1.6rem; font-variant-numeric: tabular-nums; margin-right: 4px; }
+.live-latency strong { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; font-size: 2rem; font-variant-numeric: tabular-nums; margin-right: 4px; }
 .live-tips { margin: 12px 0 0; padding-left: 18px; line-height: 1.6; }
 .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); animation: live-blink 1.6s ease-in-out infinite; }
 @keyframes live-blink { 50% { opacity: 0.35; } }
@@ -643,3 +650,4 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 @media (max-width: 720px) {
   .bass-blocks { grid-template-columns: minmax(0, 1fr); }
 }
+.chord strong, .scale-note strong { font-family: var(--font-display); font-weight: 700; }
