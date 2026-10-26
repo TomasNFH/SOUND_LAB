@@ -114,7 +114,7 @@ class LiveEngine {
     try {
       const saved: Partial<LiveState> = JSON.parse(localStorage.getItem(STORE_KEY) ?? '{}');
       // Settings added in later versions take their defaults.
-      if (saved.bass) saved.bass = { ...DEFAULT_BASS, ...saved.bass };
+      if (saved.bass) saved.bass = { ...DEFAULT_BASS, ...saved.bass, tube: { ...DEFAULT_BASS.tube, ...saved.bass.tube } };
       return saved;
     } catch {
       return {};

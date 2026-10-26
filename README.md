@@ -98,6 +98,14 @@ The pedals:
 | Hard distortion | Hard clipping and a scooped tone; mode II boosts the mids first |
 | Clean-blend overdrive | Clean signal blended with clipped signal, keeps the attack |
 
+### Live's tube bass head
+
+The tube head in Live's Bass sound is a circuit model. Its preamp parts and
+wiring come from J. Fleig's re-drawing of a classic tube bass preamp's
+factory schematic and his LTspice simulation of it, published in
+["Bass guitar preamplifier in the … tradition"](http://www.frontiernet.net/~jff/SonOfSVPCL/DIYSVTBassPreamplifierSimulation.html).
+The power amp is modelled from published specifications, not a schematic.
+
 ## Trademarks
 
 Tone Lab is an independent, non-commercial educational project. The pedals

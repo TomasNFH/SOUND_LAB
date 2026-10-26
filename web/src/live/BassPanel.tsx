@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { EqPanel } from '../components/EqPanel';
 import { fmt, Knob } from '../components/Knob';
-import type { BassCab, BassSettings } from './BassRig';
+import type { MidFreq, TubeBassSettings } from '../audio/tubebass/circuit';
+import type { BassAmpModel, BassCab, BassSettings } from './BassRig';
 import { DEFAULT_BASS } from './BassRig';
 import { live, type InputChannel } from './LiveEngine';
 
@@ -11,8 +12,23 @@ type Opened = BassBlock | 'output';
 const CABS: { id: BassCab; label: string }[] = [
   { id: '410', label: '4×10"' },
   { id: '115', label: '1×15"' },
+  { id: '810', label: '8×10"' },
   { id: 'off', label: 'Off' },
 ];
+
+const MODELS: { id: BassAmpModel; label: string }[] = [
+  { id: 'generic', label: 'Generic' },
+  { id: 'tube', label: 'Tube head' },
+];
+
+const MID_FREQS: { id: MidFreq; label: string }[] = [
+  { id: '220', label: '220 Hz' },
+  { id: '800', label: '800 Hz' },
+  { id: '3k', label: '3 kHz' },
+];
+
+// Tube head knobs read 0 to 10, like the amp's front panel.
+const dial = (v: number) => (v * 10).toFixed(1);
 
 const CHANNEL_NAMES: Record<InputChannel, string> = { left: 'Input 1', right: 'Input 2', both: 'Inputs 1 + 2' };
 
@@ -32,8 +48,9 @@ const PowerIcon = () => (
 function describe(b: BassSettings, block: BassBlock): { label: string; on: boolean; detail: string } {
   if (block === 'octave') return { label: 'Octave', on: b.octaveOn, detail: `${fmt.pct(b.octave)} · ${fmt.hz(b.tracking)}` };
   if (block === 'amp') {
-    const cab = CABS.find((c) => c.id === b.cab)?.label ?? '';
-    return { label: 'Bass amp', on: b.ampOn, detail: `${b.cab === 'off' ? 'no cab' : cab} · drive ${fmt.pct(b.drive)}` };
+    const cab = b.cab === 'off' ? 'no cab' : (CABS.find((c) => c.id === b.cab)?.label ?? '');
+    const detail = b.ampModel === 'tube' ? `tube head · ${cab} · gain ${dial(b.tube.gain)}` : `${cab} · drive ${fmt.pct(b.drive)}`;
+    return { label: 'Bass amp', on: b.ampOn, detail };
   }
   const shaped = b.eq.bands.filter((band) => band.on && band.gain !== 0).length;
   return { label: 'Parametric EQ', on: b.eq.on, detail: shaped ? `${shaped} band${shaped > 1 ? 's' : ''} shaped` : 'flat' };
@@ -129,16 +146,40 @@ export function BassPanel({ bass, channel }: { bass: BassSettings; channel: Inpu
         <section className={`panel ${bass.ampOn ? '' : 'block-off'}`}>
           <div className="panel-head">
             <h2>Bass amp</h2>
-            {!bass.ampOn && <span className="muted small inline">Off: no compressor, drive, tone or cabinet</span>}
+            <div className="seg" role="group" aria-label="Amp model">
+              {MODELS.map((m) => (
+                <button
+                  key={m.id}
+                  className={bass.ampModel === m.id ? 'on' : ''}
+                  // The tube head's classic partner is an 8x10.
+                  onClick={() => set(m.id === 'tube' && bass.ampModel !== 'tube' ? { ampModel: m.id, cab: '810' } : { ampModel: m.id })}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            {!bass.ampOn && <span className="muted small inline">Off: no amp or cabinet</span>}
           </div>
-          <div className="knobs">
-            <Knob label="Compressor" value={bass.compress} min={0} max={1} step={0.01} defaultValue={d.compress} format={fmt.pct} onChange={(compress) => set({ compress })} />
-            <Knob label="Drive" value={bass.drive} min={0} max={1} step={0.01} defaultValue={d.drive} format={fmt.pct} onChange={(drive) => set({ drive })} />
-            <Knob label="Bass" value={bass.bass} min={-12} max={12} step={0.5} defaultValue={d.bass} format={fmt.db} onChange={(v) => set({ bass: v })} />
-            <Knob label="Mid" value={bass.mid} min={-12} max={12} step={0.5} defaultValue={d.mid} format={fmt.db} onChange={(mid) => set({ mid })} />
-            <Knob label="Mid freq" value={bass.midFreq} min={200} max={1500} scale="log" defaultValue={d.midFreq} format={fmt.hz} onChange={(midFreq) => set({ midFreq: Math.round(midFreq) })} />
-            <Knob label="Treble" value={bass.treble} min={-12} max={12} step={0.5} defaultValue={d.treble} format={fmt.db} onChange={(treble) => set({ treble })} />
-          </div>
+
+          {bass.ampModel === 'generic' ? (
+            <>
+              <div className="knobs">
+                <Knob label="Compressor" value={bass.compress} min={0} max={1} step={0.01} defaultValue={d.compress} format={fmt.pct} onChange={(compress) => set({ compress })} />
+                <Knob label="Drive" value={bass.drive} min={0} max={1} step={0.01} defaultValue={d.drive} format={fmt.pct} onChange={(drive) => set({ drive })} />
+                <Knob label="Bass" value={bass.bass} min={-12} max={12} step={0.5} defaultValue={d.bass} format={fmt.db} onChange={(v) => set({ bass: v })} />
+                <Knob label="Mid" value={bass.mid} min={-12} max={12} step={0.5} defaultValue={d.mid} format={fmt.db} onChange={(mid) => set({ mid })} />
+                <Knob label="Mid freq" value={bass.midFreq} min={200} max={1500} scale="log" defaultValue={d.midFreq} format={fmt.hz} onChange={(midFreq) => set({ midFreq: Math.round(midFreq) })} />
+                <Knob label="Treble" value={bass.treble} min={-12} max={12} step={0.5} defaultValue={d.treble} format={fmt.db} onChange={(treble) => set({ treble })} />
+              </div>
+              <p className="muted small">
+                A simple bass amp: compressor, a soft-clipping drive and three tone filters. Mid between 400 and 800 Hz is
+                where a bass cuts through a band.
+              </p>
+            </>
+          ) : (
+            <TubeHeadControls tube={bass.tube} onChange={(patch) => set({ tube: { ...bass.tube, ...patch } })} />
+          )}
+
           <div className="live-row" style={{ marginTop: 12 }}>
             <span className="switch-label">Cabinet</span>
             <div className="seg" role="group" aria-label="Bass cabinet">
@@ -150,12 +191,14 @@ export function BassPanel({ bass, channel }: { bass: BassSettings; channel: Inpu
             </div>
           </div>
           <p className="muted small">
-            4×10" is tight with a little bite; 1×15" is deeper and rounder. Mid between 400 and 800 Hz is where a bass
-            cuts through a band.
+            4×10" is tight with a little bite; 1×15" is deeper and rounder; 8×10" is the classic rock stack, punchy low
+            mids and no deep sub.
           </p>
           <button
             className="link-btn"
-            onClick={() => set({ ...DEFAULT_BASS, octaveOn: bass.octaveOn, ampOn: bass.ampOn, eq: bass.eq, level: bass.level })}
+            onClick={() =>
+              set({ ...DEFAULT_BASS, octaveOn: bass.octaveOn, ampOn: bass.ampOn, ampModel: bass.ampModel, cab: bass.cab, eq: bass.eq, level: bass.level })
+            }
           >
             Reset octave and amp knobs
           </button>
@@ -180,6 +223,51 @@ export function BassPanel({ bass, channel }: { bass: BassSettings; channel: Inpu
           <EqPanel eq={bass.eq} onChange={(eq) => set({ eq })} onActiveBand={() => {}} showPosition={false} />
         </div>
       )}
+    </>
+  );
+}
+
+// The tube head's front panel.
+function TubeHeadControls({ tube, onChange }: { tube: TubeBassSettings; onChange: (patch: Partial<TubeBassSettings>) => void }) {
+  const d = DEFAULT_BASS.tube;
+  return (
+    <>
+      <p className="muted small">
+        A circuit model of the classic 300 W all-tube rock bass head: 12AX7 and 12AU7 preamp, passive bass and
+        treble, an active midrange on a tapped inductor, six 6550s in push-pull. Gain pushes the preamp into breakup;
+        Master drives the power tubes.
+      </p>
+      <div className="knobs">
+        <Knob label="Gain" value={tube.gain} min={0} max={1} step={0.01} defaultValue={d.gain} format={dial} onChange={(gain) => onChange({ gain })} />
+        <Knob label="Bass" value={tube.bass} min={0} max={1} step={0.01} defaultValue={d.bass} format={dial} onChange={(bass) => onChange({ bass })} />
+        <Knob label="Mid" value={tube.mid} min={0} max={1} step={0.01} defaultValue={d.mid} format={dial} onChange={(mid) => onChange({ mid })} />
+        <Knob label="Treble" value={tube.treble} min={0} max={1} step={0.01} defaultValue={d.treble} format={dial} onChange={(treble) => onChange({ treble })} />
+        <Knob label="Master" value={tube.master} min={0} max={1} step={0.01} defaultValue={d.master} format={dial} onChange={(master) => onChange({ master })} />
+      </div>
+      <div className="live-row" style={{ marginTop: 12 }}>
+        <span className="switch-label">Mid freq</span>
+        <div className="seg" role="group" aria-label="Midrange frequency">
+          {MID_FREQS.map((m) => (
+            <button key={m.id} className={tube.midFreq === m.id ? 'on' : ''} onClick={() => onChange({ midFreq: m.id })}>
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="live-row" style={{ marginTop: 8 }}>
+        <label className="check">
+          <input type="checkbox" checked={tube.ultraLo} onChange={(e) => onChange({ ultraLo: e.target.checked })} />
+          Ultra Lo
+        </label>
+        <label className="check">
+          <input type="checkbox" checked={tube.ultraHi} onChange={(e) => onChange({ ultraHi: e.target.checked })} />
+          Ultra Hi
+        </label>
+      </div>
+      <p className="muted small">
+        Tone controls are flat at 5. Ultra Lo scoops the mids around 600 Hz so the lows stand out; Ultra Hi brightens the
+        top, most at lower Gain settings.
+      </p>
     </>
   );
 }

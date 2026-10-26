@@ -24,8 +24,19 @@ const div = (a: C, b: C): C => {
 };
 const abs = (a: C) => Math.hypot(a.re, a.im);
 
-// A two-terminal part between nodes a and b ('gnd' is ground).
-export type Part = { kind: 'R' | 'C'; a: string; b: string; value: number; name?: string };
+// A two-terminal part between nodes a and b ('gnd' is ground), or a
+// tube's transconductance: current gm·(V(grid) − V(cathode)) flowing from
+// its plate (a) to its cathode (b). A triode in small signal is that plus
+// its plate resistance rp from plate to cathode (see triodeParts).
+export type Part =
+  | { kind: 'R' | 'C' | 'L'; a: string; b: string; value: number; name?: string }
+  | { kind: 'G'; a: string; b: string; grid: string; cathode: string; value: number; name?: string };
+
+// A triode as linear parts around its operating point.
+export const triodeParts = (name: string, plate: string, grid: string, cathode: string, mu: number, rp: number): Part[] => [
+  { kind: 'G', a: plate, b: cathode, grid, cathode, value: mu / rp, name: `${name} gm` },
+  { kind: 'R', a: plate, b: cathode, value: rp, name: `${name} rp` },
+];
 
 // A linear network driven at node `input` by an ideal voltage source
 // behind `sourceR` (the driving tube's output resistance).
@@ -35,13 +46,29 @@ export type Network = { parts: Part[]; input: string; sourceR: number };
 const Y_SCALE = 1e5;
 
 function admittanceMatrix(net: Network, s: C) {
-  const nodes = [...new Set(net.parts.flatMap((p) => [p.a, p.b]).filter((n) => n !== 'gnd'))];
+  const nodes = [
+    ...new Set(net.parts.flatMap((p) => (p.kind === 'G' ? [p.a, p.b, p.grid, p.cathode] : [p.a, p.b])).filter((n) => n !== 'gnd')),
+  ];
   if (!nodes.includes(net.input)) nodes.push(net.input);
   const idx = new Map(nodes.map((n, i) => [n, i]));
   const n = nodes.length;
   const Y: C[][] = Array.from({ length: n }, () => Array.from({ length: n }, () => c(0)));
   for (const p of net.parts) {
-    const y = p.kind === 'R' ? c(Y_SCALE / p.value) : mul(s, c(Y_SCALE * p.value));
+    if (p.kind === 'G') {
+      // Current leaves the plate node and enters the cathode node.
+      const gm = c(Y_SCALE * p.value);
+      const g = idx.get(p.grid);
+      const k = idx.get(p.cathode);
+      for (const [row, sign] of [[p.a, 1], [p.b, -1]] as const) {
+        const r = idx.get(row);
+        if (r === undefined) continue;
+        if (g !== undefined) Y[r][g] = sign > 0 ? add(Y[r][g], gm) : sub(Y[r][g], gm);
+        if (k !== undefined) Y[r][k] = sign > 0 ? sub(Y[r][k], gm) : add(Y[r][k], gm);
+      }
+      continue;
+    }
+    const y =
+      p.kind === 'R' ? c(Y_SCALE / p.value) : p.kind === 'C' ? mul(s, c(Y_SCALE * p.value)) : div(c(Y_SCALE / p.value), s);
     const i = idx.get(p.a);
     const j = idx.get(p.b);
     if (i !== undefined) Y[i][i] = add(Y[i][i], y);
@@ -100,12 +127,14 @@ export function nodeGain(net: Network, node: string, w: number): C {
 
 // Exact transfer function source → node as a ratio of polynomials in the
 // normalized variable σ = s / s0. det(Y) and Cramer's numerator are
-// polynomials whose degree is at most the number of capacitors; they are
+// multi-affine in every part's admittance, so with nC capacitors and nL
+// inductors, σ^nL·det is a polynomial of degree at most nC + nL; both are
 // sampled on the unit circle and recovered with an inverse DFT, which is
 // well conditioned because σ is normalized.
 export function transferPolys(net: Network, node: string, s0: number) {
-  const order = net.parts.filter((p) => p.kind === 'C').length;
-  const M = 8;
+  const nL = net.parts.filter((p) => p.kind === 'L').length;
+  const order = net.parts.filter((p) => p.kind === 'C').length + nL;
+  const M = Math.max(8, 2 ** Math.ceil(Math.log2(order + 1)));
   const numS: C[] = [];
   const denS: C[] = [];
   for (let k = 0; k < M; k++) {
@@ -113,8 +142,10 @@ export function transferPolys(net: Network, node: string, s0: number) {
     const { Y, rhs, idx } = admittanceMatrix(net, mul(sigma, c(s0)));
     const col = idx.get(node)!;
     const Yn = Y.map((row, r) => row.map((v, j) => (j === col ? rhs[r] : v)));
-    denS.push(solve(Y, rhs).det);
-    numS.push(solve(Yn, rhs).det);
+    // σ^nL clears the inductors' 1/σ terms.
+    const shift = c(Math.cos((2 * Math.PI * k * nL) / M), Math.sin((2 * Math.PI * k * nL) / M));
+    denS.push(mul(solve(Y, rhs).det, shift));
+    numS.push(mul(solve(Yn, rhs).det, shift));
   }
   const coeffs = (samples: C[]) => {
     const out: number[] = [];

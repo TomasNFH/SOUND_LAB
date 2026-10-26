@@ -2,13 +2,20 @@ import { EqBlock } from '../audio/blocks/EqBlock';
 import type { EqSettings } from '../audio/settings';
 import { clippersReady, dbToGain, lerp, LowLatencyCompressor, setParam, ShaperStage, type Block } from '../audio/util';
 import { loadWorklet } from '../audio/worklets';
+import { DEFAULT_TUBE_BASS, tubeBassParams, type TubeBassSettings } from '../audio/tubebass/circuit';
+import tubeUrl from '../audio/tubebass/tubebass.worklet.ts?worker&url';
 import octaveUrl from './octave.worklet.ts?worker&url';
 
-export type BassCab = '410' | '115' | 'off';
+export type BassCab = '410' | '115' | '810' | 'off';
+// generic: compressor, drive and simple tone filters; tube: a circuit model
+// of the classic 300 W tube bass head.
+export type BassAmpModel = 'generic' | 'tube';
 
 export interface BassSettings {
   octaveOn: boolean;
-  ampOn: boolean; // compressor, drive, tone and cabinet; the EQ has eq.on
+  ampOn: boolean; // the amp and its cabinet; the EQ has eq.on
+  ampModel: BassAmpModel;
+  tube: TubeBassSettings;
   octave: number; // octave-down level, 0..1
   guitar: number; // original guitar level, 0..1 (attack and definition)
   tracking: number; // Hz: lower tracks low notes cleanly, higher reaches high ones
@@ -26,6 +33,8 @@ export interface BassSettings {
 export const DEFAULT_BASS: BassSettings = {
   octaveOn: true,
   ampOn: true,
+  ampModel: 'generic',
+  tube: DEFAULT_TUBE_BASS,
   octave: 1,
   guitar: 0.2,
   tracking: 250,
@@ -57,11 +66,11 @@ type FilterSpec = { type: BiquadFilterType; freq: number; gain?: number; q: numb
 // level; take it back so Level at 0 dB comes out about as loud as the
 // guitar went in, whichever blocks are on.
 const OCTAVE_TRIM_DB = -2;
-const AMP_TRIM_DB = -9.5;
+const AMP_TRIM_DB: Record<BassAmpModel, number> = { generic: -9.5, tube: 1 };
 
 // Which blocks exist. Turning one off or on builds a new rig without or
 // with it, so a block that is off costs nothing.
-export const bassStructure = (s: BassSettings) => JSON.stringify([s.octaveOn, s.ampOn, s.eq.on]);
+export const bassStructure = (s: BassSettings) => JSON.stringify([s.octaveOn, s.ampOn && s.ampModel, s.eq.on]);
 
 // Transparent up to about -1 dBFS, then rounds off: a hard-picked note
 // can't crackle at the output. No oversampling, so no delay; it only
@@ -90,6 +99,16 @@ const CABS: Record<BassCab, FilterSpec[]> = {
     { type: 'lowpass', freq: 2500, q: 0.7 },
     { type: 'lowpass', freq: 2500, q: 0.7 },
   ],
+  // 8x10: the classic partner of a 300 W tube head. Sealed, so the lows
+  // fall away below about 50 Hz; a punchy low-mid bump; ten-inch cones
+  // give some bite around 2 to 3 kHz and little above 4.5 kHz.
+  '810': [
+    { type: 'highpass', freq: 50, q: 0.8 },
+    { type: 'peaking', freq: 90, gain: 2, q: 1 },
+    { type: 'peaking', freq: 2500, gain: 3, q: 1.2 },
+    { type: 'lowpass', freq: 4500, q: 0.7 },
+    { type: 'lowpass', freq: 4500, q: 0.7 },
+  ],
   off: [
     { type: 'highpass', freq: 20, q: 0.7 },
     { type: 'peaking', freq: 100, gain: 0, q: 1 },
@@ -105,7 +124,8 @@ const CABS: Record<BassCab, FilterSpec[]> = {
 //
 //   octave:   ─┬─ octave down ───────┬─   mostly the octave, with a little
 //              └─ lowpass 2.5 kHz ───┘    of the original for the attack
-//   bass amp: compressor ─ drive ─ bass / mid / treble ─ cabinet
+//   bass amp: generic:  compressor ─ drive ─ bass / mid / treble ─ cabinet
+//             tube head: the circuit model (preamp, power amp) ─ cabinet
 export class BassRig implements Block {
   readonly input: GainNode;
   readonly output: GainNode;
@@ -118,11 +138,12 @@ export class BassRig implements Block {
     driveIn: GainNode;
     driveOut: GainNode;
     tone: BiquadFilterNode[];
-    cab: BiquadFilterNode[];
   } | null = null;
+  private tube: { node: AudioWorkletNode | null; posted: string } | null = null;
+  private cab: BiquadFilterNode[] | null = null;
   private eq: EqBlock | null = null;
   private readonly levelGain: GainNode;
-  private readonly loading: Promise<void> = Promise.resolve();
+  private readonly loading: Promise<unknown>[] = [];
   private last: BassSettings;
 
   constructor(
@@ -152,7 +173,7 @@ export class BassRig implements Block {
       }
       g.connect(guitarGain).connect(sum);
       const from = prev;
-      this.loading = loadWorklet(ctx, octaveUrl).then(() => {
+      this.loading.push(loadWorklet(ctx, octaveUrl).then(() => {
         // Settings in the constructor options: they must be in place before
         // the first sample, even in an offline render.
         this.octave = new AudioWorkletNode(ctx, 'octaveDown', {
@@ -162,11 +183,11 @@ export class BassRig implements Block {
           processorOptions: { tracking: this.last.tracking },
         });
         from.connect(this.octave).connect(octaveGain).connect(sum);
-      });
+      }));
       prev = sum;
     }
 
-    if (s.ampOn) {
+    if (s.ampOn && s.ampModel === 'generic') {
       const comp = new LowLatencyCompressor(ctx);
       const driveIn = ctx.createGain();
       const clip = new ShaperStage(ctx, Math.tanh, 8);
@@ -176,12 +197,36 @@ export class BassRig implements Block {
         f.type = type as BiquadFilterType;
         return f;
       });
-      const cab = CABS.off.map(() => ctx.createBiquadFilter());
       prev.connect(comp.input);
       comp.output.connect(driveIn).connect(clip.input);
       prev = clip.output.connect(driveOut);
-      for (const f of [...tone, ...cab]) prev = prev.connect(f);
-      this.amp = { comp, driveIn, driveOut, tone, cab };
+      for (const f of tone) prev = prev.connect(f);
+      this.amp = { comp, driveIn, driveOut, tone };
+    }
+    if (s.ampOn && s.ampModel === 'tube') {
+      // The whole head in one worklet; it is silent for the moment the
+      // module takes to load. Volts in, speaker volts / 49 out.
+      const tube: { node: AudioWorkletNode | null; posted: string } = { node: null, posted: JSON.stringify(s.tube) };
+      this.tube = tube;
+      const from = prev;
+      const out = ctx.createGain();
+      this.loading.push(
+        loadWorklet(ctx, tubeUrl).then(() => {
+          tube.node = new AudioWorkletNode(ctx, 'tubeBass', {
+            numberOfInputs: 1,
+            numberOfOutputs: 1,
+            outputChannelCount: [1],
+            processorOptions: tubeBassParams(this.last.tube, ctx.sampleRate * 4),
+          });
+          tube.posted = JSON.stringify(this.last.tube);
+          from.connect(tube.node).connect(out);
+        }),
+      );
+      prev = out;
+    }
+    if (s.ampOn) {
+      this.cab = CABS.off.map(() => ctx.createBiquadFilter());
+      for (const f of this.cab) prev = prev.connect(f);
     }
 
     if (s.eq.on) {
@@ -198,7 +243,7 @@ export class BassRig implements Block {
   }
 
   ready() {
-    return Promise.all([this.loading, clippersReady(this.ctx)]).then(() => undefined);
+    return Promise.all([...this.loading, clippersReady(this.ctx)]).then(() => undefined);
   }
 
   // Knob values, in place. Blocks turned on or off need a new BassRig.
@@ -222,10 +267,21 @@ export class BassRig implements Block {
         { type: 'highshelf', freq: 2500, gain: s.treble, q: 0.7 },
       ];
       tone.forEach((spec, i) => this.setFilter(amp.tone[i], spec));
-      CABS[s.cab].forEach((spec, i) => this.setFilter(amp.cab[i], spec));
     }
+    const tube = this.tube;
+    if (tube?.node) {
+      // Coefficients only when this head's knobs actually changed.
+      const key = JSON.stringify(s.tube);
+      if (key !== tube.posted) {
+        tube.posted = key;
+        tube.node.port.postMessage(tubeBassParams(s.tube, c.sampleRate * 4));
+      }
+    }
+    const cab = this.cab;
+    if (cab) CABS[s.cab].forEach((spec, i) => this.setFilter(cab[i], spec));
     this.eq?.apply(s.eq);
-    const trim = (this.octaveGain ? OCTAVE_TRIM_DB : 0) + (amp ? AMP_TRIM_DB : 0);
+    const ampTrim = amp ? AMP_TRIM_DB.generic : tube ? AMP_TRIM_DB.tube : 0;
+    const trim = (this.octaveGain ? OCTAVE_TRIM_DB : 0) + ampTrim;
     setParam(this.levelGain.gain, dbToGain(s.level + trim), c);
   }
 
