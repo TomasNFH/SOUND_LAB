@@ -766,3 +766,83 @@ button.link { all: unset; color: var(--accent-text); cursor: pointer; text-decor
   .bass-blocks { grid-template-columns: minmax(0, 1fr); }
 }
 .chord strong, .scale-note strong { font-family: var(--font-display); font-weight: 700; }
+
+/* Illustrated stompboxes: a painted enclosure with a hard drop shadow,
+   corner screws, side jacks, knobs printed with their names, a status
+   LED, and the model name around a metal footswitch. */
+.pedal-stage { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px 36px; margin-top: 16px; }
+.pedal-stage .pedal-mods { flex: 1 1 260px; min-width: 0; }
+.pedal-stage .pedal-mods .switches { margin-top: 0; }
+.pedal {
+  --paint: #267A82; --ink-on-paint: var(--cream-light);
+  position: relative; flex: none; width: 236px; margin: 0 14px;
+  padding: 22px 18px 20px; border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 30%), var(--paint);
+  border: 2px solid var(--espresso);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.2), 6px 6px 0 var(--espresso);
+  color: var(--ink-on-paint);
+}
+.pedal-teal { --paint: #267A82; }
+.pedal-screw {
+  position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #EDEAE2, #8E877B);
+  box-shadow: 0 0 0 1px rgba(29, 20, 18, 0.5);
+}
+.pedal-screw.tl { top: 8px; left: 8px; }
+.pedal-screw.tr { top: 8px; right: 8px; }
+.pedal-screw.bl { bottom: 8px; left: 8px; }
+.pedal-screw.br { bottom: 8px; right: 8px; }
+.pedal-jack {
+  position: absolute; top: 64px; width: 14px; height: 24px; border-radius: 3px;
+  background: linear-gradient(180deg, #E4E0D6 0%, #A39C90 100%);
+  border: 2px solid var(--espresso);
+}
+.pedal-jack.in { right: -16px; }
+.pedal-jack.out { left: -16px; }
+
+/* Pedal knobs: black caps with a white line, the name printed above. */
+.pedal-knobs { display: flex; justify-content: center; gap: 8px; }
+.pedal .knob { width: 62px; gap: 4px; }
+.pedal .knob-label { order: -1; color: var(--ink-on-paint); font-size: 0.66rem; letter-spacing: 0.1em; }
+.pedal .knob-value { color: var(--ink-on-paint); font-size: 0.7rem; opacity: 0.9; }
+.pedal .knob-dial {
+  width: 46px; height: 46px; border: 2px solid #111;
+  background: radial-gradient(circle at 35% 30%, #4A4744 0%, #1B1A19 70%);
+  box-shadow: 0 3px 0 rgba(29, 20, 18, 0.55);
+}
+.pedal .knob-pointer::after { top: 4px; height: 13px; width: 3px; margin-left: -1.5px; background: #F8F5EC; }
+.pedal .knob-dial:focus-visible { outline: 2px solid var(--cream-light); outline-offset: 3px; }
+
+.pedal-led {
+  width: 12px; height: 12px; border-radius: 50%; margin: 14px 0 12px;
+  background: #5A1E17; border: 1.5px solid rgba(29, 20, 18, 0.6);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.pedal.is-on .pedal-led { background: radial-gradient(circle at 40% 35%, #FFD3C9 0%, #FF5A43 55%); box-shadow: 0 0 10px 3px rgba(255, 90, 67, 0.75); }
+
+/* The lighter outlined plate holding the footswitch, name above and below. */
+.pedal-plate {
+  align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 12px 10px 14px; border-radius: 6px;
+  border: 2px solid rgba(248, 245, 236, 0.6); background: rgba(255, 255, 255, 0.08);
+}
+.pedal-name {
+  font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; line-height: 1;
+  letter-spacing: 0.3em; margin-right: -0.3em; text-transform: uppercase; color: var(--ink-on-paint);
+}
+.pedal-name.sub { font-size: 0.9rem; letter-spacing: 0.4em; margin-right: -0.4em; }
+.pedal-switch {
+  width: 58px; height: 58px; padding: 0; border-radius: 8px;
+  border: 2px solid #1d1412;
+  background: radial-gradient(circle at 50% 40%, #FFFFFF 0%, #DCD7CC 45%, #A9A296 100%);
+  box-shadow: inset 0 -3px 0 rgba(29, 20, 18, 0.25), 0 4px 0 #1d1412;
+  transform: none;
+}
+.pedal-switch:hover:not(:disabled) { transform: none; box-shadow: inset 0 -3px 0 rgba(29, 20, 18, 0.25), 0 4px 0 #1d1412; filter: brightness(1.04); }
+.pedal-switch:active:not(:disabled) { transform: translateY(3px); box-shadow: inset 0 2px 4px rgba(29, 20, 18, 0.35), 0 1px 0 #1d1412; }
+.pedal-switch:focus-visible { outline: 2px solid var(--cream-light); outline-offset: 3px; }
+
+@media (max-width: 640px) {
+  .pedal-stage { justify-content: center; }
+}

@@ -4,6 +4,7 @@ import { BoostEqPanel } from './BoostEqPanel';
 import { BoostPanel } from './BoostPanel';
 import { fmt, Knob } from './Knob';
 import { Drive4558Panel } from './Drive4558Panel';
+import { PedalBox } from './PedalBox';
 
 type Props = {
   pedal: PedalSettings;
@@ -46,15 +47,19 @@ export function PedalPanel({ pedal, onChange }: Props) {
   const setAmpLike = (patch: Partial<AmpLikeSettings>) => onChange({ ...pedal, bd: { ...pedal.bd, ...patch } });
   const setHardDistortion = (patch: Partial<HardDistortionSettings>) => onChange({ ...pedal, ds2: { ...pedal.ds2, ...patch } });
   const setCleanBlend = (patch: Partial<CleanBlendSettings>) => onChange({ ...pedal, klon: { ...pedal.klon, ...patch } });
+  // Drawn as a stompbox, whose footswitch is the on/off control.
+  const pedalFace = pedal.type === 'ts' && pedal.ts.mode !== '4558';
 
   return (
     <section className="panel pedal-panel">
       <div className="panel-head">
         <h2>Distortion</h2>
-        <label className="check">
-          <input type="checkbox" checked={pedal.on} onChange={(e) => onChange({ ...pedal, on: e.target.checked })} />
-          On
-        </label>
+        {!pedalFace && (
+          <label className="check">
+            <input type="checkbox" checked={pedal.on} onChange={(e) => onChange({ ...pedal, on: e.target.checked })} />
+            On
+          </label>
+        )}
         <select
           className="compact"
           value={pedal.type}
@@ -69,7 +74,7 @@ export function PedalPanel({ pedal, onChange }: Props) {
       </div>
       {info && <p className="muted small">{info.idea}</p>}
 
-      <div className={pedal.on ? '' : 'disabled'}>
+      <div className={pedal.on || pedalFace ? '' : 'disabled'}>
         {pedal.type === 'boost' && (
           <div className="switches">
             <div className="switch-row">
@@ -111,49 +116,51 @@ export function PedalPanel({ pedal, onChange }: Props) {
         )}
 
         {pedal.type === 'ts' && pedal.ts.mode !== '4558' && (
-          <>
-            <div className="knobs">
+          <div className="pedal-stage">
+            <PedalBox name="Mid" subtitle="Hump" color="teal" on={pedal.on} onToggle={() => onChange({ ...pedal, on: !pedal.on })}>
               <Knob label="Drive" value={pedal.ts.drive} min={0} max={1} step={0.01} defaultValue={0.3} format={fmt.pct} onChange={(drive) => setMidHump({ drive })} />
               <Knob label="Tone" value={pedal.ts.tone} min={0} max={1} step={0.01} defaultValue={0.5} format={fmt.pct} onChange={(tone) => setMidHump({ tone })} />
               <Knob label="Level" value={pedal.ts.level} min={-30} max={6} step={0.5} defaultValue={-9} format={fmt.db} onChange={(level) => setMidHump({ level })} />
-            </div>
-            <div className="switches">
-              <div className="switch-row">
-                <span className="switch-label">Clipping</span>
-                <div className="seg">
-                  {(['sym', 'asym'] as const).map((c) => (
-                    <button key={c} className={pedal.ts.clip === c ? 'on' : ''} onClick={() => setMidHump({ clip: c })}>
-                      {c === 'sym' ? 'Symmetric' : 'Asymmetric'}
-                    </button>
-                  ))}
+            </PedalBox>
+            <div className={`pedal-mods ${pedal.on ? '' : 'disabled'}`}>
+              <div className="switches">
+                <div className="switch-row">
+                  <span className="switch-label">Clipping</span>
+                  <div className="seg">
+                    {(['sym', 'asym'] as const).map((c) => (
+                      <button key={c} className={pedal.ts.clip === c ? 'on' : ''} onClick={() => setMidHump({ clip: c })}>
+                        {c === 'sym' ? 'Symmetric' : 'Asymmetric'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="switch-row">
+                  <span className="switch-label">Hump</span>
+                  <div className="seg">
+                    {([340, 720, 1500] as const).map((h) => (
+                      <button key={h} className={pedal.ts.hump === h ? 'on' : ''} onClick={() => setMidHump({ hump: h })}>
+                        {fmt.hz(humpFrequency(h))}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="switch-row">
+                  <label className="check">
+                    <input type="checkbox" checked={pedal.ts.bassPath} onChange={(e) => setMidHump({ bassPath: e.target.checked })} />
+                    Clean bass path
+                  </label>
+                  <label className="check">
+                    <input type="checkbox" checked={pedal.ts.highCut} onChange={(e) => setMidHump({ highCut: e.target.checked })} />
+                    High cut (51 pF)
+                  </label>
                 </div>
               </div>
-              <div className="switch-row">
-                <span className="switch-label">Hump</span>
-                <div className="seg">
-                  {([340, 720, 1500] as const).map((h) => (
-                    <button key={h} className={pedal.ts.hump === h ? 'on' : ''} onClick={() => setMidHump({ hump: h })}>
-                      {fmt.hz(humpFrequency(h))}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="switch-row">
-                <label className="check">
-                  <input type="checkbox" checked={pedal.ts.bassPath} onChange={(e) => setMidHump({ bassPath: e.target.checked })} />
-                  Clean bass path
-                </label>
-                <label className="check">
-                  <input type="checkbox" checked={pedal.ts.highCut} onChange={(e) => setMidHump({ highCut: e.target.checked })} />
-                  High cut (51 pF)
-                </label>
-              </div>
+              <p className="muted small">
+                Op-amp gain {midHumpGain(pedal.ts.drive).toFixed(0)}× above {fmt.hz(humpFrequency(pedal.ts.hump))}
+                {pedal.ts.highCut && <>, high cut at {fmt.hz(midHumpHighCut(pedal.ts.drive))}</>}.
+              </p>
             </div>
-            <p className="muted small">
-              Op-amp gain {midHumpGain(pedal.ts.drive).toFixed(0)}× above {fmt.hz(humpFrequency(pedal.ts.hump))}
-              {pedal.ts.highCut && <>, high cut at {fmt.hz(midHumpHighCut(pedal.ts.drive))}</>}.
-            </p>
-          </>
+          </div>
         )}
 
         {pedal.type === 'bd' && (
