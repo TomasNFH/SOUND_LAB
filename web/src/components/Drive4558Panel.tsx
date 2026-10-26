@@ -3,9 +3,10 @@ import { STOCK_DRIVE4558, type Drive4558Settings } from '../audio/settings';
 import { CompareResponseView } from '../views/CompareResponseView';
 import { Drive4558Schematic } from '../views/Drive4558Schematic';
 import { fmt, Knob } from './Knob';
+import { PedalBox } from './PedalBox';
 import { farads, hz, ohms, potLabel, snap } from './parts';
 
-type Props = { ts: Drive4558Settings; onChange: (t: Drive4558Settings) => void };
+type Props = { ts: Drive4558Settings; onChange: (t: Drive4558Settings) => void; box: { on: boolean; onToggle: () => void } };
 
 type PartKey = 'rIn' | 'cIn' | 'cCouple' | 'rBias' | 'rFixed' | 'cFb' | 'rGnd' | 'cGnd' | 'r7' | 'c6' | 'rTone' | 'r8' | 'c7' | 'rToneFb' | 'cOut' | 'rOut';
 type Part = { key: PartKey; label: string; min: number; max: number; role: string };
@@ -53,7 +54,7 @@ const SECTIONS: { name: string; parts: Part[] }[] = [
 const isCap = (k: PartKey) => k.startsWith('c');
 const POT_FIELDS = ['drive', 'tone', 'level'] as const;
 
-export function Drive4558Panel({ ts, onChange }: Props) {
+export function Drive4558Panel({ ts, onChange, box }: Props) {
   const set = (patch: Partial<Drive4558Settings>) => onChange({ ...ts, ...patch });
   const v = drive4558Values(ts);
   const stockAtKnobs = { ...STOCK_DRIVE4558, drive: ts.drive, tone: ts.tone, level: ts.level };
@@ -77,11 +78,13 @@ export function Drive4558Panel({ ts, onChange }: Props) {
   const clipIn = DIODES[ts.diodes].pos / (v.gain - 1);
 
   return (
-    <div className="boost">
-      <div className="knobs">
-        <Knob label="Drive" value={ts.drive} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.drive} format={fmt.pct} onChange={(drive) => set({ drive })} />
-        <Knob label="Tone" value={ts.tone} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.tone} format={fmt.pct} onChange={(tone) => set({ tone })} />
-        <Knob label="Level" value={ts.level} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.level} format={fmt.pct} onChange={(level) => set({ level })} />
+    <div className={`boost ${box.on ? '' : 'pedal-off'}`}>
+      <div className="pedal-stage">
+        <PedalBox name="Mid" subtitle="Hump 4558" paint="teal" {...box}>
+          <Knob label="Drive" value={ts.drive} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.drive} format={fmt.pct} onChange={(drive) => set({ drive })} />
+          <Knob label="Tone" value={ts.tone} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.tone} format={fmt.pct} onChange={(tone) => set({ tone })} />
+          <Knob label="Level" value={ts.level} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.level} format={fmt.pct} onChange={(level) => set({ level })} />
+        </PedalBox>
       </div>
       <p className="muted small">
         Feedback {ohms(v.rDrive)} → IC1a gain ×{v.gain.toFixed(1)} ({db(v.gain).toFixed(1)} dB) above{' '}

@@ -770,7 +770,7 @@ button.link { all: unset; color: var(--accent-text); cursor: pointer; text-decor
 /* Illustrated stompboxes: a painted enclosure with a hard drop shadow,
    corner screws, side jacks, knobs printed with their names, a status
    LED, and the model name around a metal footswitch. */
-.pedal-stage { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px 36px; margin-top: 16px; }
+.pedal-stage { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px 36px; margin: 16px 0 18px; }
 .pedal-stage .pedal-mods { flex: 1 1 260px; min-width: 0; }
 .pedal-stage .pedal-mods .switches { margin-top: 0; }
 .pedal {
@@ -783,7 +783,16 @@ button.link { all: unset; color: var(--accent-text); cursor: pointer; text-decor
   box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.2), 6px 6px 0 var(--espresso);
   color: var(--ink-on-paint);
 }
+/* Paints: each pedal's enclosure and the ink printed on it (all pairs pass
+   WCAG AA for the small knob labels). */
 .pedal-teal { --paint: #267A82; }
+.pedal-cream { --paint: #EFE6CF; --ink-on-paint: var(--ink); }
+.pedal-skyblue { --paint: #CFE0E3; --ink-on-paint: #1E3440; }
+.pedal-orange { --paint: #E8824C; --ink-on-paint: #1E3440; }
+.pedal-navy { --paint: #2C5F7C; }
+.pedal-eqorange { --paint: #EA8A55; --ink-on-paint: #1E3440; }
+.pedal-mint { --paint: #BFE3D9; --ink-on-paint: #1E4A52; }
+.pedal-rust { --paint: #B8452F; }
 .pedal-screw {
   position: absolute; width: 8px; height: 8px; border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #EDEAE2, #8E877B);
@@ -803,8 +812,8 @@ button.link { all: unset; color: var(--accent-text); cursor: pointer; text-decor
 
 /* Pedal knobs: black caps with a white line, the name printed above. */
 .pedal-knobs { display: flex; justify-content: center; gap: 8px; }
-.pedal .knob { width: 62px; gap: 4px; }
-.pedal .knob-label { order: -1; color: var(--ink-on-paint); font-size: 0.66rem; letter-spacing: 0.1em; }
+.pedal .knob { width: 60px; gap: 4px; }
+.pedal .knob-label { order: -1; color: var(--ink-on-paint); font-size: 0.66rem; letter-spacing: 0.1em; white-space: nowrap; }
 .pedal .knob-value { color: var(--ink-on-paint); font-size: 0.7rem; opacity: 0.9; }
 .pedal .knob-dial {
   width: 46px; height: 46px; border: 2px solid #111;
@@ -845,4 +854,92 @@ button.link { all: unset; color: var(--accent-text); cursor: pointer; text-decor
 
 @media (max-width: 640px) {
   .pedal-stage { justify-content: center; }
+}
+
+/* Light paints get dark knob outlines on the plate and a darker plate rule. */
+.pedal-cream .pedal-plate, .pedal-skyblue .pedal-plate, .pedal-orange .pedal-plate,
+.pedal-eqorange .pedal-plate, .pedal-mint .pedal-plate {
+  border-color: color-mix(in srgb, var(--ink-on-paint) 55%, transparent); background: rgba(255, 255, 255, 0.18);
+}
+
+/* Shapes */
+.pedal.shape-small { width: 196px; }
+.pedal.shape-slim { width: 176px; }
+.pedal.shape-slim .pedal-knobs { flex-wrap: wrap; row-gap: 10px; }
+.pedal.shape-wide { width: 420px; max-width: calc(100vw - 96px); }
+.pedal.shape-wide .pedal-knobs { flex-wrap: wrap; row-gap: 12px; }
+.pedal.shape-wide .pedal-plate { flex-direction: row; justify-content: center; gap: 22px; padding: 12px 16px; }
+.pedal-knobs { flex-wrap: wrap; }
+
+/* Lettering */
+.pedal-name.font-script { font-family: 'Yellowtail', cursive; font-weight: 400; text-transform: none; letter-spacing: 0; margin-right: 0; font-size: 2rem; line-height: 1.05; }
+.pedal-name.font-block { font-family: 'Bowlby One SC', var(--font-display); font-weight: 400; letter-spacing: 0.04em; margin-right: -0.04em; font-size: 1.45rem; }
+.pedal-name.font-tall { font-family: 'Antonio', var(--font-display); font-weight: 300; letter-spacing: 0.35em; margin-right: -0.35em; font-size: 2rem; }
+.pedal-name.font-serif { font-family: var(--font-serif); font-style: italic; font-weight: 400; text-transform: none; letter-spacing: 0; margin-right: 0; font-size: 1.9rem; }
+.pedal-name.sub.font-tall { font-size: 0.85rem; font-weight: 500; }
+.pedal-name.sub.font-block { font-size: 0.85rem; }
+
+/* A printed speaker grille across the plate (distortion box). */
+.pedal-grille {
+  align-self: stretch; height: 38px; border-radius: 4px;
+  background: repeating-linear-gradient(180deg, color-mix(in srgb, var(--ink-on-paint) 75%, transparent) 0 3px, transparent 3px 7px);
+}
+
+/* Amp head: a tolex box with a cream faceplate over a grille cloth. */
+.pedal.shape-amp {
+  width: 440px; max-width: calc(100vw - 96px); padding: 12px; gap: 10px;
+  background: linear-gradient(180deg, #4A3631 0%, var(--espresso) 100%);
+  border-color: var(--ink); border-radius: 12px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.08), 6px 6px 0 var(--ink);
+}
+.pedal.shape-amp .pedal-jack.out { left: -16px; top: 30px; }
+.amp-face {
+  --ink-on-paint: var(--ink);
+  align-self: stretch; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px;
+  padding: 12px 16px; border-radius: 6px; color: var(--ink);
+  background: linear-gradient(180deg, #F2EAD5 0%, #E2D6B8 100%);
+  border: 2px solid #1d1412; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.amp-face .pedal-knobs { flex: 1; justify-content: center; }
+.amp-name { font-size: 1.7rem; color: var(--ink); }
+.amp-sub { font-family: var(--font-display); font-weight: 700; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; }
+/* Chicken-head knobs on the amp: a cream pointer bar across a dark cap. */
+.amp-face .knob-dial { background: radial-gradient(circle at 35% 30%, #4A4744 0%, #1B1A19 70%); }
+.amp-power-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.amp-power-wrap .pedal-led { margin: 0; width: 16px; height: 16px; }
+.amp-power-label { font-family: var(--font-display); font-weight: 600; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.amp-power {
+  width: 22px; height: 34px; padding: 0; border-radius: 4px; border: 2px solid #1d1412;
+  background: linear-gradient(180deg, #2A2523 0 50%, #DCD7CC 50% 100%);
+  box-shadow: 0 2px 0 #1d1412; transform: none;
+}
+.pedal.is-on .amp-power { background: linear-gradient(180deg, #DCD7CC 0 50%, #2A2523 50% 100%); }
+.amp-power:hover:not(:disabled) { transform: none; box-shadow: 0 2px 0 #1d1412; }
+.amp-power:focus-visible { outline: 2px solid var(--turquoise); outline-offset: 3px; }
+.pedal.is-on .amp-power-wrap .pedal-led { background: radial-gradient(circle at 40% 35%, #FFE9B0 0%, #E8A83A 60%); box-shadow: 0 0 10px 3px rgba(232, 168, 58, 0.7); }
+.amp-grille {
+  align-self: stretch; height: 64px; border-radius: 6px; border: 2px solid #1d1412;
+  background:
+    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.25) 0 2px, transparent 2px 6px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.08) 0 2px, transparent 2px 6px),
+    #8C6A4A;
+}
+@media (max-width: 640px) {
+  .pedal.shape-wide, .pedal.shape-amp { width: auto; max-width: none; flex: 1 1 100%; margin: 0 14px; }
+  .pedal.shape-wide .pedal-plate { flex-direction: column; }
+}
+/* Circuit editors: everything under the pedal greys out while it is bypassed. */
+.pedal-off > :not(.pedal-stage) { opacity: 0.45; }
+/* The parametric EQ's bands as printed sections on the Equalizer box. */
+.pedal .eq-bands { flex: 1 1 100%; margin-top: 0; gap: 8px; }
+.pedal .eq-band { border: 1.5px solid color-mix(in srgb, var(--ink-on-paint) 40%, transparent); background: rgba(255, 255, 255, 0.14); }
+.pedal .band-title { color: var(--ink-on-paint); font-family: var(--font-display); font-weight: 600; font-size: 0.78rem; }
+.pedal .check input { accent-color: var(--ink-on-paint); }
+/* The Equalizer is a console-width box: each band's knobs sit side by side. */
+.pedal-eqorange.shape-wide { width: min(100% - 28px, 760px); max-width: none; }
+.pedal .eq-band { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 4px 6px; padding: 8px 6px; }
+.pedal .eq-band .band-title { flex: 1 1 100%; justify-content: center; }
+@media (max-width: 640px) {
+  .pedal-eqorange.shape-wide { width: auto; }
+  .pedal .eq-bands { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

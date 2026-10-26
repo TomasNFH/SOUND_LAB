@@ -2,12 +2,15 @@ import { flatKnobs, interstageResponseDb, powerTube, stageGains, stockKnobs, tes
 import { MODS } from '../audio/combo/mods';
 import { STOCK_COMBO, type AmpSettings, type ComboSettings } from '../audio/settings';
 import { fmt, Knob } from './Knob';
+import { PedalBox } from './PedalBox';
 
 type Props = {
   amp: AmpSettings;
   onChange: (amp: AmpSettings) => void;
   otherBranch: string; // 'A' or 'B'
   onStockToOther: () => void;
+  // The amp head's power switch.
+  box: { on: boolean; onToggle: () => void };
 };
 
 const unit = { min: 0, max: 1, step: 0.01, format: fmt.pct };
@@ -15,7 +18,7 @@ const db = (x: number) => 20 * Math.log10(x);
 
 // Controls for the 6V6 combo circuit model: the real amp's one knob,
 // and every mod as a switch, stock first.
-export function ComboPanel({ amp, onChange, otherBranch, onStockToOther }: Props) {
+export function ComboPanel({ amp, onChange, otherBranch, onStockToOther, box }: Props) {
   const combo = amp.champ;
   const set = (patch: Partial<ComboSettings>) => onChange({ ...amp, champ: { ...combo, ...patch } });
   const g = stageGains(combo);
@@ -27,9 +30,11 @@ export function ComboPanel({ amp, onChange, otherBranch, onStockToOther }: Props
   const stackDb = interstageResponseDb(combo, 1, new Float32Array([1000]))[0];
 
   return (
-    <div className="combo">
-      <div className="knobs">
-        <Knob label="Volume" value={amp.volume} {...unit} defaultValue={0.4} onChange={(volume) => onChange({ ...amp, volume })} />
+    <div className={`combo ${box.on ? '' : 'pedal-off'}`}>
+      <div className="pedal-stage">
+        <PedalBox name="Combo" subtitle="6V6" paint="amp" shape="amp" lettering="script" {...box}>
+          <Knob label="Volume" value={amp.volume} {...unit} defaultValue={0.4} onChange={(volume) => onChange({ ...amp, volume })} />
+        </PedalBox>
       </div>
       <p className="muted small">
         The real amp's only control: a 1 MΩ audio-taper pot after the tone stack, so it sets how hard the second

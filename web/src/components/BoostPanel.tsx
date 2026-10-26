@@ -3,9 +3,10 @@ import { STOCK_BOOST, type BoostSettings } from '../audio/settings';
 import { BoostResponseView } from '../views/BoostResponseView';
 import { BoostSchematic } from '../views/BoostSchematic';
 import { fmt, Knob } from './Knob';
+import { PedalBox } from './PedalBox';
 import { farads, hz, ohms, potLabel, snap } from './parts';
 
-type Props = { boost: BoostSettings; onChange: (b: BoostSettings) => void };
+type Props = { boost: BoostSettings; onChange: (b: BoostSettings) => void; box: { on: boolean; onToggle: () => void } };
 
 type PartKey = 'r1' | 'c1' | 'r2' | 'c2' | 'c3';
 
@@ -17,7 +18,7 @@ const PARTS: { key: PartKey; label: string; min: number; max: number; format: (v
   { key: 'c3', label: 'C3', min: 1e-9, max: 100e-6, format: farads, role: 'output cap' },
 ];
 
-export function BoostPanel({ boost, onChange }: Props) {
+export function BoostPanel({ boost, onChange, box }: Props) {
   const set = (patch: Partial<BoostSettings>) => onChange({ ...boost, ...patch });
   const v = boostValues(boost);
   const stock = boostValues(STOCK_BOOST);
@@ -36,10 +37,12 @@ export function BoostPanel({ boost, onChange }: Props) {
   const db = (x: number) => 20 * Math.log10(x);
 
   return (
-    <div className="boost">
-      <div className="knobs">
-        <Knob label="Gain" value={boost.gainPos} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST.gainPos} format={fmt.pct} onChange={(gainPos) => set({ gainPos })} />
-        <Knob label="Volume" value={boost.volPos} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST.volPos} format={fmt.pct} onChange={(volPos) => set({ volPos })} />
+    <div className={`boost ${box.on ? '' : 'pedal-off'}`}>
+      <div className="pedal-stage">
+        <PedalBox name="Clean Boost" paint="cream" shape="small" lettering="serif" {...box}>
+          <Knob label="Gain" value={boost.gainPos} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST.gainPos} format={fmt.pct} onChange={(gainPos) => set({ gainPos })} />
+          <Knob label="Volume" value={boost.volPos} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST.volPos} format={fmt.pct} onChange={(volPos) => set({ volPos })} />
+        </PedalBox>
       </div>
       <p className="muted small">
         Rgain {ohms(v.rGain)} → op-amp gain ×{v.gain.toFixed(1)} ({db(v.gain) >= 0 ? '+' : ''}

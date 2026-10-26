@@ -1,5 +1,6 @@
 import type { EqBand, EqSettings } from '../audio/settings';
 import { fmt, Knob } from './Knob';
+import { PedalBox } from './PedalBox';
 
 type Props = {
   eq: EqSettings;
@@ -23,10 +24,6 @@ export function EqPanel({ eq, onChange, onActiveBand, showPosition = true }: Pro
     <section className="panel">
       <div className="panel-head">
         <h2>Parametric EQ</h2>
-        <label className="check">
-          <input type="checkbox" checked={eq.on} onChange={(e) => onChange({ ...eq, on: e.target.checked })} />
-          On
-        </label>
         {showPosition && (
           <div className="seg" role="group" aria-label="EQ position">
             {(['pre', 'post'] as const).map((p) => (
@@ -47,57 +44,61 @@ export function EqPanel({ eq, onChange, onActiveBand, showPosition = true }: Pro
         </p>
       )}
 
-      <div className={`eq-bands ${eq.on ? '' : 'disabled'}`}>
-        {eq.bands.map((band, i) => (
-          <div
-            key={i}
-            className={`eq-band ${band.on ? '' : 'off'}`}
-            onPointerEnter={() => onActiveBand(i)}
-            onPointerLeave={() => onActiveBand(null)}
-          >
-            <label className="check band-title">
-              <input type="checkbox" checked={band.on} onChange={(e) => setBand(i, { on: e.target.checked })} />
-              {BAND_NAMES[band.type]}
-            </label>
-            <Knob
-              size="small"
-              label="Freq"
-              value={band.freq}
-              min={band.type === 'highshelf' ? 1000 : 30}
-              max={band.type === 'lowshelf' ? 1000 : 16000}
-              scale="log"
-              format={fmt.hz}
-              onChange={(freq) => setBand(i, { freq })}
-              onActive={(a) => onActiveBand(a ? i : null)}
-            />
-            <Knob
-              size="small"
-              label="Gain"
-              value={band.gain}
-              min={-15}
-              max={15}
-              step={0.5}
-              defaultValue={0}
-              format={fmt.db}
-              onChange={(gain) => setBand(i, { gain })}
-              onActive={(a) => onActiveBand(a ? i : null)}
-            />
-            {band.type === 'peaking' && (
-              <Knob
-                size="small"
-                label="Q"
-                value={band.q}
-                min={0.3}
-                max={12}
-                scale="log"
-                defaultValue={1}
-                format={fmt.q}
-                onChange={(q) => setBand(i, { q })}
-                onActive={(a) => onActiveBand(a ? i : null)}
-              />
-            )}
+      <div className="pedal-stage">
+        <PedalBox name="Equalizer" paint="eqorange" shape="wide" lettering="block" on={eq.on} onToggle={() => onChange({ ...eq, on: !eq.on })}>
+          <div className="eq-bands">
+            {eq.bands.map((band, i) => (
+              <div
+                key={i}
+                className={`eq-band ${band.on ? '' : 'off'}`}
+                onPointerEnter={() => onActiveBand(i)}
+                onPointerLeave={() => onActiveBand(null)}
+              >
+                <label className="check band-title">
+                  <input type="checkbox" checked={band.on} onChange={(e) => setBand(i, { on: e.target.checked })} />
+                  {BAND_NAMES[band.type]}
+                </label>
+                <Knob
+                  size="small"
+                  label="Freq"
+                  value={band.freq}
+                  min={band.type === 'highshelf' ? 1000 : 30}
+                  max={band.type === 'lowshelf' ? 1000 : 16000}
+                  scale="log"
+                  format={fmt.hz}
+                  onChange={(freq) => setBand(i, { freq })}
+                  onActive={(a) => onActiveBand(a ? i : null)}
+                />
+                <Knob
+                  size="small"
+                  label="Gain"
+                  value={band.gain}
+                  min={-15}
+                  max={15}
+                  step={0.5}
+                  defaultValue={0}
+                  format={fmt.db}
+                  onChange={(gain) => setBand(i, { gain })}
+                  onActive={(a) => onActiveBand(a ? i : null)}
+                />
+                {band.type === 'peaking' && (
+                  <Knob
+                    size="small"
+                    label="Q"
+                    value={band.q}
+                    min={0.3}
+                    max={12}
+                    scale="log"
+                    defaultValue={1}
+                    format={fmt.q}
+                    onChange={(q) => setBand(i, { q })}
+                    onActive={(a) => onActiveBand(a ? i : null)}
+                  />
+                )}
+              </div>
+            ))}
           </div>
-        ))}
+        </PedalBox>
       </div>
     </section>
   );

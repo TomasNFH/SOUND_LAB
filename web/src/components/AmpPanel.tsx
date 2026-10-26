@@ -5,6 +5,7 @@ import type { AmpSettings } from '../audio/settings';
 import { listFiles, uploadFile, type AudioFile } from '../api';
 import { ComboPanel } from './ComboPanel';
 import { fmt, Knob } from './Knob';
+import { PedalBox } from './PedalBox';
 
 type Props = {
   amp: AmpSettings;
@@ -20,6 +21,7 @@ export function AmpPanel({ amp, onChange, otherBranch, onStockToOther }: Props) 
   const [status, setStatus] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const set = (patch: Partial<AmpSettings>) => onChange({ ...amp, ...patch });
+  const box = { on: amp.on, onToggle: () => set({ on: !amp.on }) };
 
   const refresh = useCallback(async () => {
     try {
@@ -48,10 +50,6 @@ export function AmpPanel({ amp, onChange, otherBranch, onStockToOther }: Props) 
     <section className="panel">
       <div className="panel-head">
         <h2>Amp</h2>
-        <label className="check">
-          <input type="checkbox" checked={amp.on} onChange={(e) => set({ on: e.target.checked })} />
-          On
-        </label>
         <div className="seg" role="group" aria-label="Amp model">
           <button className={amp.model === 'champ600' ? 'on' : ''} onClick={() => set({ model: 'champ600' })}>
             6V6 combo
@@ -67,17 +65,19 @@ export function AmpPanel({ amp, onChange, otherBranch, onStockToOther }: Props) 
           : 'A hand-tuned small combo. Volume drives the preamp and power stage: low is clean, high breaks up.'}
       </p>
 
-      <div className={amp.on ? '' : 'disabled'}>
-        {amp.model === 'champ600' ? (
-          <ComboPanel amp={amp} onChange={onChange} otherBranch={otherBranch} onStockToOther={onStockToOther} />
-        ) : (
-          <div className="knobs">
+      {amp.model === 'champ600' ? (
+        <ComboPanel amp={amp} onChange={onChange} otherBranch={otherBranch} onStockToOther={onStockToOther} box={box} />
+      ) : (
+        <div className="pedal-stage">
+          <PedalBox name="Combo" subtitle="Generic" paint="amp" shape="amp" lettering="script" {...box}>
             <Knob label="Volume" value={amp.volume} {...unit} defaultValue={0.3} onChange={(volume) => set({ volume })} />
             <Knob label="Bass" value={amp.bass} {...unit} defaultValue={0.5} onChange={(bass) => set({ bass })} />
             <Knob label="Middle" value={amp.middle} {...unit} defaultValue={0.5} onChange={(middle) => set({ middle })} />
             <Knob label="Treble" value={amp.treble} {...unit} defaultValue={0.6} onChange={(treble) => set({ treble })} />
-          </div>
-        )}
+          </PedalBox>
+        </div>
+      )}
+      <div className={amp.on ? '' : 'disabled'}>
         <div className="switches">
           <div className="switch-row">
             <span className="switch-label">Cabinet</span>

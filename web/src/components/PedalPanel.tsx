@@ -47,19 +47,14 @@ export function PedalPanel({ pedal, onChange }: Props) {
   const setAmpLike = (patch: Partial<AmpLikeSettings>) => onChange({ ...pedal, bd: { ...pedal.bd, ...patch } });
   const setHardDistortion = (patch: Partial<HardDistortionSettings>) => onChange({ ...pedal, ds2: { ...pedal.ds2, ...patch } });
   const setCleanBlend = (patch: Partial<CleanBlendSettings>) => onChange({ ...pedal, klon: { ...pedal.klon, ...patch } });
-  // Drawn as a stompbox, whose footswitch is the on/off control.
-  const pedalFace = pedal.type === 'ts' && pedal.ts.mode !== '4558';
+  // Every pedal is drawn as a stompbox whose footswitch is the on/off control.
+  const box = { on: pedal.on, onToggle: () => onChange({ ...pedal, on: !pedal.on }) };
+  const dimIfOff = pedal.on ? '' : 'disabled';
 
   return (
     <section className="panel pedal-panel">
       <div className="panel-head">
         <h2>Distortion</h2>
-        {!pedalFace && (
-          <label className="check">
-            <input type="checkbox" checked={pedal.on} onChange={(e) => onChange({ ...pedal, on: e.target.checked })} />
-            On
-          </label>
-        )}
         <select
           className="compact"
           value={pedal.type}
@@ -74,7 +69,7 @@ export function PedalPanel({ pedal, onChange }: Props) {
       </div>
       {info && <p className="muted small">{info.idea}</p>}
 
-      <div className={pedal.on || pedalFace ? '' : 'disabled'}>
+      <div>
         {pedal.type === 'boost' && (
           <div className="switches">
             <div className="switch-row">
@@ -90,10 +85,10 @@ export function PedalPanel({ pedal, onChange }: Props) {
           </div>
         )}
         {pedal.type === 'boost' && pedal.boostCircuit !== 'eq' && (
-          <BoostPanel boost={pedal.boost} onChange={(boost) => onChange({ ...pedal, boost })} />
+          <BoostPanel boost={pedal.boost} onChange={(boost) => onChange({ ...pedal, boost })} box={box} />
         )}
         {pedal.type === 'boost' && pedal.boostCircuit === 'eq' && (
-          <BoostEqPanel eq={pedal.boostEq} onChange={(boostEq) => onChange({ ...pedal, boostEq })} />
+          <BoostEqPanel eq={pedal.boostEq} onChange={(boostEq) => onChange({ ...pedal, boostEq })} box={box} />
         )}
 
         {pedal.type === 'ts' && (
@@ -112,17 +107,17 @@ export function PedalPanel({ pedal, onChange }: Props) {
         )}
 
         {pedal.type === 'ts' && pedal.ts.mode === '4558' && (
-          <Drive4558Panel ts={pedal.ts.c4558} onChange={(c4558) => setMidHump({ c4558 })} />
+          <Drive4558Panel ts={pedal.ts.c4558} onChange={(c4558) => setMidHump({ c4558 })} box={box} />
         )}
 
         {pedal.type === 'ts' && pedal.ts.mode !== '4558' && (
           <div className="pedal-stage">
-            <PedalBox name="Mid" subtitle="Hump" color="teal" on={pedal.on} onToggle={() => onChange({ ...pedal, on: !pedal.on })}>
+            <PedalBox name="Mid" subtitle="Hump" paint="teal" {...box}>
               <Knob label="Drive" value={pedal.ts.drive} min={0} max={1} step={0.01} defaultValue={0.3} format={fmt.pct} onChange={(drive) => setMidHump({ drive })} />
               <Knob label="Tone" value={pedal.ts.tone} min={0} max={1} step={0.01} defaultValue={0.5} format={fmt.pct} onChange={(tone) => setMidHump({ tone })} />
               <Knob label="Level" value={pedal.ts.level} min={-30} max={6} step={0.5} defaultValue={-9} format={fmt.db} onChange={(level) => setMidHump({ level })} />
             </PedalBox>
-            <div className={`pedal-mods ${pedal.on ? '' : 'disabled'}`}>
+            <div className={`pedal-mods ${dimIfOff}`}>
               <div className="switches">
                 <div className="switch-row">
                   <span className="switch-label">Clipping</span>
@@ -164,21 +159,23 @@ export function PedalPanel({ pedal, onChange }: Props) {
         )}
 
         {pedal.type === 'bd' && (
-          <div className="knobs">
-            <Knob label="Gain" value={pedal.bd.gain} {...unit} defaultValue={0.5} onChange={(gain) => setAmpLike({ gain })} />
-            <Knob label="Tone" value={pedal.bd.tone} {...unit} defaultValue={0.5} onChange={(tone) => setAmpLike({ tone })} />
-            <Knob label="Level" value={pedal.bd.level} min={-30} max={6} step={0.5} defaultValue={-9} format={fmt.db} onChange={(level) => setAmpLike({ level })} />
+          <div className="pedal-stage">
+            <PedalBox name="Amp-like" subtitle="Overdrive" paint="skyblue" shape="wide" lettering="script" {...box}>
+              <Knob label="Gain" value={pedal.bd.gain} {...unit} defaultValue={0.5} onChange={(gain) => setAmpLike({ gain })} />
+              <Knob label="Tone" value={pedal.bd.tone} {...unit} defaultValue={0.5} onChange={(tone) => setAmpLike({ tone })} />
+              <Knob label="Level" value={pedal.bd.level} min={-30} max={6} step={0.5} defaultValue={-9} format={fmt.db} onChange={(level) => setAmpLike({ level })} />
+            </PedalBox>
           </div>
         )}
 
         {pedal.type === 'ds2' && (
-          <>
-            <div className="knobs">
+          <div className="pedal-stage">
+            <PedalBox name="Distortion" paint="orange" lettering="block" grille {...box}>
               <Knob label="Dist" value={pedal.ds2.dist} {...unit} defaultValue={0.5} onChange={(dist) => setHardDistortion({ dist })} />
               <Knob label="Tone" value={pedal.ds2.tone} {...unit} defaultValue={0.5} onChange={(tone) => setHardDistortion({ tone })} />
               <Knob label="Level" value={pedal.ds2.level} min={-30} max={6} step={0.5} defaultValue={-7} format={fmt.db} onChange={(level) => setHardDistortion({ level })} />
-            </div>
-            <div className="switches">
+            </PedalBox>
+            <div className={`pedal-mods switches ${dimIfOff}`}>
               <div className="switch-row">
                 <span className="switch-label">Mode</span>
                 <div className="seg">
@@ -191,14 +188,16 @@ export function PedalPanel({ pedal, onChange }: Props) {
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {pedal.type === 'klon' && (
-          <div className="knobs">
-            <Knob label="Gain" value={pedal.klon.gain} {...unit} defaultValue={0.35} onChange={(gain) => setCleanBlend({ gain })} />
-            <Knob label="Treble" value={pedal.klon.treble} {...unit} defaultValue={0.5} onChange={(treble) => setCleanBlend({ treble })} />
-            <Knob label="Output" value={pedal.klon.output} min={-30} max={6} step={0.5} defaultValue={3} format={fmt.db} onChange={(output) => setCleanBlend({ output })} />
+          <div className="pedal-stage">
+            <PedalBox name="Clean Blend" paint="navy" lettering="script" {...box}>
+              <Knob label="Treble" value={pedal.klon.treble} {...unit} defaultValue={0.5} onChange={(treble) => setCleanBlend({ treble })} />
+              <Knob label="Gain" value={pedal.klon.gain} {...unit} defaultValue={0.35} onChange={(gain) => setCleanBlend({ gain })} />
+              <Knob label="Output" value={pedal.klon.output} min={-30} max={6} step={0.5} defaultValue={3} format={fmt.db} onChange={(output) => setCleanBlend({ output })} />
+            </PedalBox>
           </div>
         )}
       </div>
