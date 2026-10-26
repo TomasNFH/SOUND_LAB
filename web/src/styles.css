@@ -265,6 +265,44 @@ optgroup { color: var(--muted); }
 .control-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
 .transport { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; flex: 1 1 340px; min-width: 0; }
 .transport .seek { flex: 1 0 100%; margin-top: 2px; }
+
+/* Tape-deck keys: brushed-metal caps on an espresso strip. A key stands
+   proud on a hard bottom edge and sinks flush when pressed or latched. */
+.tape-deck {
+  display: inline-flex; gap: 6px; padding: 8px 10px 6px;
+  background: var(--espresso); border-radius: 10px;
+  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+.tape-slot { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.tape-lamp { width: 7px; height: 7px; border-radius: 50%; background: rgba(243, 239, 224, 0.14); }
+.tape-lamp.none { visibility: hidden; }
+.tape-lamp.terra.on { background: var(--terracotta); box-shadow: 0 0 6px 1px rgba(224, 90, 71, 0.8); }
+.tape-lamp.turq.on { background: var(--turquoise); box-shadow: 0 0 6px 1px rgba(69, 179, 186, 0.8); }
+.tape-key {
+  width: 64px; height: 48px; padding: 0; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center; color: var(--ink);
+  border: 1.5px solid #1d1412;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #FBF9F3 0%, #E6E0D2 55%, #D3CBBA 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -3px 0 rgba(61, 43, 38, 0.18), 0 4px 0 #1d1412;
+  transform: none;
+  transition: transform 0.06s, box-shadow 0.06s;
+}
+.tape-key:hover:not(:disabled) { transform: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -3px 0 rgba(61, 43, 38, 0.18), 0 4px 0 #1d1412; filter: brightness(1.03); }
+.tape-key:active:not(:disabled), .tape-key.latched {
+  transform: translateY(3px);
+  box-shadow: inset 0 2px 4px rgba(29, 20, 18, 0.35), 0 1px 0 #1d1412;
+}
+.tape-key.latched { background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 3px), linear-gradient(180deg, #E6E0D2 0%, #D3CBBA 100%); }
+.tape-key:focus-visible { outline: 2px solid var(--turquoise); outline-offset: 3px; }
+.tape-label {
+  font-family: var(--font-display); font-weight: 600; font-size: 0.62rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: rgba(248, 245, 236, 0.75);
+}
+@media (max-width: 640px) {
+  .tape-key { width: 56px; height: 44px; }
+}
 .monitor { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
 
 /* Signal chain: the source splits into branch A and branch B (a grid of

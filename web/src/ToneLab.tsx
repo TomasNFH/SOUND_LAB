@@ -18,6 +18,7 @@ import { EqPanel } from './components/EqPanel';
 import { LivePanel } from './components/LivePanel';
 import { FxPanel } from './components/FxPanel';
 import { fmt, Knob } from './components/Knob';
+import { TAPE_ICONS, TransportKeys } from './components/TransportKeys';
 import { PedalPanel } from './components/PedalPanel';
 import { PresetPanel } from './components/PresetPanel';
 import { SectionHero } from './components/SectionHero';
@@ -217,16 +218,22 @@ export function ToneLab({ active, showPresets }: { active: boolean; showPresets:
 
       <section className="panel control-bar">
         <div className="transport">
-          <button className="primary" onClick={togglePlay} disabled={!canPlay}>
-            {playing ? 'Pause' : 'Play'}
-          </button>
-          <button onClick={() => getEngine().stop()} disabled={!canPlay}>
-            Stop
-          </button>
-          <label className="check">
-            <input type="checkbox" checked={loop} onChange={(e) => setLoop(e.target.checked)} />
-            Loop
-          </label>
+          <TransportKeys
+            keys={[
+              {
+                id: 'play',
+                label: playing ? 'Pause' : 'Play',
+                icon: playing ? TAPE_ICONS.pause : TAPE_ICONS.play,
+                onPress: togglePlay,
+                latched: playing,
+                lamp: 'terra',
+                disabled: !canPlay,
+                title: 'Space',
+              },
+              { id: 'stop', label: 'Stop', icon: TAPE_ICONS.stop, onPress: () => getEngine().stop(), disabled: !canPlay },
+              { id: 'loop', label: 'Loop', icon: TAPE_ICONS.loop, onPress: () => setLoop((l) => !l), latched: loop, toggle: true, lamp: 'turq' },
+            ]}
+          />
           <span className="time">
             {formatTime(position)} / {formatTime(duration)}
           </span>
