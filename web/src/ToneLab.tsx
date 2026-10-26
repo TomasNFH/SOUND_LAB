@@ -18,7 +18,7 @@ import { EqPanel } from './components/EqPanel';
 import { LivePanel } from './components/LivePanel';
 import { FxPanel } from './components/FxPanel';
 import { fmt, Knob } from './components/Knob';
-import { TAPE_ICONS, TransportKeys } from './components/TransportKeys';
+import { DialTicks, TAPE_ICONS, TransportKeys } from './components/TransportKeys';
 import { PedalPanel } from './components/PedalPanel';
 import { PresetPanel } from './components/PresetPanel';
 import { SectionHero } from './components/SectionHero';
@@ -173,6 +173,7 @@ export function ToneLab({ active, showPresets }: { active: boolean; showPresets:
   }, [active, togglePlay, listenTo]);
 
   const { playing, canPlay, position, duration, levelMatchDb } = engineState;
+  const status = playing ? 'PLAYING' : position > 0 ? 'PAUSED' : 'STOPPED';
 
   useEffect(() => {
     if (!auto || !playing) return;
@@ -216,54 +217,98 @@ export function ToneLab({ active, showPresets }: { active: boolean; showPresets:
         />
       </div>
 
-      <section className="panel control-bar">
-        <div className="transport">
-          <TransportKeys
-            keys={[
-              {
-                id: 'play',
-                label: playing ? 'Pause' : 'Play',
-                icon: playing ? TAPE_ICONS.pause : TAPE_ICONS.play,
-                onPress: togglePlay,
-                latched: playing,
-                lamp: 'terra',
-                disabled: !canPlay,
-                title: 'Space',
-              },
-              { id: 'stop', label: 'Stop', icon: TAPE_ICONS.stop, onPress: () => getEngine().stop(), disabled: !canPlay },
-              { id: 'loop', label: 'Loop', icon: TAPE_ICONS.loop, onPress: () => setLoop((l) => !l), latched: loop, toggle: true, lamp: 'turq' },
-            ]}
-          />
-          <span className="time tape-counter">
-            {formatTime(position)} <span className="of">/ {formatTime(duration)}</span>
-          </span>
-          <input
-            className="seek"
-            type="range"
-            min={0}
-            max={duration || 1}
-            step={0.01}
-            value={position}
-            disabled={!duration}
-            onChange={(e) => getEngine().seek(Number(e.target.value))}
-            aria-label="Position"
-          />
+      <section className="panel control-bar deck-card">
+        <header className="deck-head">
+          <div className="deck-brand">
+            <span className={`deck-power ${playing ? 'on' : ''}`} aria-hidden="true" />
+            <div>
+              <h2 className="deck-title">
+                TONE LAB DECK <span className="deck-badge">A/B MONITOR</span>
+              </h2>
+              <p className="deck-sub">CLIP PLAYBACK · A AGAINST B</p>
+            </div>
+          </div>
+          <div className="deck-display" role="status">
+            <span>
+              <span className="deck-display-key">TIME:</span> {formatTime(position)} / {formatTime(duration)}
+            </span>
+            <span className="deck-display-rule" aria-hidden="true" />
+            <span>
+              <span className="deck-display-key">STATUS:</span>{' '}
+              <span className={status === 'PLAYING' ? 'deck-ok' : 'deck-stop'}>{status}</span>
+            </span>
+          </div>
+        </header>
+
+        <div className="deck-well">
+          <div className="deck-transport">
+            <TransportKeys
+              keys={[
+                {
+                  id: 'play',
+                  label: playing ? 'Pause' : 'Play',
+                  icon: playing ? TAPE_ICONS.pause : TAPE_ICONS.play,
+                  onPress: togglePlay,
+                  latched: playing,
+                  color: 'turq',
+                  disabled: !canPlay,
+                  title: 'Space',
+                },
+                {
+                  id: 'stop',
+                  label: 'Stop',
+                  icon: TAPE_ICONS.stop,
+                  onPress: () => getEngine().stop(),
+                  latched: canPlay && status === 'STOPPED',
+                  color: 'terra',
+                  disabled: !canPlay,
+                },
+                { id: 'loop', label: 'Loop', icon: TAPE_ICONS.loop, onPress: () => setLoop((l) => !l), latched: loop, toggle: true, color: 'tan' },
+              ]}
+            />
+            <input
+              className="seek deck-seek"
+              type="range"
+              min={0}
+              max={duration || 1}
+              step={0.01}
+              value={position}
+              disabled={!duration}
+              onChange={(e) => getEngine().seek(Number(e.target.value))}
+              aria-label="Position"
+            />
+          </div>
+          <div className="deck-volume">
+            <span className="deck-volume-title">MASTER VOLUME</span>
+            <span className="deck-volume-readout">{fmt.db(masterDb)}</span>
+            <div className="deck-dial">
+              <DialTicks />
+              <Knob label="Volume" value={masterDb} min={-40} max={0} step={0.5} defaultValue={-6} format={fmt.db} onChange={setMasterDb} />
+            </div>
+            <span className="deck-minmax" aria-hidden="true">
+              <span>MIN</span>
+              <span>MAX</span>
+            </span>
+          </div>
         </div>
-        <div className="monitor">
-          <button
-            className={`ab-switch ${listening === 'a' ? 'is-dry' : 'is-wet'}`}
-            onClick={() => listenTo('other')}
-            title="Press B to switch"
-          >
-            <span className={listening === 'a' ? 'on' : ''}>A{isDry(branches.a) ? ' · Dry' : ''}</span>
-            <span className={listening === 'b' ? 'on' : ''}>B{isDry(branches.b) ? ' · Dry' : ''}</span>
-          </button>
-          <label className="check" title={levelMatch ? `B corrected by ${fmt.db(levelMatchDb)} to match A` : 'Off: louder will sound better'}>
-            <input type="checkbox" checked={levelMatch} onChange={(e) => setLevelMatch(e.target.checked)} />
-            Level match {levelMatch && <span className="muted inline">{fmt.db(levelMatchDb)}</span>}
-          </label>
-          <Knob size="small" label="Volume" value={masterDb} min={-40} max={0} step={0.5} defaultValue={-6} format={fmt.db} onChange={setMasterDb} />
-        </div>
+
+        <footer className="deck-foot">
+          <div className="deck-monitor">
+            <button
+              className={`ab-switch ${listening === 'a' ? 'is-dry' : 'is-wet'}`}
+              onClick={() => listenTo('other')}
+              title="Press B to switch"
+            >
+              <span className={listening === 'a' ? 'on' : ''}>A{isDry(branches.a) ? ' · Dry' : ''}</span>
+              <span className={listening === 'b' ? 'on' : ''}>B{isDry(branches.b) ? ' · Dry' : ''}</span>
+            </button>
+            <label className="check" title={levelMatch ? `B corrected by ${fmt.db(levelMatchDb)} to match A` : 'Off: louder will sound better'}>
+              <input type="checkbox" checked={levelMatch} onChange={(e) => setLevelMatch(e.target.checked)} />
+              LEVEL MATCH {levelMatch && <span className="deck-ok">{fmt.db(levelMatchDb)}</span>}
+            </label>
+          </div>
+          <span className="deck-hint">SPACE PLAY/PAUSE · B SWITCH A/B</span>
+        </footer>
       </section>
 
       <ChainMatrix

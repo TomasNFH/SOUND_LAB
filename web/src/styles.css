@@ -40,6 +40,7 @@
   --font-display: 'Outfit', 'Comfortaa', sans-serif;
   --font-serif: 'Instrument Serif', 'Playfair Display', serif;
   --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Share Tech Mono', ui-monospace, monospace;
 
   font-family: var(--font-body);
   color: var(--text);
@@ -266,76 +267,148 @@ optgroup { color: var(--muted); }
 .transport { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; flex: 1 1 340px; min-width: 0; }
 .transport .seek { flex: 1 0 100%; margin-top: 2px; }
 
-/* Tape-deck keys: brushed-metal caps on an espresso strip. A key stands
-   proud on a hard bottom edge and sinks flush when pressed or latched. */
-.tape-deck {
-  display: inline-flex; gap: 6px; padding: 8px 10px 6px;
-  background: var(--espresso); border-radius: 10px;
-  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.35);
+/* Tone Lab deck: an espresso card with a header plate and LCD-style
+   display, a recessed well holding tall mechanical keys and a rotary
+   master volume, and a footer for A/B monitoring. */
+.panel.deck-card {
+  display: block; padding: 24px;
+  --text: var(--cream-light); --muted: rgba(248, 245, 236, 0.6);
+  background: var(--espresso); color: var(--text);
+  border: 4px solid var(--ink); border-radius: 24px;
+  box-shadow: 8px 8px 0 var(--espresso);
 }
-.tape-slot { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.tape-lamp { width: 7px; height: 7px; border-radius: 50%; background: rgba(243, 239, 224, 0.14); }
-.tape-lamp.none { visibility: hidden; }
-.tape-lamp.terra.on { background: var(--terracotta); box-shadow: 0 0 6px 1px rgba(224, 90, 71, 0.8); }
-.tape-lamp.turq.on { background: var(--turquoise); box-shadow: 0 0 6px 1px rgba(69, 179, 186, 0.8); }
-.tape-key {
-  width: 64px; height: 48px; padding: 0; border-radius: 5px;
-  display: flex; align-items: center; justify-content: center; color: var(--ink);
-  border: 1.5px solid #1d1412;
-  background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 3px),
-    linear-gradient(180deg, #FBF9F3 0%, #E6E0D2 55%, #D3CBBA 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -3px 0 rgba(61, 43, 38, 0.18), 0 4px 0 #1d1412;
-  transform: none;
-  transition: transform 0.06s, box-shadow 0.06s;
+.deck-card .deck-ok { color: var(--turquoise); }
+.deck-card .deck-stop { color: #F08071; }
+
+.deck-head {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px;
+  padding-bottom: 16px; margin-bottom: 20px; border-bottom: 2px solid rgba(243, 239, 224, 0.1);
 }
-.tape-key:hover:not(:disabled) { transform: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -3px 0 rgba(61, 43, 38, 0.18), 0 4px 0 #1d1412; filter: brightness(1.03); }
-.tape-key:active:not(:disabled), .tape-key.latched {
-  transform: translateY(3px);
-  box-shadow: inset 0 2px 4px rgba(29, 20, 18, 0.35), 0 1px 0 #1d1412;
+.deck-brand { display: flex; align-items: center; gap: 12px; }
+.deck-power {
+  width: 16px; height: 16px; border-radius: 50%; flex: none;
+  background: var(--terracotta); border: 1px solid rgba(243, 239, 224, 0.2);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.35);
 }
-.tape-key.latched { background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 3px), linear-gradient(180deg, #E6E0D2 0%, #D3CBBA 100%); }
-.tape-key:focus-visible { outline: 2px solid var(--turquoise); outline-offset: 3px; }
-.tape-label {
-  font-family: var(--font-display); font-weight: 600; font-size: 0.62rem; letter-spacing: 0.14em;
-  text-transform: uppercase; color: rgba(248, 245, 236, 0.75);
+.deck-power.on { background: var(--turquoise); box-shadow: 0 0 10px var(--turquoise); }
+.panel.deck-card h2.deck-title {
+  margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  font-family: var(--font-display); font-style: normal; font-weight: 700; font-size: 1.35rem;
+  letter-spacing: 0.04em; color: var(--cream-light);
+}
+.deck-badge {
+  font-family: var(--font-mono); font-weight: 400; font-size: 0.7rem; letter-spacing: 0.04em;
+  color: var(--turquoise); background: rgba(69, 179, 186, 0.1);
+  border: 1px solid rgba(69, 179, 186, 0.3); border-radius: 4px; padding: 1px 7px;
+}
+.deck-sub { margin: 2px 0 0; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+.deck-display {
+  display: flex; align-items: center; gap: 14px;
+  font-family: var(--font-mono); font-size: 0.8rem; font-variant-numeric: tabular-nums;
+  background: rgba(44, 30, 26, 0.9); border: 2px solid rgba(243, 239, 224, 0.2); border-radius: 12px;
+  padding: 8px 16px;
+}
+.deck-display-key { color: rgba(248, 245, 236, 0.58); }
+.deck-display-rule { width: 1px; height: 16px; background: rgba(243, 239, 224, 0.2); }
+
+.deck-well {
+  display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; align-items: center;
+  padding: 24px; border-radius: 16px; border: 2px solid rgba(243, 239, 224, 0.1);
+  background: linear-gradient(180deg, #3D2B26 0%, #221714 100%);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.1), 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+.deck-transport { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.deck-seek { margin: 0; accent-color: var(--turquoise); }
+
+/* Mechanical keys: a thick dark bottom edge that collapses when pressed. */
+.mech-keys { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.mech-key {
+  height: 128px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;
+  color: var(--cream-light); text-align: left;
+  background: linear-gradient(180deg, #4A3631 0%, #2C1E1A 100%);
+  border: 2px solid #5A433D; border-bottom: 6px solid #1A110F; border-radius: 8px;
+  box-shadow: none; transform: none;
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.1s, border-bottom-width 0.1s;
+  user-select: none;
+}
+.mech-key:hover:not(:disabled) { transform: none; box-shadow: none; }
+@media (hover: hover) {
+  .mech-key:hover:not(:disabled):not(.latched) { border-color: var(--turquoise); border-bottom-color: #1A110F; transform: translateY(-2px); }
+}
+.mech-key:active:not(:disabled), .mech-key.latched {
+  border-bottom-width: 2px; transform: translateY(4px); box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.6);
+}
+.mech-key.latched.turq { background: linear-gradient(180deg, #23757C 0%, #185559 100%); border-color: #72D0D6; }
+.mech-key.latched.terra { background: linear-gradient(180deg, #C0442F 0%, #9C2E22 100%); border-color: #F08071; }
+.mech-key.latched.tan { background: linear-gradient(180deg, #9C5A33 0%, #74401F 100%); border-color: #EBA87F; }
+.mech-key:focus-visible { outline: 2px solid var(--turquoise); outline-offset: 3px; }
+.mech-key-top, .mech-key-bottom { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.mech-key-index { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(248, 245, 236, 0.7); }
+.mech-ridges {
+  height: 32px; border-radius: 4px; opacity: 0.4;
+  background-image: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0, 0, 0, 0.35) 3px 5px);
+}
+.mech-key-name { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.mech-key.latched .mech-key-index { color: var(--cream-light); }
+.mech-led { width: 10px; height: 10px; border-radius: 50%; background: rgba(248, 245, 236, 0.2); transition: background 0.2s, box-shadow 0.2s; }
+.mech-key.latched.turq .mech-led { background: #72D0D6; box-shadow: 0 0 10px var(--turquoise), 0 0 20px var(--turquoise); }
+.mech-key.latched.terra .mech-led { background: #F08071; box-shadow: 0 0 10px var(--terracotta), 0 0 20px var(--terracotta); }
+.mech-key.latched.tan .mech-led { background: #E6C594; box-shadow: 0 0 10px #E6C594, 0 0 20px #E6C594; }
+
+/* Rotary master volume: a dark knurled dial inside a printed tick scale. */
+.deck-volume {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: rgba(44, 30, 26, 0.7); border: 1px solid rgba(243, 239, 224, 0.1); border-radius: 12px; padding: 16px;
+}
+.deck-volume-title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em; color: rgba(248, 245, 236, 0.7); }
+.deck-volume-readout { font-family: var(--font-mono); font-size: 0.8rem; color: var(--turquoise); }
+.deck-dial { position: relative; width: 140px; height: 140px; display: flex; align-items: center; justify-content: center; }
+.dial-ticks { position: absolute; inset: 0; width: 100%; height: 100%; }
+.dial-ticks line { stroke: var(--cream); stroke-opacity: 0.25; stroke-width: 1.5; stroke-linecap: round; }
+.deck-dial .knob { width: auto; gap: 0; }
+.deck-dial .knob-value, .deck-dial .knob-label { display: none; }
+.deck-dial .knob-dial {
+  width: 92px; height: 92px; border: 2px solid rgba(243, 239, 224, 0.2);
+  background: radial-gradient(circle at 35% 35%, #5A433D 0%, #2C1E1A 70%, #1A110F 100%);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.2);
+}
+.deck-dial .knob-dial::before {
+  content: ''; position: absolute; inset: 14px; border-radius: 50%;
+  background: var(--ink); border: 1px solid rgba(243, 239, 224, 0.2);
+}
+.deck-dial .knob-pointer::after {
+  top: 17px; width: 6px; height: 16px; margin-left: -3px; border-radius: 3px;
+  background: var(--turquoise); box-shadow: 0 0 6px rgba(69, 179, 186, 0.8);
+}
+.deck-minmax { display: flex; justify-content: space-between; width: 100%; padding: 0 20px; font-family: var(--font-mono); font-size: 0.66rem; color: rgba(248, 245, 236, 0.62); }
+
+.deck-foot {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(243, 239, 224, 0.1);
+  font-family: var(--font-mono); font-size: 0.75rem;
+}
+.deck-monitor { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+.deck-monitor .check input { accent-color: var(--turquoise); }
+.deck-hint { color: rgba(248, 245, 236, 0.62); }
+.deck-card .ab-switch {
+  font-family: var(--font-mono); background: var(--ink); border: 2px solid #5A433D; box-shadow: none;
+}
+.deck-card .ab-switch:hover:not(:disabled) { transform: none; border-color: var(--turquoise); box-shadow: none; }
+.deck-card .ab-switch span { font-family: var(--font-mono); color: rgba(248, 245, 236, 0.6); }
+.deck-card .ab-switch.is-dry span.on { background: var(--dry); color: var(--cream-light); }
+.deck-card .ab-switch.is-wet span.on { background: var(--accent); color: var(--cream-light); }
+
+@media (max-width: 760px) {
+  .deck-well { grid-template-columns: minmax(0, 1fr); padding: 16px; gap: 20px; }
 }
 @media (max-width: 640px) {
-  .tape-key { width: 56px; height: 44px; }
+  .panel.deck-card { padding: 16px; border-radius: 18px; box-shadow: 4px 4px 0 var(--espresso); }
+  .deck-display { width: 100%; justify-content: space-between; padding: 8px 12px; gap: 8px; font-size: 0.72rem; }
+  .mech-keys { gap: 8px; }
+  .mech-key { height: 108px; padding: 9px; }
+  .mech-key-index-name { display: none; }
+  .mech-key-name { font-size: 0.9rem; }
 }
-
-/* The control bar is the deck itself: an espresso faceplate with the keys
-   sunk into a darker well, a recessed tape counter and metal monitor
-   controls. Ink colours flip to cream inside it. */
-.panel.control-bar {
-  --text: var(--cream-light); --muted: rgba(248, 245, 236, 0.68);
-  background: linear-gradient(180deg, #46322C 0%, var(--espresso) 100%);
-  color: var(--text);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 6px 6px 0 var(--ink);
-}
-.control-bar .tape-deck { background: #1d1412; }
-.tape-counter {
-  font-family: var(--font-display); font-weight: 600; font-size: 0.95rem; letter-spacing: 0.06em;
-  font-variant-numeric: tabular-nums; color: var(--cream-light);
-  background: #1d1412; padding: 6px 12px; border-radius: 6px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.08);
-}
-.tape-counter .of { color: var(--muted); }
-.control-bar .seek { accent-color: var(--terracotta); }
-.control-bar .check input { accent-color: var(--turquoise); }
-/* A/B: a metal two-way selector, the lit side filled. */
-.control-bar .ab-switch {
-  border-color: #1d1412;
-  background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 3px),
-    linear-gradient(180deg, #FBF9F3 0%, #E6E0D2 55%, #D3CBBA 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 3px 0 #1d1412;
-}
-.control-bar .ab-switch:hover:not(:disabled) { transform: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 3px 0 #1d1412; }
-.control-bar .ab-switch:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 0 #1d1412; }
-.control-bar .ab-switch span { color: rgba(44, 30, 26, 0.68); }
-.control-bar .ab-switch.is-dry span.on, .control-bar .ab-switch.is-wet span.on { color: var(--on-accent); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3); }
-.control-bar .knob-pointer::after { background: var(--ink); }
 .monitor { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
 
 /* Signal chain: the source splits into branch A and branch B (a grid of
