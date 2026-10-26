@@ -146,7 +146,7 @@ export function TheoryLab() {
             </button>
           </div>
         </div>
-        <p className="muted small">Standard tuning, frets 0 to 12. The root is green; tap any fret to hear it.</p>
+        <p className="muted small">Standard tuning, frets 0 to 12. The root is terracotta; tap any fret to hear it.</p>
         <Fretboard notes={notes} flats={flats} show={show} label={label} focus={focus} />
       </section>
     </div>
