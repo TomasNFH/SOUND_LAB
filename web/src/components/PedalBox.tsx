@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-export type PedalPaint = 'teal' | 'cream' | 'skyblue' | 'orange' | 'navy' | 'eqorange' | 'mint' | 'rust' | 'amp' | 'tuner' | 'tin';
-export type PedalShape = 'upright' | 'small' | 'slim' | 'wide' | 'amp' | 'tin';
+export type PedalPaint = 'teal' | 'cream' | 'skyblue' | 'orange' | 'navy' | 'eqorange' | 'mint' | 'rust' | 'amp' | 'tuner' | 'tin' | 'can';
+export type PedalShape = 'upright' | 'small' | 'slim' | 'wide' | 'amp' | 'tin' | 'can';
 export type PedalLettering = 'display' | 'script' | 'block' | 'tall' | 'serif';
 
 type Props = {
@@ -29,12 +29,14 @@ type Props = {
 // stick out of the sides. The amp shape is a head instead: a faceplate
 // with the knobs and a jewel lamp power switch over a grille cloth. The
 // tin shape is a box built from an old sewing-machine tin: a rusty cream
-// band with a toggle and one big knob over a green printed panel.
+// band with a toggle and one big knob over a green printed panel. The can
+// shape is a round tin lid: two thumbwheels and an aluminium knob glued
+// on, a keyboard key for a footswitch and label-maker tape for the names.
 export function PedalBox({ name, subtitle, paint, shape = 'upright', lettering = 'display', grille, on, onToggle, switchLabel, children, feature }: Props) {
   const label = `${name}${subtitle ? ` ${subtitle}` : ''}`;
   const toggle = (
     <button
-      className={shape === 'amp' ? 'amp-power' : shape === 'tin' ? 'tin-toggle' : 'pedal-switch'}
+      className={shape === 'amp' ? 'amp-power' : shape === 'tin' ? 'tin-toggle' : shape === 'can' ? 'can-key' : 'pedal-switch'}
       onClick={onToggle}
       aria-pressed={on}
       aria-label={switchLabel ?? `${label} on`}
@@ -61,6 +63,22 @@ export function PedalBox({ name, subtitle, paint, shape = 'upright', lettering =
           </div>
         </div>
         <div className="amp-grille" aria-hidden="true" />
+      </div>
+    );
+  }
+
+  if (shape === 'can') {
+    return (
+      <div className={`pedal pedal-${paint} shape-can ${on ? 'is-on' : 'is-off'}`}>
+        <span className="pedal-jack in" aria-hidden="true" />
+        <span className="pedal-jack out" aria-hidden="true" />
+        {toggle}
+        <span className="pedal-led" aria-hidden="true" />
+        <div className="pedal-knobs">{children}</div>
+        <span className="can-tape" aria-hidden="true">
+          {name}
+          {subtitle && ` ${subtitle}`}
+        </span>
       </div>
     );
   }

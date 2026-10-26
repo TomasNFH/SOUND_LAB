@@ -80,7 +80,7 @@ export function Drive4558Panel({ ts, onChange, box }: Props) {
   return (
     <div className={`boost ${box.on ? '' : 'pedal-off'}`}>
       <div className="pedal-stage">
-        <PedalBox name="Mid" subtitle="Hump 4558" paint="teal" {...box}>
+        <PedalBox name="Mid" subtitle="Hump 4558" paint="can" shape="can" {...box}>
           <Knob label="Drive" value={ts.drive} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.drive} format={fmt.pct} onChange={(drive) => set({ drive })} />
           <Knob label="Tone" value={ts.tone} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.tone} format={fmt.pct} onChange={(tone) => set({ tone })} />
           <Knob label="Level" value={ts.level} min={0} max={1} step={0.01} defaultValue={STOCK_DRIVE4558.level} format={fmt.pct} onChange={(level) => set({ level })} />

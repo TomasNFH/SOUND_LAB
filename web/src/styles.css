@@ -1036,6 +1036,88 @@ button.link { all: unset; color: var(--accent-text); cursor: pointer; text-decor
   .tin-stamp { display: none; }
   .shape-tin .tin-top { justify-content: space-between; }
 }
+/* Can pedal (Mid-hump 4558): a round tin lid with a rolled rim and pressed
+   rings. Drive and Tone are black knurled thumbwheels held on with hot
+   glue, Level is an aluminium knob, the footswitch is a keyboard key and
+   the names are embossed label-maker tape. */
+.pedal.shape-can {
+  --ink-on-paint: #2A2826;
+  width: 300px; height: 300px; padding: 0; margin: 0 18px; border-radius: 50%;
+  display: block; isolation: isolate; border: 2px solid #3A3836;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 54%, rgba(0, 0, 0, 0.12) 54.5% 56%, transparent 56.5% 63%, rgba(0, 0, 0, 0.1) 63.5% 65%, transparent 65.5%),
+    radial-gradient(circle at 50% 50%, #D7D9DA 0 30%, transparent 30.5%),
+    radial-gradient(circle at 50% 50%, transparent 0 84%, #8E9295 85%, #F2F3F3 88%, #A7ABAE 91%, #6D7175 95%, #C9CCCE 98%),
+    linear-gradient(135deg, #F4F5F5 0%, #C3C6C8 40%, #E6E8E9 58%, #9EA2A5 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 7px 8px 0 var(--espresso);
+}
+.shape-can .pedal-jack { top: 136px; }
+.shape-can .pedal-led { position: absolute; left: 196px; top: 58px; margin: 0; width: 10px; height: 10px; }
+
+/* The footswitch: an off-white keycap that sinks when the effect is on. */
+.can-key {
+  position: absolute; left: 124px; top: 30px; width: 52px; height: 50px; padding: 0;
+  border-radius: 6px; border: 1.5px solid #8F8C84; color: #4A4843;
+  background: linear-gradient(180deg, #F3F1EC 0%, #DEDBD3 100%);
+  box-shadow: inset 0 -5px 0 #C9C5BB, inset 0 0 0 4px #ECE9E2, 2px 5px 0 rgba(29, 20, 18, 0.35);
+  font-family: var(--font-display); transform: none; transition: transform 0.08s, box-shadow 0.08s;
+}
+.can-key::before { content: 'A'; position: absolute; left: 50%; top: 8px; transform: translateX(-50%); font-size: 0.95rem; font-weight: 500; }
+.can-key::after { content: '←'; position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); font-size: 0.7rem; }
+.pedal.is-on .can-key { transform: translateY(2px); box-shadow: inset 0 -3px 0 #C9C5BB, inset 0 0 0 4px #ECE9E2, 1px 2px 0 rgba(29, 20, 18, 0.35); }
+.can-key:hover:not(:disabled) { filter: brightness(1.03); }
+.pedal.is-off .can-key:hover:not(:disabled) { transform: none; }
+.pedal.is-on .can-key:hover:not(:disabled) { transform: translateY(2px); }
+.can-key:focus-visible { outline: 2px solid var(--turquoise); outline-offset: 3px; }
+
+/* Knobs sit where they are glued: two up top, Level at the bottom. */
+.shape-can .pedal-knobs { display: block; }
+.shape-can .knob { position: absolute; width: 76px; gap: 3px; transform: translateX(-50%); }
+.shape-can .knob:nth-child(1) { left: 74px; top: 88px; }
+.shape-can .knob:nth-child(2) { left: 226px; top: 88px; }
+.shape-can .knob:nth-child(3) { left: 150px; top: 154px; }
+.shape-can .knob-value { color: var(--ink-on-paint); font-size: 0.7rem; }
+.shape-can .knob-label, .can-tape {
+  font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.12em; color: #F2F2F0;
+  background: linear-gradient(180deg, #222 0%, #0B0B0B 100%); padding: 2px 5px 1px; border-radius: 2px;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9), 0 -1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 1px 2px 0 rgba(29, 20, 18, 0.3);
+}
+.shape-can .knob-label { order: -1; font-size: 0.62rem; white-space: nowrap; }
+.can-tape { position: absolute; left: 50%; top: 258px; transform: translateX(-50%) rotate(-3deg); font-size: 0.72rem; white-space: nowrap; }
+
+/* Thumbwheels: a knurled black wheel round a hub with a brass screw. */
+.shape-can .knob:nth-child(-n+2) .knob-dial {
+  width: 54px; height: 54px; border: 0;
+  background:
+    radial-gradient(circle, #1C1B1A 0 11px, #2F2E2C 12px, #0B0B0B 13px 21px, rgba(0, 0, 0, 0) 22px),
+    repeating-conic-gradient(#050505 0 5deg, #4A4845 5deg 10deg);
+  box-shadow: 0 0 0 1.5px #000, 2px 4px 0 rgba(29, 20, 18, 0.35);
+}
+.shape-can .knob:nth-child(-n+2) .knob-pointer::before {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+  background: linear-gradient(90deg, transparent 0 42%, #5A4416 42% 58%, transparent 58%), radial-gradient(circle at 35% 30%, #F4DB8E, #A9802E 80%);
+}
+.shape-can .knob:nth-child(-n+2) .knob-pointer::after { top: 8px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: #9C9A95; }
+/* Hot glue squeezed out round the thumbwheels. */
+.shape-can .knob:nth-child(-n+2) .knob-dial::before {
+  content: ''; position: absolute; inset: -9px -12px -7px -8px; z-index: -1; pointer-events: none;
+  border-radius: 46% 54% 40% 60% / 55% 45% 58% 42%;
+  background: radial-gradient(ellipse at 30% 25%, rgba(255, 255, 255, 0.9), rgba(236, 239, 237, 0.6) 50%, rgba(214, 219, 216, 0.45) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8), inset -2px -3px 4px rgba(120, 128, 124, 0.35), 1px 2px 2px rgba(60, 64, 62, 0.25);
+}
+.shape-can .knob:nth-child(2) .knob-dial::before { border-radius: 60% 40% 52% 48% / 40% 62% 38% 60%; inset: -6px -8px -10px -12px; }
+
+/* Level: a spun aluminium cap. */
+.shape-can .knob:nth-child(3) .knob-dial {
+  width: 58px; height: 58px; border: 3px solid #2A2826;
+  background:
+    repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 0 1px, rgba(0, 0, 0, 0.07) 1px 2px),
+    linear-gradient(135deg, #F5F2E8 0%, #BDB6A2 45%, #8E8775 70%, #D8D2C2 100%);
+  box-shadow: 2px 4px 0 rgba(29, 20, 18, 0.35);
+}
+.shape-can .knob:nth-child(3) .knob-pointer::after { top: 3px; height: 13px; width: 2px; margin-left: -1px; background: #FFFFFF; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3); }
+.shape-can .knob-dial:focus-visible { outline: 2px solid var(--turquoise); outline-offset: 4px; }
 /* Circuit editors: everything under the pedal greys out while it is bypassed. */
 .pedal-off > :not(.pedal-stage) { opacity: 0.45; }
 /* The parametric EQ's bands as printed sections on the Equalizer box. */
