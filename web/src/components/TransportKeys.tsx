@@ -16,12 +16,12 @@ export interface TransportKey {
   title?: string;
 }
 
-// A row of tall mechanical deck keys: a numbered plate with an LED at the
-// top, grip ridges, and the name with its symbol at the bottom.
+// A row of tall mechanical deck keys: an LED at the top, grip ridges, and
+// the name with its symbol at the bottom.
 export function TransportKeys({ keys, label = 'Transport' }: { keys: TransportKey[]; label?: string }) {
   return (
     <div className="mech-keys" role="group" aria-label={label}>
-      {keys.map((k, i) => (
+      {keys.map((k) => (
         <button
           key={k.id}
           className={`mech-key ${k.color} ${k.latched ? 'latched' : ''}`}
@@ -32,10 +32,6 @@ export function TransportKeys({ keys, label = 'Transport' }: { keys: TransportKe
           aria-pressed={k.toggle ? !!k.latched : undefined}
         >
           <span className="mech-key-top" aria-hidden="true">
-            <span className="mech-key-index">
-              {String(i + 1).padStart(2, '0')}
-              <span className="mech-key-index-name"> / {k.label}</span>
-            </span>
             <span className="mech-led" />
           </span>
           <span className="mech-ridges" aria-hidden="true" />

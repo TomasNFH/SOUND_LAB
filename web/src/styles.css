@@ -342,14 +342,13 @@ optgroup { color: var(--muted); }
 .mech-key.latched.terra { background: linear-gradient(180deg, #C0442F 0%, #9C2E22 100%); border-color: #F08071; }
 .mech-key.latched.tan { background: linear-gradient(180deg, #9C5A33 0%, #74401F 100%); border-color: #EBA87F; }
 .mech-key:focus-visible { outline: 2px solid var(--turquoise); outline-offset: 3px; }
-.mech-key-top, .mech-key-bottom { display: flex; justify-content: space-between; align-items: center; width: 100%; }
-.mech-key-index { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(248, 245, 236, 0.7); }
+.mech-key-top { display: flex; justify-content: flex-end; width: 100%; }
+.mech-key-bottom { display: flex; justify-content: space-between; align-items: center; width: 100%; }
 .mech-ridges {
   height: 32px; border-radius: 4px; opacity: 0.4;
   background-image: repeating-linear-gradient(0deg, transparent 0 3px, rgba(0, 0, 0, 0.35) 3px 5px);
 }
 .mech-key-name { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; letter-spacing: 0.06em; text-transform: uppercase; }
-.mech-key.latched .mech-key-index { color: var(--cream-light); }
 .mech-led { width: 10px; height: 10px; border-radius: 50%; background: rgba(248, 245, 236, 0.2); transition: background 0.2s, box-shadow 0.2s; }
 .mech-key.latched.turq .mech-led { background: #72D0D6; box-shadow: 0 0 10px var(--turquoise), 0 0 20px var(--turquoise); }
 .mech-key.latched.terra .mech-led { background: #F08071; box-shadow: 0 0 10px var(--terracotta), 0 0 20px var(--terracotta); }
@@ -406,7 +405,6 @@ optgroup { color: var(--muted); }
   .deck-display { width: 100%; justify-content: space-between; padding: 8px 12px; gap: 8px; font-size: 0.72rem; }
   .mech-keys { gap: 8px; }
   .mech-key { height: 108px; padding: 9px; }
-  .mech-key-index-name { display: none; }
   .mech-key-name { font-size: 0.9rem; }
 }
 .monitor { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
