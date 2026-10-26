@@ -38,7 +38,9 @@ export function App() {
       <header className="header">
         <div className="brand">
           <Logo />
-          <h1>SoundLab</h1>
+          <h1 className="display" aria-label="SoundLab">
+            s<span className="dot turq">o</span>undlab
+          </h1>
         </div>
         <nav className="section-tabs" aria-label="Sections">
           {SECTIONS.map((s) => (

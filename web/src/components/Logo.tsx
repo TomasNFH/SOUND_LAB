@@ -11,6 +11,7 @@ export function Logo({ size = 34 }: { size?: number }) {
         strokeLinecap="round"
       />
       <path
+        className="logo-wave"
         d="M8.6 24c1.6-3.6 3.2-3.6 4.8 0s3.2 3.6 4.8 0 3.2-3.6 4.8 0"
         fill="none"
         stroke="currentColor"
