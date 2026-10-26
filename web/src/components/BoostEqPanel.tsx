@@ -113,7 +113,14 @@ export function BoostEqPanel({ eq, onChange, box }: Props) {
   return (
     <div className={`boost ${box.on ? '' : 'pedal-off'}`}>
       <div className="pedal-stage">
-        <PedalBox name="Boost EQ" paint="cream" shape="wide" lettering="serif" {...box}>
+        <PedalBox
+          name="Boost EQ"
+          subtitle="Booster · Equalizer"
+          paint="tin"
+          shape="tin"
+          feature={<Knob label="Volume" value={eq.volPos} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST_EQ.volPos} format={fmt.pct} onChange={(volPos) => set({ volPos })} />}
+          {...box}
+        >
           <Knob label="Boost" value={eq.gainPos} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST_EQ.gainPos} format={fmt.pct} onChange={(gainPos) => set({ gainPos })} />
           <Knob label="Low cut" value={eq.lowCut} min={0} max={1} step={0.01} defaultValue={0} format={fmt.pct} onChange={(lowCut) => set({ lowCut })} />
           <Knob label="High cut" value={eq.highCut} min={0} max={1} step={0.01} defaultValue={0} format={fmt.pct} onChange={(highCut) => set({ highCut })} />
@@ -122,7 +129,6 @@ export function BoostEqPanel({ eq, onChange, box }: Props) {
           <Knob label="Mid" value={eq.mid} min={0} max={1} step={0.01} defaultValue={0.5} format={centred} onChange={(mid) => set({ mid })} />
           <Knob label="Freq" value={eq.freq} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST_EQ.freq} format={() => hz(v.corners.mid)} onChange={(freq) => set({ freq })} />
           <Knob label="Q (width)" value={eq.width} min={0} max={1} step={0.01} defaultValue={0} format={fmt.pct} onChange={(width) => set({ width })} />
-          <Knob label="Volume" value={eq.volPos} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST_EQ.volPos} format={fmt.pct} onChange={(volPos) => set({ volPos })} />
         </PedalBox>
       </div>
       <div className="switches">
