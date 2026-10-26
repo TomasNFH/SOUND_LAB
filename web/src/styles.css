@@ -303,6 +303,39 @@ optgroup { color: var(--muted); }
 @media (max-width: 640px) {
   .tape-key { width: 56px; height: 44px; }
 }
+
+/* The control bar is the deck itself: an espresso faceplate with the keys
+   sunk into a darker well, a recessed tape counter and metal monitor
+   controls. Ink colours flip to cream inside it. */
+.panel.control-bar {
+  --text: var(--cream-light); --muted: rgba(248, 245, 236, 0.68);
+  background: linear-gradient(180deg, #46322C 0%, var(--espresso) 100%);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 6px 6px 0 var(--ink);
+}
+.control-bar .tape-deck { background: #1d1412; }
+.tape-counter {
+  font-family: var(--font-display); font-weight: 600; font-size: 0.95rem; letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums; color: var(--cream-light);
+  background: #1d1412; padding: 6px 12px; border-radius: 6px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.tape-counter .of { color: var(--muted); }
+.control-bar .seek { accent-color: var(--terracotta); }
+.control-bar .check input { accent-color: var(--turquoise); }
+/* A/B: a metal two-way selector, the lit side filled. */
+.control-bar .ab-switch {
+  border-color: #1d1412;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #FBF9F3 0%, #E6E0D2 55%, #D3CBBA 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 3px 0 #1d1412;
+}
+.control-bar .ab-switch:hover:not(:disabled) { transform: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 3px 0 #1d1412; }
+.control-bar .ab-switch:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 0 #1d1412; }
+.control-bar .ab-switch span { color: rgba(44, 30, 26, 0.68); }
+.control-bar .ab-switch.is-dry span.on, .control-bar .ab-switch.is-wet span.on { color: var(--on-accent); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3); }
+.control-bar .knob-pointer::after { background: var(--ink); }
 .monitor { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
 
 /* Signal chain: the source splits into branch A and branch B (a grid of

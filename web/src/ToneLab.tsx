@@ -234,8 +234,8 @@ export function ToneLab({ active, showPresets }: { active: boolean; showPresets:
               { id: 'loop', label: 'Loop', icon: TAPE_ICONS.loop, onPress: () => setLoop((l) => !l), latched: loop, toggle: true, lamp: 'turq' },
             ]}
           />
-          <span className="time">
-            {formatTime(position)} / {formatTime(duration)}
+          <span className="time tape-counter">
+            {formatTime(position)} <span className="of">/ {formatTime(duration)}</span>
           </span>
           <input
             className="seek"
