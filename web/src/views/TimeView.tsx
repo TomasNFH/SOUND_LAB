@@ -57,9 +57,9 @@ export function TimeView({ engine, settings, branch }: Props) {
       let level = d.mix;
       for (let k = 1; d.time * k <= WINDOW_S && level > 0.005; k++) {
         // Tape: the loop lowpass applies k-1 more times; show how much
-        // top end is left as the colour fading from green to dark.
+        // top end is left as the colour fading from terracotta to dark.
         const bright = tape ? Math.pow(Math.min(1, tapeLoopCutoff(d.tone) / 8000), k - 1) : 1;
-        spike(d.time * k, level, `rgba(111,207,111,${0.25 + 0.75 * bright})`);
+        spike(d.time * k, level, `rgba(${COLORS.wetRgb},${0.25 + 0.75 * bright})`);
         level *= d.feedback;
       }
       if (tape) {

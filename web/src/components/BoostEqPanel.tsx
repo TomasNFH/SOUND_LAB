@@ -198,7 +198,7 @@ export function BoostEqPanel({ eq, onChange }: Props) {
         </div>
       </div>
 
-      <p className="muted small view-caption">Frequency response: your values (green) vs the netlist (dashed), same knobs</p>
+      <p className="muted small view-caption">Frequency response: your values (terracotta) vs the netlist (dashed), same knobs</p>
       <CompareResponseView
         current={(f) => boostEqResponseDb(eq, f)}
         stock={(f) => boostEqResponseDb(stockAtKnobs, f)}
@@ -238,7 +238,7 @@ export function BoostEqPanel({ eq, onChange }: Props) {
 
       <div className="mods-head">
         <h3>Schematic</h3>
-        <span className="muted inline">boost_eq_cortes_bypass_2x4558.cir · changed parts in orange</span>
+        <span className="muted inline">boost_eq_cortes_bypass_2x4558.cir · changed parts in amber</span>
       </div>
       <div className="schematic-wrap">
         <BoostEqSchematic eq={eq} />

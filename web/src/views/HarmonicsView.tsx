@@ -111,7 +111,7 @@ export function HarmonicsView({ engine }: Props) {
     <>
       <canvas ref={canvasRef} className="view-canvas tall" />
       <p className="muted small">
-        Grey is branch A, colour is branch B. Orange bars are even harmonics (2×, 4×…): the octave colour that
+        Grey is branch A, colour is branch B. Amber bars are even harmonics (2×, 4×…): the octave colour that
         asymmetric clipping adds. Symmetric clipping makes odd ones (3×, 5×…).
       </p>
     </>

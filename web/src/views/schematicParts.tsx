@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 // Schematic symbols for the circuit diagrams. Coordinates in SVG units;
-// `hot` draws a part that differs from stock in orange.
+// `hot` draws a part that differs from stock in amber.
 
 export const ohms = (v: number) => (v >= 1e6 ? `${+(v / 1e6).toFixed(2)}M` : v >= 1e3 ? `${+(v / 1e3).toFixed(1)}k` : `${Math.round(v)}`);
 export const farads = (v: number) =>

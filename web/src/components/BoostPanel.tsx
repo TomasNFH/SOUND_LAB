@@ -109,7 +109,7 @@ export function BoostPanel({ boost, onChange }: Props) {
         </div>
       </div>
 
-      <p className="muted small view-caption">Frequency response: your values (green) vs the netlist (dashed)</p>
+      <p className="muted small view-caption">Frequency response: your values (terracotta) vs the netlist (dashed)</p>
       <BoostResponseView boost={boost} />
 
       <table className="corner-table">
@@ -142,7 +142,7 @@ export function BoostPanel({ boost, onChange }: Props) {
 
       <div className="mods-head">
         <h3>Schematic</h3>
-        <span className="muted inline">clean_boost_4558.cir · changed parts in orange</span>
+        <span className="muted inline">clean_boost_4558.cir · changed parts in amber</span>
       </div>
       <div className="schematic-wrap">
         <BoostSchematic boost={boost} />

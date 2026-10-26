@@ -199,7 +199,7 @@ button:focus-visible, select:focus-visible, input.text:focus-visible { outline: 
 .views { padding-top: 10px; }
 .tabs { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
 .tab { padding: 5px 14px; font-size: 0.85rem; border-radius: 999px; background: transparent; border-color: transparent; color: var(--muted); }
-.tab:hover:not(:disabled) { color: var(--accent); }
+.tab:hover:not(:disabled):not(.on) { color: var(--accent); }
 .tab.on { background: var(--espresso); border-color: var(--espresso); color: var(--cream-light); }
 .view-canvas { display: block; width: 100%; height: 260px; background: var(--screen); border-radius: 6px; touch-action: none; }
 .view-canvas.tall { height: 340px; }
@@ -224,7 +224,7 @@ select.compact { min-width: 0; flex: 0 0 auto; padding: 4px 8px; }
 .seg { display: inline-flex; border: 1.5px solid var(--espresso); border-radius: 8px; overflow: hidden; background: var(--button); }
 .seg button { border: 0; border-radius: 0; padding: 5px 10px; font-size: 0.82rem; background: transparent; color: var(--muted); }
 .seg button + button { border-left: 1px solid var(--border); }
-.seg button:hover:not(:disabled) { color: var(--text); }
+.seg button:hover:not(:disabled):not(.on) { color: var(--text); }
 .seg button.on { background: var(--espresso); color: var(--cream-light); }
 .eq-bands { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
 .eq-band { border: 1.5px solid var(--border-strong); border-radius: 12px; padding: 8px 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -367,10 +367,17 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .testpoints th { color: var(--muted); font-weight: 500; font-size: 0.78rem; }
 
 /* Circuit view */
+/* Circuit diagrams sit on the same espresso screen as the charts, with the
+   ink colours flipped to cream. */
+.circuit-svg, .schematic-wrap {
+  --text: var(--cream-light); --muted: rgba(243, 239, 224, 0.6); --border: rgba(243, 239, 224, 0.25);
+  --accent: #E86A55; --warn: #E8B04A;
+  background: var(--screen); border-radius: 10px;
+}
 .circuit-svg { display: block; width: 100%; height: auto; }
 .cv-wire { stroke: var(--muted); stroke-width: 1.2; fill: none; }
 .cv-box { cursor: pointer; }
-.cv-box rect { fill: var(--panel); stroke: var(--border); stroke-width: 1; transition: stroke 0.1s; }
+.cv-box rect { fill: rgba(243, 239, 224, 0.06); stroke: var(--border); stroke-width: 1; transition: stroke 0.1s; }
 .cv-box.tube rect { fill: var(--accent-2-soft); }
 .cv-box.changed rect { stroke: var(--warn); stroke-width: 1.5; }
 .cv-box.selected rect { stroke: var(--accent); stroke-width: 2; }
@@ -437,7 +444,7 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .part-section { margin: 10px 0 2px; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px; }
 
 /* Clean boost schematic */
-.schematic-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px; overflow-x: auto; }
+.schematic-wrap { border: 1.5px solid var(--espresso); padding: 8px; overflow-x: auto; }
 .schematic { display: block; width: 100%; min-width: 560px; height: auto; }
 .sch-wire, .sch-part { fill: none; stroke: var(--muted); stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; }
 .sch-part { stroke: var(--text); }
@@ -502,11 +509,13 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
 .fb-cell.open::before { display: none; }
 .fb-cell {
   position: relative; height: 34px; padding: 0; border: 0; border-radius: 0; background: transparent;
-  border-right: 2px solid var(--border-strong); display: flex; align-items: center; justify-content: center;
+  border-right: 2px solid var(--espresso); display: flex; align-items: center; justify-content: center;
 }
 .fb-cell.open { border-right: 5px solid var(--espresso); }
+/* Rosewood-free: a light maple neck behind the fretted cells. */
+.fb-string .fb-cell:not(.open) { background: #E6C594; }
 /* The string itself, running through the middle of each fret. */
-.fb-cell::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--muted); }
+.fb-cell::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(61, 43, 38, 0.6); }
 .fb-string:nth-child(4) .fb-cell::before, .fb-string:nth-child(5) .fb-cell::before { height: 2px; }
 .fb-string:nth-child(6) .fb-cell::before { height: 3px; }
 .fb-cell:hover::after { content: ''; position: absolute; inset: 3px; border-radius: 6px; background: var(--chip); }
@@ -515,7 +524,7 @@ button.link { all: unset; color: var(--accent); cursor: pointer; text-decoration
   display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 600;
   transition: opacity 0.1s;
 }
-.fb-note.in { background: var(--chip-on); color: var(--text); }
+.fb-note.in { background: var(--turquoise); color: var(--ink); }
 .fb-note.root { background: var(--accent); color: var(--on-accent); }
 .fb-note.out { color: var(--faint); font-weight: 400; background: var(--panel); }
 .fb-note.dim { opacity: 0.25; }

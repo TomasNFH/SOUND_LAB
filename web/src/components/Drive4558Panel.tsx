@@ -177,7 +177,7 @@ export function Drive4558Panel({ ts, onChange }: Props) {
         </div>
       </div>
 
-      <p className="muted small view-caption">Frequency response before clipping: your values (green) vs stock (dashed), same knobs</p>
+      <p className="muted small view-caption">Frequency response before clipping: your values (terracotta) vs stock (dashed), same knobs</p>
       <CompareResponseView
         current={(f) => drive4558ResponseDb(ts, f)}
         stock={(f) => drive4558ResponseDb(stockAtKnobs, f)}
@@ -222,7 +222,7 @@ export function Drive4558Panel({ ts, onChange }: Props) {
 
       <div className="mods-head">
         <h3>Schematic</h3>
-        <span className="muted inline">Classic op-amp overdrive with a JRC4558 · changed parts in orange</span>
+        <span className="muted inline">Classic op-amp overdrive with a JRC4558 · changed parts in amber</span>
       </div>
       <div className="schematic-wrap">
         <Drive4558Schematic ts={ts} />

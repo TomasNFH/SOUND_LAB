@@ -34,7 +34,7 @@ export function ResponseView({ ctx, settings, activeBand }: Props) {
 
     eq.bands.forEach((band, i) => {
       if (!band.on) return;
-      plot(eqResponseDb(ctx, eq, freqs, i), i === activeBand ? COLORS.diff : 'rgba(111,168,255,0.45)', i === activeBand ? 2 : 1);
+      plot(eqResponseDb(ctx, eq, freqs, i), i === activeBand ? COLORS.diff : `rgba(${COLORS.accent2Rgb},0.45)`, i === activeBand ? 2 : 1);
     });
     const genericStack = settings.amp.on && settings.amp.model === 'generic';
     if (genericStack) {

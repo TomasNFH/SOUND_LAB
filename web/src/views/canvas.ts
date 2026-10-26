@@ -68,15 +68,19 @@ export function useCanvasLoop(draw: DrawFn, animate = true) {
   return canvasRef;
 }
 
+// Drawn on the espresso screen (--screen): the theme's accents, lifted a
+// little so they read on dark.
 export const COLORS = {
-  grid: 'rgba(255,255,255,0.07)',
-  gridStrong: 'rgba(255,255,255,0.16)',
-  label: '#7d808a',
-  dry: '#8d909a',
-  wet: '#6fcf6f',
-  diff: '#f0a848',
-  accent2: '#6fa8ff',
-  highlight: 'rgba(111,207,111,0.10)',
+  grid: 'rgba(243,239,224,0.08)',
+  gridStrong: 'rgba(243,239,224,0.18)',
+  label: 'rgba(243,239,224,0.55)',
+  dry: '#BFB2A0',
+  wet: '#E86A55',
+  wetRgb: '232,106,85',
+  diff: '#E8B04A',
+  accent2: '#5CC6CC',
+  accent2Rgb: '92,198,204',
+  highlight: 'rgba(232,106,85,0.12)',
 };
 
 export const LOG_MIN_HZ = 20;
