@@ -32,6 +32,11 @@ const SOURCES: { id: SourceKind; label: string }[] = [
   { id: 'live', label: 'Live' },
 ];
 
+// The deck's volume readout, always two digits (-06.0 dB, -18.5 dB) so it
+// doesn't jump in width as the dial turns. 0 dB gets a figure space for the
+// sign.
+const formatDeckDb = (db: number) => `${db < 0 ? '-' : '\u2007'}${Math.abs(db).toFixed(1).padStart(4, '0')} dB`;
+
 const formatTime = (s: number) => {
   const tenths = Math.floor(s * 10);
   const sec = (tenths % 600) / 10;
@@ -282,7 +287,7 @@ export function ToneLab({ active, showPresets }: { active: boolean; showPresets:
             <Knob label="Volume" value={masterDb} min={-40} max={0} step={0.5} defaultValue={-6} format={fmt.db} onChange={setMasterDb} />
           </div>
           <span className="deck-volume-title">
-            VOLUME <span className="deck-ok">{fmt.db(masterDb)}</span>
+            VOLUME <span className="deck-ok">{formatDeckDb(masterDb)}</span>
           </span>
         </div>
       </section>
