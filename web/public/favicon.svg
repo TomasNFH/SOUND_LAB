@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-3 -3 40 40">
+  <!-- The SoundLab flask (components/Logo.tsx) on a cream tile, so it reads on light and dark tab bars. -->
+  <rect x="-3" y="-3" width="40" height="40" rx="9" fill="#F3EFE0" />
+  <path
+    d="M12.5 3h9M14 3v9.5L5.2 27.6C4.2 29.6 5.3 31 7.4 31h19.2c2.1 0 3.2-1.4 2.2-3.4L20 12.5V3"
+    fill="none"
+    stroke="#3D2B26"
+    stroke-width="2.6"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  />
+  <path
+    d="M8.6 24c1.6-3.6 3.2-3.6 4.8 0s3.2 3.6 4.8 0 3.2-3.6 4.8 0"
+    fill="none"
+    stroke="#E05A47"
+    stroke-width="2.6"
+    stroke-linecap="round"
+  />
+</svg>
