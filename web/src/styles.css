@@ -1125,13 +1125,120 @@ button.link { all: unset; color: var(--accent-text); cursor: pointer; text-decor
 .pedal .eq-band { border: 1.5px solid color-mix(in srgb, var(--ink-on-paint) 40%, transparent); background: rgba(255, 255, 255, 0.14); }
 .pedal .band-title { color: var(--ink-on-paint); font-family: var(--font-display); font-weight: 600; font-size: 0.78rem; }
 .pedal .check input { accent-color: var(--ink-on-paint); }
-/* The Equalizer is a console-width box: each band's knobs sit side by side. */
-.pedal-eqorange.shape-wide { width: min(100% - 28px, 760px); max-width: none; }
 .pedal .eq-band { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 4px 6px; padding: 8px 6px; }
 .pedal .eq-band .band-title { flex: 1 1 100%; justify-content: center; }
 @media (max-width: 640px) {
-  .pedal-eqorange.shape-wide { width: auto; }
   .pedal .eq-bands { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Studio EQ box (Parametric EQ): gloss blue with white print, one column
+   per band split by printed rules, aluminium Freq and Gain knobs with
+   dotted scales, small black Q knobs, jacks on top, a lowercase name and
+   a chrome stomp switch under a jewel lamp. */
+.pedal.shape-studio {
+  --paint: #1E72BF; --ink-on-paint: #F4F8FC; --studio-ink: #0E1A26;
+  width: min(100% - 28px, 640px); max-width: none; padding: 30px 18px 18px; border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 12%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.1) 0%, transparent 5%, transparent 95%, rgba(0, 0, 0, 0.12) 100%),
+    var(--paint);
+  border-color: #0E3A63; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 6px 6px 0 var(--espresso);
+}
+.shape-studio .pedal-jack {
+  top: -18px; width: 28px; height: 16px; border-radius: 3px 3px 0 0;
+  background: linear-gradient(90deg, #A39C90 0%, #EDEAE2 45%, #A39C90 100%);
+}
+.shape-studio .pedal-jack.in { right: 64px; left: auto; }
+.shape-studio .pedal-jack.out { left: 64px; right: auto; }
+.shape-studio .pedal-knobs { align-self: stretch; }
+.shape-studio .eq-bands { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px 0; }
+.shape-studio .eq-band {
+  flex-direction: column; flex-wrap: nowrap; align-items: center; justify-content: flex-start; gap: 10px; padding: 0 2px 4px;
+  border: 0; border-left: 1.5px solid color-mix(in srgb, var(--ink-on-paint) 70%, transparent); border-radius: 0; background: none;
+}
+.shape-studio .eq-band:first-child { border-left: 0; }
+.shape-studio .band-title { flex: none; font-weight: 500; font-size: 0.74rem; text-transform: lowercase; letter-spacing: 0; white-space: nowrap; }
+.shape-studio .knob { width: 84px; gap: 2px; }
+.shape-studio .knob-label {
+  order: 1; margin-top: 4px; font-family: var(--font-display); font-weight: 400; font-size: 0.82rem;
+  text-transform: lowercase; letter-spacing: 0;
+}
+.shape-studio .knob-value { order: 2; font-size: 0.66rem; opacity: 0.85; }
+.eq-knob { position: relative; }
+/* Scale ends printed either side of the knob's skirt. */
+.eq-knob::before, .eq-knob::after {
+  position: absolute; top: 44px; font-family: var(--font-display); font-size: 0.6rem; line-height: 1;
+  color: var(--ink-on-paint); pointer-events: none;
+}
+.eq-knob::before { content: attr(data-lo); right: calc(50% + 21px); }
+.eq-knob::after { content: attr(data-hi); left: calc(50% + 21px); }
+.eq-knob.q::before, .eq-knob.q::after { top: 26px; }
+.eq-knob.q::before { right: calc(50% + 17px); }
+.eq-knob.q::after { left: calc(50% + 17px); }
+/* Aluminium knobs: a spun cap on a bright skirt, black pointer. */
+.shape-studio .eq-knob .knob-dial {
+  width: 46px; height: 46px; margin: 6px 0 0; border: 1.5px solid #1F2830;
+  background:
+    repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.16) 0 1px, rgba(0, 0, 0, 0.05) 1px 2px),
+    conic-gradient(from 20deg, #F6F8FA, #A7AEB6 25%, #EEF1F4 50%, #98A0A9 75%, #F6F8FA);
+  box-shadow: 0 0 0 3px #C6CCD2, 0 0 0 4.5px #1F2830, 0 4px 0 4px rgba(14, 26, 38, 0.4);
+}
+.shape-studio .eq-knob .knob-pointer::after { top: 2px; height: 15px; width: 3px; margin-left: -1.5px; background: #141A20; }
+.shape-studio .eq-knob.q .knob-dial {
+  width: 28px; height: 28px; border: 1.5px solid #05080B;
+  background: radial-gradient(circle at 35% 30%, #3A3F45 0%, #0B0E11 70%);
+  box-shadow: 0 3px 0 rgba(14, 26, 38, 0.45);
+}
+.shape-studio .eq-knob.q .knob-pointer::after { top: 2px; height: 9px; width: 2px; margin-left: -1px; background: #F4F8FC; }
+/* Printed dots round each knob over its 270° sweep. */
+.shape-studio .eq-knob .knob-dial::before {
+  content: ''; position: absolute; inset: -12px; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(from 225deg, var(--ink-on-paint) 0 3deg, transparent 3deg 27deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 calc(50% - 3px), #000 calc(50% - 2.5px) 50%, transparent 50.5%), conic-gradient(from 138deg, transparent 0 84deg, #000 84deg);
+  mask: radial-gradient(circle, transparent 0 calc(50% - 3px), #000 calc(50% - 2.5px) 50%, transparent 50.5%), conic-gradient(from 138deg, transparent 0 84deg, #000 84deg);
+  -webkit-mask-composite: source-in; mask-composite: intersect;
+}
+.shape-studio .eq-knob.q .knob-dial::before { inset: -9px; }
+.shape-studio .knob-dial:focus-visible { outline: 2px solid var(--ink-on-paint); outline-offset: 6px; }
+.eq-shelf { flex: none; width: 44px; height: 72px; fill: none; stroke: var(--ink-on-paint); stroke-width: 2; stroke-linecap: round; }
+
+.studio-name {
+  display: flex; align-items: center; gap: 12px; margin: 22px 0 6px;
+  font-family: var(--font-display); font-weight: 400; font-size: 3.2rem; line-height: 1; letter-spacing: 0.01em;
+  color: var(--studio-ink);
+}
+.studio-dots { display: inline-flex; gap: 6px; }
+.studio-dots i { width: 22px; height: 22px; border-radius: 50%; border: 5px solid var(--studio-ink); }
+.studio-dots i:nth-child(1) { background: #EE8A2C; }
+.studio-dots i:nth-child(2) { background: #1E8A4E; }
+.studio-dots i:nth-child(3) { background: #E25660; }
+.studio-foot { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 8px; }
+.studio-label { font-family: var(--font-display); font-size: 0.85rem; color: var(--ink-on-paint); }
+/* A jewel lamp: a chrome bezel round a faceted lens. */
+.shape-studio .pedal-led {
+  width: 24px; height: 24px; margin: 0; border: 3px solid #D3D8DD;
+  background: repeating-conic-gradient(rgba(255, 255, 255, 0.5) 0 15deg, rgba(150, 160, 170, 0.5) 15deg 30deg), #C7CED5;
+  box-shadow: 0 0 0 1.5px #1F2830;
+}
+.pedal.shape-studio.is-on .pedal-led {
+  background: repeating-conic-gradient(rgba(255, 255, 255, 0.55) 0 15deg, rgba(120, 200, 255, 0.4) 15deg 30deg), #BFE6FF;
+  box-shadow: 0 0 0 1.5px #1F2830, 0 0 12px 4px rgba(170, 225, 255, 0.85);
+}
+/* The stomp switch: a chrome button inside a nut. */
+.studio-stomp {
+  width: 50px; height: 50px; padding: 0; margin: 10px; border-radius: 50%; border: 2px solid #1F2830;
+  background: radial-gradient(circle at 40% 35%, #FFFFFF 0%, #C9CED3 45%, #8B929A 100%);
+  box-shadow: 0 0 0 7px #B8BEC5, 0 0 0 8.5px #1F2830, 0 5px 0 8px rgba(14, 26, 38, 0.45);
+  transform: none;
+}
+.studio-stomp:hover:not(:disabled) { transform: none; filter: brightness(1.04); box-shadow: 0 0 0 7px #B8BEC5, 0 0 0 8.5px #1F2830, 0 5px 0 8px rgba(14, 26, 38, 0.45); }
+.studio-stomp:active:not(:disabled) { transform: translateY(2px); }
+.studio-stomp:focus-visible { outline: 2px solid var(--ink-on-paint); outline-offset: 12px; }
+@media (max-width: 640px) {
+  .pedal.shape-studio { width: auto; flex: 1 1 100%; margin: 0 14px; }
+  .shape-studio .eq-bands { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .shape-studio .eq-band:nth-child(3n + 1) { border-left: 0; }
+  .studio-name { font-size: 2.5rem; }
 }
 
 /* Tuner pedal: a needle meter window over the calibration knob. */

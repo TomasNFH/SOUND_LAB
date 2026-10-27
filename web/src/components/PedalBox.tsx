@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-export type PedalPaint = 'teal' | 'cream' | 'skyblue' | 'orange' | 'navy' | 'eqorange' | 'mint' | 'rust' | 'amp' | 'tuner' | 'tin' | 'can';
-export type PedalShape = 'upright' | 'small' | 'slim' | 'wide' | 'amp' | 'tin' | 'can';
+export type PedalPaint = 'teal' | 'cream' | 'skyblue' | 'orange' | 'navy' | 'eqorange' | 'mint' | 'rust' | 'amp' | 'tuner' | 'tin' | 'can' | 'blue';
+export type PedalShape = 'upright' | 'small' | 'slim' | 'wide' | 'amp' | 'tin' | 'can' | 'studio';
 export type PedalLettering = 'display' | 'script' | 'block' | 'tall' | 'serif';
 
 type Props = {
@@ -32,11 +32,14 @@ type Props = {
 // band with a toggle and one big knob over a green printed panel. The can
 // shape is a round tin lid: two thumbwheels and an aluminium knob glued
 // on, a keyboard key for a footswitch and label-maker tape for the names.
+// The studio shape is a gloss-painted EQ box: columns of aluminium knobs
+// split by printed rules, jacks on top, a lowercase name and a chrome
+// stomp switch under a jewel lamp.
 export function PedalBox({ name, subtitle, paint, shape = 'upright', lettering = 'display', grille, on, onToggle, switchLabel, children, feature }: Props) {
   const label = `${name}${subtitle ? ` ${subtitle}` : ''}`;
   const toggle = (
     <button
-      className={shape === 'amp' ? 'amp-power' : shape === 'tin' ? 'tin-toggle' : shape === 'can' ? 'can-key' : 'pedal-switch'}
+      className={shape === 'amp' ? 'amp-power' : shape === 'tin' ? 'tin-toggle' : shape === 'can' ? 'can-key' : shape === 'studio' ? 'studio-stomp' : 'pedal-switch'}
       onClick={onToggle}
       aria-pressed={on}
       aria-label={switchLabel ?? `${label} on`}
@@ -63,6 +66,31 @@ export function PedalBox({ name, subtitle, paint, shape = 'upright', lettering =
           </div>
         </div>
         <div className="amp-grille" aria-hidden="true" />
+      </div>
+    );
+  }
+
+  if (shape === 'studio') {
+    return (
+      <div className={`pedal pedal-${paint} shape-studio ${on ? 'is-on' : 'is-off'}`}>
+        <span className="pedal-jack in" aria-hidden="true" />
+        <span className="pedal-jack out" aria-hidden="true" />
+        <div className="pedal-knobs">{children}</div>
+        <div className="studio-name" aria-hidden="true">
+          {name}
+          <span className="studio-dots">
+            <i />
+            <i />
+            <i />
+          </span>
+        </div>
+        <div className="studio-foot">
+          <span className="pedal-led" aria-hidden="true" />
+          <span className="studio-label" aria-hidden="true">
+            bypass
+          </span>
+          {toggle}
+        </div>
       </div>
     );
   }
