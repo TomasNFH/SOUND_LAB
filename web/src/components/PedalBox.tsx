@@ -19,8 +19,6 @@ type Props = {
   switchLabel?: string;
   // The knobs across the top of the box.
   children: ReactNode;
-  // Tin shape only: the big knob in the top band, beside the toggle.
-  feature?: ReactNode;
 };
 
 // An illustrated stompbox: a painted enclosure with corner screws, the
@@ -29,13 +27,14 @@ type Props = {
 // stick out of the sides. The amp shape is a head instead: a faceplate
 // with the knobs and a jewel lamp power switch over a grille cloth. The
 // tin shape is a box built from an old sewing-machine tin: a rusty cream
-// band with a toggle and one big knob over a green printed panel. The can
+// panel beside a green printed one, with the toggle and each knob where
+// it sits on the real box (the caller gives each knob a slot). The can
 // shape is a round tin lid: two thumbwheels and an aluminium knob glued
 // on, a keyboard key for a footswitch and label-maker tape for the names.
 // The studio shape is a gloss-painted EQ box: columns of aluminium knobs
 // split by printed rules, jacks on top, a lowercase name and a chrome
 // stomp switch under a jewel lamp.
-export function PedalBox({ name, subtitle, paint, shape = 'upright', lettering = 'display', grille, on, onToggle, switchLabel, children, feature }: Props) {
+export function PedalBox({ name, subtitle, paint, shape = 'upright', lettering = 'display', grille, on, onToggle, switchLabel, children }: Props) {
   const label = `${name}${subtitle ? ` ${subtitle}` : ''}`;
   const toggle = (
     <button
@@ -116,23 +115,21 @@ export function PedalBox({ name, subtitle, paint, shape = 'upright', lettering =
       <div className={`pedal pedal-${paint} shape-tin ${on ? 'is-on' : 'is-off'}`}>
         <span className="pedal-jack in" aria-hidden="true" />
         <span className="pedal-jack out" aria-hidden="true" />
-        <div className="tin-top">
-          <span className="tin-toggle-wrap">{toggle}</span>
-          <span className="pedal-led" aria-hidden="true" />
-          <span className="tin-stamp" aria-hidden="true" />
-          {feature && <div className="tin-feature">{feature}</div>}
-        </div>
-        <div className="tin-panel">
-          <span className="tin-name" aria-hidden="true">
-            {name}
+        <span className="tin-cream" aria-hidden="true">
+          <span className="tin-stamp" />
+        </span>
+        <span className="tin-stripe" aria-hidden="true" />
+        <span className="tin-name" aria-hidden="true">
+          {name}
+        </span>
+        {subtitle && (
+          <span className="tin-sub" aria-hidden="true">
+            {subtitle}
           </span>
-          {subtitle && (
-            <span className="tin-sub" aria-hidden="true">
-              {subtitle}
-            </span>
-          )}
-          <div className="pedal-knobs">{children}</div>
-        </div>
+        )}
+        <span className="tin-toggle-wrap">{toggle}</span>
+        <span className="pedal-led" aria-hidden="true" />
+        {children}
       </div>
     );
   }

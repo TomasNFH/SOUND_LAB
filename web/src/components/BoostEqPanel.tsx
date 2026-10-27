@@ -113,22 +113,34 @@ export function BoostEqPanel({ eq, onChange, box }: Props) {
   return (
     <div className={`boost ${box.on ? '' : 'pedal-off'}`}>
       <div className="pedal-stage">
-        <PedalBox
-          name="Boost EQ"
-          subtitle="Booster · Equalizer"
-          paint="tin"
-          shape="tin"
-          feature={<Knob label="Volume" value={eq.volPos} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST_EQ.volPos} format={fmt.pct} onChange={(volPos) => set({ volPos })} />}
-          {...box}
-        >
-          <Knob label="Boost" value={eq.gainPos} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST_EQ.gainPos} format={fmt.pct} onChange={(gainPos) => set({ gainPos })} />
-          <Knob label="Low cut" value={eq.lowCut} min={0} max={1} step={0.01} defaultValue={0} format={fmt.pct} onChange={(lowCut) => set({ lowCut })} />
-          <Knob label="High cut" value={eq.highCut} min={0} max={1} step={0.01} defaultValue={0} format={fmt.pct} onChange={(highCut) => set({ highCut })} />
-          <Knob label="Bass" value={eq.bass} min={0} max={1} step={0.01} defaultValue={0.5} format={centred} onChange={(bass) => set({ bass })} />
-          <Knob label="Treble" value={eq.treble} min={0} max={1} step={0.01} defaultValue={0.5} format={centred} onChange={(treble) => set({ treble })} />
-          <Knob label="Mid" value={eq.mid} min={0} max={1} step={0.01} defaultValue={0.5} format={centred} onChange={(mid) => set({ mid })} />
-          <Knob label="Freq" value={eq.freq} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST_EQ.freq} format={() => hz(v.corners.mid)} onChange={(freq) => set({ freq })} />
-          <Knob label="Q (width)" value={eq.width} min={0} max={1} step={0.01} defaultValue={0} format={fmt.pct} onChange={(width) => set({ width })} />
+        <PedalBox name="Apollo" subtitle="Sewing Machine" paint="tin" shape="tin" switchLabel="Boost EQ on" {...box}>
+          <div className="tin-slot slot-volume">
+            <Knob label="Volume" value={eq.volPos} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST_EQ.volPos} format={fmt.pct} onChange={(volPos) => set({ volPos })} />
+          </div>
+          <div className="tin-slot slot-lowcut">
+            <Knob label="Low cut" value={eq.lowCut} min={0} max={1} step={0.01} defaultValue={0} format={fmt.pct} onChange={(lowCut) => set({ lowCut })} />
+          </div>
+          <div className="tin-slot slot-highcut">
+            <Knob label="High cut" value={eq.highCut} min={0} max={1} step={0.01} defaultValue={0} format={fmt.pct} onChange={(highCut) => set({ highCut })} />
+          </div>
+          <div className="tin-slot slot-boost">
+            <Knob label="Boost" value={eq.gainPos} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST_EQ.gainPos} format={fmt.pct} onChange={(gainPos) => set({ gainPos })} />
+          </div>
+          <div className="tin-slot slot-bass">
+            <Knob label="Bass" value={eq.bass} min={0} max={1} step={0.01} defaultValue={0.5} format={centred} onChange={(bass) => set({ bass })} />
+          </div>
+          <div className="tin-slot slot-treble">
+            <Knob label="Treble" value={eq.treble} min={0} max={1} step={0.01} defaultValue={0.5} format={centred} onChange={(treble) => set({ treble })} />
+          </div>
+          <div className="tin-slot slot-mid">
+            <Knob label="Mid" value={eq.mid} min={0} max={1} step={0.01} defaultValue={0.5} format={centred} onChange={(mid) => set({ mid })} />
+          </div>
+          <div className="tin-slot slot-freq">
+            <Knob label="Freq" value={eq.freq} min={0} max={1} step={0.01} defaultValue={STOCK_BOOST_EQ.freq} format={() => hz(v.corners.mid)} onChange={(freq) => set({ freq })} />
+          </div>
+          <div className="tin-slot slot-q">
+            <Knob label="Q (width)" value={eq.width} min={0} max={1} step={0.01} defaultValue={0} format={fmt.pct} onChange={(width) => set({ width })} />
+          </div>
         </PedalBox>
       </div>
       <div className="switches">

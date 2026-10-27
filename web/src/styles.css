@@ -928,38 +928,62 @@ button.link { all: unset; color: var(--accent-text); cursor: pointer; text-decor
   .pedal.shape-wide, .pedal.shape-amp { width: auto; max-width: none; flex: 1 1 100%; margin: 0 14px; }
   .pedal.shape-wide .pedal-plate { flex-direction: column; }
 }
-/* Tin box (Boost EQ): built from an old sewing-machine tin. A rusty cream
-   band with a toggle bat and a big aluminium knob over a speckled green
-   panel edged with a gold pinstripe, red block lettering and black
-   chicken-head knobs. The textures are SVG noise. */
+/* Tin box (Boost EQ): an Apollo sewing-machine tin as the real pedal is
+   built. A rusty cream panel on the left holds the aluminium Volume knob
+   over Low cut and High cut; the green panel, edged with a gold pinstripe,
+   carries the red APOLLO with the on/off toggle and Boost knob over it and
+   a row of chicken-head knobs (Bass, Treble, Mid, Freq, Q) above "Sewing
+   Machine". On a phone the tin stands upright, as in the photo. The
+   textures are SVG noise. */
 .pedal.shape-tin {
   --tin-cream: #DCCFAE; --tin-green: #213D2E; --tin-gold: #D9C27E; --tin-red: #C8372A;
   --ink-on-paint: #F1E6C4;
-  width: 420px; max-width: calc(100vw - 96px); padding: 0; overflow: visible;
+  display: block; width: 640px; height: 300px; padding: 0; margin: 0 18px;
   border: 2px solid #2A1A12; border-radius: 22px;
-  background: var(--tin-green);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.84 0 0 0 0 0.72 6 0 0 0 -3.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 60% 30%, rgba(255, 255, 255, 0.06), transparent 60%),
+    var(--tin-green);
+  background-size: 180px 180px, auto, auto;
   box-shadow: inset 0 0 0 3px rgba(74, 44, 24, 0.55), 6px 6px 0 var(--espresso);
 }
-.shape-tin .tin-top, .shape-tin .tin-panel { align-self: stretch; position: relative; }
-.shape-tin .tin-top {
-  display: flex; align-items: center; gap: 16px; padding: 16px 22px 12px 26px;
-  border-radius: 20px 20px 0 0; color: var(--ink);
+.shape-tin .pedal-jack { top: 136px; }
+.tin-cream {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 200px; border-radius: 20px 0 0 20px;
   background:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.33 0 0 0 0 0.19 0 0 0 0 0.09 4.2 0 0 0 -2.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.035' numOctaves='3' seed='2'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.3 0 0 0 0 0.17 3.4 0 0 0 -1.75'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-    linear-gradient(180deg, #E6DBBE 0%, var(--tin-cream) 100%);
+    linear-gradient(90deg, #E6DBBE 0%, var(--tin-cream) 100%);
   background-size: 220px 220px, cover, auto;
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 0 rgba(42, 26, 18, 0.35);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset -2px 0 0 rgba(42, 26, 18, 0.35);
 }
-.shape-tin .tin-top .pedal-led { margin: 0; }
 /* A faded red maker's stamp printed on the cream. */
 .tin-stamp {
-  width: 58px; height: 58px; border-radius: 50%; margin-right: auto; opacity: 0.55;
+  position: absolute; left: 70px; top: 104px; width: 56px; height: 56px; border-radius: 50%; opacity: 0.5;
   border: 2px solid rgba(200, 55, 42, 0.75); transform: rotate(-12deg);
   background: radial-gradient(circle, transparent 0 15px, rgba(200, 55, 42, 0.7) 15px 17px, transparent 17px);
 }
+.tin-stripe {
+  position: absolute; left: 209px; top: 9px; right: 9px; bottom: 9px; pointer-events: none;
+  border: 1.5px solid var(--tin-gold); border-radius: 4px 13px 13px 4px; opacity: 0.85;
+}
+.tin-name {
+  position: absolute; left: 222px; top: 26px; pointer-events: none;
+  font-family: 'Antonio', var(--font-display); font-weight: 700; font-size: 4rem; line-height: 1;
+  letter-spacing: 0.3em; text-transform: uppercase; color: var(--tin-red);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -5 0 0 0 3.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -5 0 0 0 3.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.tin-sub {
+  position: absolute; left: 292px; top: 246px; pointer-events: none;
+  font-family: 'Antonio', var(--font-display); font-weight: 500; font-size: 1.2rem; line-height: 1;
+  letter-spacing: 0.3em; text-transform: uppercase; color: var(--tin-gold);
+}
+.shape-tin .pedal-led { position: absolute; left: 176px; top: 18px; margin: 0; width: 10px; height: 10px; }
+
+/* The on/off toggle: a cream bat on a chrome nut, over the P. */
 .tin-toggle-wrap {
-  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
+  position: absolute; left: 285px; top: 40px; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, #F4F1EA, #9C978C 70%); border: 1.5px solid #3A2A22;
 }
 .tin-toggle {
@@ -972,70 +996,72 @@ button.link { all: unset; color: var(--accent-text); cursor: pointer; text-decor
 .tin-toggle:hover:not(:disabled) { filter: brightness(1.04); box-shadow: 2px 3px 0 rgba(42, 26, 18, 0.35); }
 .pedal.is-off .tin-toggle:hover:not(:disabled) { transform: rotate(-14deg); }
 .pedal.is-on .tin-toggle:hover:not(:disabled) { transform: rotate(14deg); }
-.tin-toggle:focus-visible { outline: 2px solid var(--tin-red); outline-offset: 3px; }
+.tin-toggle:focus-visible { outline: 2px solid var(--tin-gold); outline-offset: 3px; }
 
-/* The big aluminium knob: a knurled black skirt under a spun metal cap. */
-.tin-feature .knob { width: 78px; flex-direction: row-reverse; flex-wrap: wrap; justify-content: center; }
-.tin-feature .knob-label, .tin-feature .knob-value { color: var(--ink); }
-.tin-feature .knob-label { order: -1; flex: 1 1 100%; text-align: center; }
-.tin-feature .knob-dial {
-  width: 60px; height: 60px; border: 4px solid #141312;
-  background:
-    repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.18) 0 1px, rgba(0, 0, 0, 0.08) 1px 2px),
-    radial-gradient(circle at 38% 32%, #F6F4EE 0%, #BDB8AE 45%, #85807A 100%);
-  box-shadow: 0 0 0 2px #3A3633, 3px 5px 0 rgba(42, 26, 18, 0.45);
-}
-.tin-feature .knob-pointer::after { top: 3px; height: 16px; width: 2px; margin-left: -1px; background: #F8F7F2; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35); }
-
-/* The green printed panel with a gold pinstripe inset from the edge. */
-.shape-tin .tin-panel {
-  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 18px 22px 24px;
-  border-radius: 0 0 20px 20px;
-  background:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0.86 0 0 0 0 0.84 0 0 0 0 0.72 6 0 0 0 -3.65'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
-    radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.06), transparent 60%),
-    var(--tin-green);
-  background-size: 180px 180px, auto, auto;
-}
-.shape-tin .tin-panel::before {
-  content: ''; position: absolute; inset: 9px 9px 9px 9px; pointer-events: none;
-  border: 1.5px solid var(--tin-gold); border-top: 0; border-radius: 0 0 13px 13px; opacity: 0.85;
-}
-.tin-name {
-  font-family: 'Antonio', var(--font-display); font-weight: 700; font-size: 3.1rem; line-height: 1;
-  letter-spacing: 0.12em; margin-right: -0.12em; text-transform: uppercase; color: var(--tin-red);
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -5 0 0 0 3.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -5 0 0 0 3.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-.tin-sub {
-  font-family: 'Antonio', var(--font-display); font-weight: 500; font-size: 0.92rem; line-height: 1;
-  letter-spacing: 0.32em; margin: 2px -0.32em 14px 0; text-transform: uppercase; color: var(--tin-gold);
-}
-.shape-tin .tin-panel .pedal-knobs { max-width: 312px; column-gap: 24px; row-gap: 12px; }
-.shape-tin .tin-panel .knob { width: 60px; }
+/* Each knob where it sits on the tin, by the centre of its column. */
+.tin-slot { position: absolute; transform: translateX(-50%); }
+.slot-volume { left: 96px; top: 14px; }
+.slot-lowcut { left: 52px; top: 168px; }
+.slot-highcut { left: 148px; top: 168px; }
+.slot-boost { left: 470px; top: 12px; }
+.slot-bass { left: 248px; top: 118px; }
+.slot-treble { left: 328px; top: 118px; }
+.slot-mid { left: 408px; top: 118px; }
+.slot-freq { left: 488px; top: 118px; }
+.slot-q { left: 574px; top: 118px; }
+.shape-tin .knob { width: 76px; gap: 2px; }
+.shape-tin .knob-label { font-size: 0.62rem; }
+.shape-tin .knob-value { font-size: 0.66rem; }
+.slot-volume .knob-label, .slot-volume .knob-value,
+.slot-lowcut .knob-label, .slot-lowcut .knob-value,
+.slot-highcut .knob-label, .slot-highcut .knob-value { color: var(--ink); }
 
 /* Chicken-head knobs: a tapered black bar over a round skirt. */
-.shape-tin .tin-panel .knob-dial {
-  width: 40px; height: 40px; margin: 6px 0 2px; border: 2px solid #0B0B0A;
-  background: radial-gradient(circle at 35% 30%, #3E3C3A 0%, #0E0D0C 70%);
+.shape-tin .tin-slot:not(.slot-volume) .knob-dial {
+  width: 40px; height: 40px; margin: 8px 0 2px; border: 2px solid #0B0B0A;
+  background: radial-gradient(circle at 50% 50%, #161514 0 55%, #050505 56% 100%);
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.5);
 }
-.shape-tin .tin-panel .knob-pointer::before {
+.shape-tin .tin-slot:not(.slot-volume) .knob-pointer::before {
   content: ''; position: absolute; left: 50%; top: -10px; width: 20px; height: 50px; margin-left: -10px;
   background: linear-gradient(90deg, #000 0 8%, #2E2C2A 8%, #77726C 34%, #2A2826 52%, #0B0B0A 88%, #000 88%);
   clip-path: polygon(50% 0, 78% 22%, 96% 92%, 50% 100%, 4% 92%, 22% 22%);
 }
-/* The round skirt under the bar reads as a separate, lower piece. */
-.shape-tin .tin-panel .knob-dial { background: radial-gradient(circle at 50% 50%, #161514 0 55%, #050505 56% 100%); }
-.shape-tin .tin-panel .knob-pointer::after { top: -6px; height: 9px; width: 2px; margin-left: -1px; background: #EDE6D2; }
-.shape-tin .knob-dial:focus-visible { outline: 2px solid var(--tin-gold); outline-offset: 4px; }
-.shape-tin .pedal-jack { top: 30px; }
-@media (max-width: 640px) {
-  .pedal.shape-tin { width: auto; max-width: none; flex: 1 1 100%; margin: 0 14px; }
-  .tin-name { font-size: 2.5rem; }
-  .tin-stamp { display: none; }
-  .shape-tin .tin-top { justify-content: space-between; }
+.shape-tin .tin-slot:not(.slot-volume) .knob-pointer::after { top: -6px; height: 9px; width: 2px; margin-left: -1px; background: #EDE6D2; }
+
+/* Volume: a tall knurled black skirt under a spun aluminium cap. */
+.shape-tin .slot-volume .knob-dial {
+  width: 60px; height: 60px; margin: 4px 0 6px; border: 4px solid #141312;
+  background:
+    repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.18) 0 1px, rgba(0, 0, 0, 0.08) 1px 2px),
+    radial-gradient(circle at 38% 32%, #F6F4EE 0%, #BDB8AE 45%, #85807A 100%);
+  box-shadow: 0 0 0 2px #3A3633, 3px 6px 0 2px #1B1A19, 4px 8px 0 2px rgba(42, 26, 18, 0.35);
 }
+.shape-tin .slot-volume .knob-pointer::after { top: 3px; height: 16px; width: 2px; margin-left: -1px; background: #F8F7F2; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35); }
+.shape-tin .knob-dial:focus-visible { outline: 2px solid var(--tin-gold); outline-offset: 4px; }
+
+/* Phone: the tin upright, as it stands in the photo. */
+@media (max-width: 720px) {
+  .pedal.shape-tin { width: 300px; height: 716px; margin: 0 auto; }
+  .shape-tin .pedal-jack { top: 110px; }
+  .tin-cream { right: 0; bottom: auto; width: auto; height: 222px; border-radius: 20px 20px 0 0; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -2px 0 rgba(42, 26, 18, 0.35); }
+  .tin-stamp { left: 136px; top: 70px; }
+  .tin-stripe { left: 9px; top: 231px; border-radius: 4px 4px 13px 13px; }
+  .tin-name { left: 196px; top: 250px; writing-mode: vertical-rl; letter-spacing: 0.22em; }
+  .tin-sub { left: 30px; top: 400px; writing-mode: vertical-rl; font-size: 1.45rem; }
+  .shape-tin .pedal-led { left: 268px; top: 198px; }
+  .tin-toggle-wrap { left: 250px; top: 318px; }
+  .slot-volume { left: 214px; top: 24px; }
+  .slot-lowcut { left: 84px; top: 10px; }
+  .slot-highcut { left: 84px; top: 114px; }
+  .slot-bass { left: 136px; top: 238px; }
+  .slot-treble { left: 136px; top: 330px; }
+  .slot-mid { left: 136px; top: 422px; }
+  .slot-freq { left: 136px; top: 514px; }
+  .slot-q { left: 136px; top: 606px; }
+  .slot-boost { left: 240px; top: 500px; }
+}
+
 /* Can pedal (Mid-hump 4558): a round tin lid with a rolled rim and pressed
    rings. Drive and Tone are black knurled thumbwheels held on with hot
    glue, Level is an aluminium knob, the footswitch is a keyboard key and
